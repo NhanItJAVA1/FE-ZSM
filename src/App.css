@@ -1,0 +1,400 @@
+.app-shell {
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.topbar,
+.auth-strip,
+.content-grid,
+.upload-panel {
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.topbar {
+  min-height: 210px;
+  padding: 28px;
+  display: grid;
+  grid-template-columns: 1fr minmax(280px, 420px);
+  gap: 24px;
+  align-items: end;
+  background:
+    linear-gradient(90deg, rgba(10, 12, 18, 0.82), rgba(10, 12, 18, 0.32)),
+    url('https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=1600&q=80') center/cover;
+  color: #fff;
+}
+
+.topbar h1 {
+  max-width: 820px;
+  margin: 8px 0 0;
+  color: #fff;
+  font-size: 46px;
+  line-height: 1.04;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.api-bar,
+.auth-strip form {
+  display: flex;
+  gap: 10px;
+  align-items: end;
+}
+
+.api-bar {
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.auth-strip {
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+}
+
+.auth-strip p {
+  color: var(--muted);
+  font-size: 14px;
+  text-align: right;
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+}
+
+input,
+select,
+textarea,
+button {
+  min-height: 42px;
+  border-radius: 6px;
+  font: inherit;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  background: var(--field);
+  color: var(--text-h);
+  padding: 9px 11px;
+  outline: none;
+}
+
+textarea {
+  resize: vertical;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus);
+}
+
+button {
+  border: 1px solid transparent;
+  background: var(--button);
+  color: #fff;
+  padding: 0 16px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.04);
+}
+
+button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.map-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+}
+
+.map-strip button {
+  min-height: 74px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-h);
+  text-align: left;
+}
+
+.map-strip button.active {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--focus);
+}
+
+.map-strip span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  min-height: 570px;
+}
+
+.viewer {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-right: 1px solid var(--border);
+}
+
+.viewer video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #090a0d;
+  object-fit: contain;
+}
+
+.viewer-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: start;
+}
+
+.viewer-meta h2,
+.section-heading h2 {
+  margin: 4px 0 0;
+  color: var(--text-h);
+}
+
+.viewer-meta p {
+  margin-top: 6px;
+  color: var(--muted);
+}
+
+.rank-label {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.time-badge {
+  flex: 0 0 auto;
+  border: 1px solid var(--border);
+  background: var(--field);
+  color: var(--text-h);
+  padding: 12px 14px;
+  font-family: var(--mono);
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.record-facts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: auto 0 0;
+}
+
+.record-facts div {
+  padding: 12px;
+  border: 1px solid var(--border);
+  background: var(--field);
+}
+
+.record-facts dt {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.record-facts dd {
+  margin: 4px 0 0;
+  color: var(--text-h);
+  font-weight: 800;
+}
+
+.leaderboard {
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.record-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: auto;
+}
+
+.record-row {
+  min-height: 70px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid var(--border);
+  background: var(--field);
+  color: var(--text-h);
+  text-align: left;
+}
+
+.record-row.active {
+  border-color: var(--accent);
+  background: var(--active);
+}
+
+.place {
+  color: var(--accent);
+  font-weight: 900;
+}
+
+.record-row strong,
+.record-row small {
+  display: block;
+}
+
+.record-row small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.record-row b {
+  font-family: var(--mono);
+}
+
+.upload-panel {
+  padding: 20px;
+}
+
+.upload-panel form {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.upload-panel .wide {
+  grid-column: span 2;
+}
+
+.file-drop {
+  min-height: 86px;
+  border: 1px dashed var(--accent);
+  background: var(--active);
+  place-content: center;
+  padding: 12px;
+}
+
+.file-drop input {
+  display: none;
+}
+
+.file-drop span {
+  color: var(--text-h);
+  font-weight: 900;
+  text-align: center;
+}
+
+.upload-panel button[type='submit'] {
+  align-self: end;
+  min-height: 86px;
+}
+
+.empty-state {
+  min-height: 420px;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  border: 1px dashed var(--border);
+}
+
+@media (max-width: 1100px) {
+  .topbar,
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .viewer {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .record-facts,
+  .upload-panel form {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    padding: 12px;
+  }
+
+  .topbar {
+    padding: 20px;
+  }
+
+  .topbar h1 {
+    font-size: 34px;
+  }
+
+  .api-bar,
+  .auth-strip,
+  .auth-strip form,
+  .viewer-meta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .auth-strip p {
+    text-align: left;
+  }
+
+  .record-facts,
+  .upload-panel form {
+    grid-template-columns: 1fr;
+  }
+
+  .upload-panel .wide {
+    grid-column: span 1;
+  }
+
+  .record-row {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .record-row b {
+    grid-column: 2;
+  }
+}
