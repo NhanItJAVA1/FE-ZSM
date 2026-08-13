@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import ImageUploadField from "../../../components/ui/ImageUploadField.js";
 import { MAP_DIFFICULTIES, formatMapRate } from "../../../constants/catalog.js";
+import { sortMapsByRate } from "../../../utils/catalog.js";
 import { resolveImageUrl } from "../../../utils/image.js";
 import { useMapsQuery } from "../../catalog/hooks/useCatalogQueries.js";
 import type { MapDto } from "../../catalog/types.js";
@@ -238,7 +239,7 @@ export default function AddMapForm() {
                     setEditingMap(maps.find((map) => map.id === id) ?? null)
                 }
                 onDelete={handleDelete}
-                items={maps.map((map) => ({
+                items={sortMapsByRate(maps).map((map) => ({
                     id: map.id,
                     name: map.name,
                     imageUrl: map.imageUrl,

@@ -30,7 +30,17 @@ const TAB_COPY: Record<
 
 export default function AdminPage() {
     const [activeTab, setActiveTab] = useState<AdminTab>("moderation");
-    const { pending, processingId, message, approve, reject } = useModeration();
+    const {
+        pending,
+        isLoading,
+        isFetching,
+        error,
+        refetch,
+        processingId,
+        message,
+        approve,
+        reject,
+    } = useModeration();
     const tabCopy = TAB_COPY[activeTab];
 
     return (
@@ -49,9 +59,15 @@ export default function AdminPage() {
 
                     <AdminPendingList
                         pending={pending}
+                        isLoading={isLoading}
+                        isFetching={isFetching}
+                        error={error}
                         processingId={processingId}
                         onApprove={approve}
                         onReject={reject}
+                        onRefresh={() => {
+                            void refetch();
+                        }}
                     />
                 </>
             )}

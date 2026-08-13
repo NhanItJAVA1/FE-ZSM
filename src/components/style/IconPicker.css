@@ -26,7 +26,7 @@
 
 .icon-picker-btn.active {
     border-color: var(--accent);
-    background: rgba(170, 59, 255, 0.12);
+    background: var(--icon-picker-active-bg);
     color: var(--text-h);
 }
 

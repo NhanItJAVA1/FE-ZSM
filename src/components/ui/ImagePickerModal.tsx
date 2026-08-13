@@ -16,6 +16,8 @@ interface ImagePickerModalProps {
     onClose: () => void;
     allowClear?: boolean;
     clearLabel?: string;
+    toolbar?: React.ReactNode;
+    emptyText?: string;
 }
 
 export default function ImagePickerModal({
@@ -27,6 +29,8 @@ export default function ImagePickerModal({
     onClose,
     allowClear = true,
     clearLabel = "Tất cả",
+    toolbar,
+    emptyText = "Không có mục nào phù hợp.",
 }: ImagePickerModalProps) {
     useEffect(() => {
         if (!open) {
@@ -67,6 +71,11 @@ export default function ImagePickerModal({
                     </button>
                 </header>
 
+                {toolbar}
+
+                {items.length === 0 ? (
+                    <div className="empty-state picker-empty">{emptyText}</div>
+                ) : (
                 <div className="picker-grid">
                     {allowClear && (
                         <button
@@ -114,6 +123,7 @@ export default function ImagePickerModal({
                         </button>
                     ))}
                 </div>
+                )}
             </div>
         </div>
     );

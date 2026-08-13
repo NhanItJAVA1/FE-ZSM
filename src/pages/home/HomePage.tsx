@@ -66,7 +66,7 @@ export default function HomePage() {
 
     return (
         <AppLayout>
-            <HomeHero />
+            <HomeHero recordCount={records.length} isLoading={isLoading} />
 
             <RecordFilterBar
                 filters={filters}
@@ -84,14 +84,34 @@ export default function HomePage() {
                 <div className="viewer">
                     <RecordViewer
                         isLoading={isLoading}
-                        records={filteredRecords}
                         selectedRecord={selectedRecord}
-                        selectedRecordId={selectedRecordId}
-                        onSelectRecord={setSelectedRecordId}
+                        emptyAction={
+                            <button
+                                type="button"
+                                className="ghost-btn"
+                                onClick={resetFilters}
+                            >
+                                Xóa bộ lọc
+                            </button>
+                        }
                     />
                 </div>
 
-                <RecordInfoPanel record={selectedRecord} />
+                <RecordInfoPanel
+                    isLoading={isLoading}
+                    records={filteredRecords}
+                    selectedRecordId={selectedRecordId}
+                    onSelectRecord={setSelectedRecordId}
+                    emptyAction={
+                        <button
+                            type="button"
+                            className="ghost-btn"
+                            onClick={resetFilters}
+                        >
+                            Xóa bộ lọc
+                        </button>
+                    }
+                />
             </section>
 
             <MapPickerModal

@@ -1,9 +1,9 @@
 export type UserRole = "User" | "Admin";
 
 export function isAdminRole(role: UserRole | undefined | null): boolean {
-    return role === "Admin";
+    return String(role).toLowerCase() === "admin";
 }
 
 export function normalizeUserRole(role: unknown): UserRole {
-    return role === "Admin" ? "Admin" : "User";
+    return String(role).toLowerCase() === "admin" ? "Admin" : "User";
 }

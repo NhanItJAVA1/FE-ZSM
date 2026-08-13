@@ -1,11 +1,12 @@
+import { useState } from "react";
 import { formatDate, formatTime } from "../../../utils/format.js";
-import type { PendingRecord } from "../../records/types.js";
+import type { RecordDto } from "../../records/types.js";
 
 interface PendingRecordCardProps {
-    record: PendingRecord;
+    record: RecordDto;
     isProcessing: boolean;
     onApprove: () => void;
-    onReject: () => void;
+    onReject: (reason?: string) => void;
 }
 
 export default function PendingRecordCard({
@@ -14,6 +15,20 @@ export default function PendingRecordCard({
     onApprove,
     onReject,
 }: PendingRecordCardProps) {
+    const [showRejectForm, setShowRejectForm] = useState(false);
+    const [rejectReason, setRejectReason] = useState("");
+
+    function handleRejectSubmit() {
+        onReject(rejectReason.trim() || undefined);
+        setShowRejectForm(false);
+        setRejectReason("");
+    }
+
+    function handleCancelReject() {
+        setShowRejectForm(false);
+        setRejectReason("");
+    }
+
     return (
         <article className="admin-card">
             <div className="admin-card-body">
@@ -23,23 +38,23 @@ export default function PendingRecordCard({
                     <dl className="admin-meta">
                         <div>
                             <dt>Map</dt>
-                            <dd>{record.mapName ?? `#${record.mapId}`}</dd>
+                            <dd>{record.map?.name ?? `#${record.map?.id ?? "—"}`}</dd>
                         </div>
                         <div>
                             <dt>Xe</dt>
-                            <dd>{record.vehicleName ?? `#${record.vehicleId}`}</dd>
+                            <dd>{record.vehicle?.name ?? `#${record.vehicle?.id ?? "—"}`}</dd>
                         </div>
                         <div>
-                            <dt>Người đua</dt>
-                            <dd>{record.racerName}</dd>
+                            <dt>Người gửi</dt>
+                            <dd>{record.user?.username ?? "Chưa rõ"}</dd>
                         </div>
                         <div>
                             <dt>Thời gian</dt>
-                            <dd>{formatTime(record.finishTimeSeconds)}</dd>
+                            <dd>{formatTime(record.finishTime)}</dd>
                         </div>
                         <div>
                             <dt>Gửi lúc</dt>
-                            <dd>{formatDate(record.submittedAt)}</dd>
+                            <dd>{formatDate(record.createdAt)}</dd>
                         </div>
                     </dl>
                     {record.description && (
@@ -52,19 +67,54 @@ export default function PendingRecordCard({
                 </div>
             </div>
 
-            <div className="admin-actions">
-                <button
-                    type="button"
-                    className="ghost-btn danger"
-                    onClick={onReject}
-                    disabled={isProcessing}
-                >
-                    Từ chối
-                </button>
-                <button type="button" onClick={onApprove} disabled={isProcessing}>
-                    {isProcessing ? "Đang duyệt..." : "Duyệt & đăng"}
-                </button>
-            </div>
+            {showRejectForm && (
+                <div className="reject-form">
+                    <label>
+                        Lý do từ chối (tuỳ chọn)
+                        <textarea
+                            rows={3}
+                            placeholder="Nhập lý do để người dùng biết..."
+                            value={rejectReason}
+                            onChange={(event) => setRejectReason(event.target.value)}
+                            disabled={isProcessing}
+                        />
+                    </label>
+                    <div className="admin-actions">
+                        <button
+                            type="button"
+                            className="ghost-btn"
+                            onClick={handleCancelReject}
+                            disabled={isProcessing}
+                        >
+                            Huỷ
+                        </button>
+                        <button
+                            type="button"
+                            className="ghost-btn danger"
+                            onClick={handleRejectSubmit}
+                            disabled={isProcessing}
+                        >
+                            {isProcessing ? "Đang xử lý..." : "Xác nhận từ chối"}
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {!showRejectForm && (
+                <div className="admin-actions">
+                    <button
+                        type="button"
+                        className="ghost-btn danger"
+                        onClick={() => setShowRejectForm(true)}
+                        disabled={isProcessing}
+                    >
+                        Từ chối
+                    </button>
+                    <button type="button" onClick={onApprove} disabled={isProcessing}>
+                        {isProcessing ? "Đang duyệt..." : "Duyệt & đăng"}
+                    </button>
+                </div>
+            )}
         </article>
     );
 }

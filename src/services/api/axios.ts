@@ -1,5 +1,6 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { ROUTES } from "../../constants/routes.js";
+import { normalizeUserRole } from "../../constants/roles.js";
 import { tokenStorage } from "../storage/token.js";
 import { userStorage } from "../storage/user.js";
 
@@ -40,12 +41,32 @@ async function refreshAccessToken(): Promise<string> {
         throw new Error("Refresh token not found");
     }
 
-    const { data } = await axios.post<{ accessToken: string; refreshToken: string }>(
-        `${baseURL}/Users/refresh`,
-        { refreshToken }
-    );
+    const { data } = await axios.post<{
+        accessToken: string;
+        user?: {
+            id: number;
+            username: string;
+            email: string;
+            displayName: string;
+            avatarUrl: string | null;
+            Role?: string;
+            role?: string;
+        };
+    }>(`${baseURL}/Users/refresh-token`, { refreshToken });
 
-    tokenStorage.set(data.accessToken, data.refreshToken);
+    tokenStorage.set(data.accessToken, refreshToken);
+
+    if (data.user) {
+        userStorage.set({
+            id: data.user.id,
+            username: data.user.username,
+            email: data.user.email,
+            displayName: data.user.displayName,
+            avatarUrl: data.user.avatarUrl,
+            role: normalizeUserRole(data.user.role ?? data.user.Role),
+        });
+    }
+
     return data.accessToken;
 }
 
@@ -133,6 +154,17 @@ api.interceptors.response.use(
             validationMessage ||
             (typeof data === "object" && (data.message || data.detail || data.title)) ||
             (typeof data === "string" ? data : axiosError.message);
+
+        if (
+            axiosError.response?.status === 403 &&
+            originalRequest?.url?.includes("/Records/admin/")
+        ) {
+            return Promise.reject(
+                new Error(
+                    "Tài khoản hiện tại không có quyền admin. Hãy đăng xuất và đăng nhập lại bằng user `admin` sau khi BE đã restart."
+                )
+            );
+        }
 
         return Promise.reject(new Error(message));
     }

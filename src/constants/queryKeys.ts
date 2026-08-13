@@ -3,4 +3,6 @@ export const QUERY_KEYS = {
     vehicles: ["vehicles"] as const,
     gameModes: ["gameModes"] as const,
     records: ["records"] as const,
+    pendingRecords: ["records", "pending"] as const,
+    myRecords: (userId: number) => ["records", "user", userId] as const,
 };

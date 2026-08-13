@@ -7,6 +7,7 @@ import LoginPage from "../pages/auth/LoginPage.js";
 import HomePage from "../pages/home/HomePage.js";
 import NotFoundPage from "../pages/notfound/NotFoundPage.js";
 import SubmitRecordPage from "../pages/submit/SubmitRecordPage.js";
+import MyRecordsPage from "../pages/records/MyRecordsPage.js";
 
 export default function AppRoutes() {
     return (
@@ -24,6 +25,7 @@ export default function AppRoutes() {
                 <Route element={<ProtectedRoute />}>
                     <Route path={ROUTES.home} element={<HomePage />} />
                     <Route path={ROUTES.submit} element={<SubmitRecordPage />} />
+                    <Route path={ROUTES.myRecords} element={<MyRecordsPage />} />
                 </Route>
 
                 <Route element={<ProtectedRoute requireAdmin />}>

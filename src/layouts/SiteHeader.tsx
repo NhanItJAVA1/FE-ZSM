@@ -1,8 +1,33 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import NavIcon, { type NavIconName } from "../components/ui/NavIcon.js";
 import { ROUTES } from "../constants/routes.js";
 import { useIsAdmin } from "../hooks/useIsAdmin.js";
 import { useAppDispatch, useAppSelector } from "../stores/hook.js";
 import { logout } from "../stores/slices/authSlice.js";
+
+const NAV_ITEMS: Array<{
+    to: string;
+    label: string;
+    icon: NavIconName;
+    end?: boolean;
+    adminOnly?: boolean;
+}> = [
+    { to: ROUTES.home, label: "Trang chủ", icon: "home", end: true },
+    { to: ROUTES.submit, label: "Đăng kỷ lục", icon: "submit" },
+    { to: ROUTES.myRecords, label: "Kỷ lục của tôi", icon: "records" },
+    { to: ROUTES.admin, label: "Kiểm duyệt", icon: "admin", adminOnly: true },
+];
+
+function getUserInitials(displayName: string, username: string): string {
+    const source = displayName.trim() || username.trim();
+    const parts = source.split(/\s+/).filter(Boolean);
+
+    if (parts.length >= 2) {
+        return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+
+    return source.slice(0, 2).toUpperCase();
+}
 
 export default function SiteHeader() {
     const dispatch = useAppDispatch();
@@ -15,32 +40,69 @@ export default function SiteHeader() {
         navigate(ROUTES.login);
     }
 
+    const visibleNavItems = NAV_ITEMS.filter(
+        (item) => !item.adminOnly || isAdmin
+    );
+
     return (
         <header className="site-header">
-            <Link to={ROUTES.home} className="brand">
-                <span className="brand-mark">ZSM</span>
-                <span>
-                    <strong>ZingSpeed Records</strong>
-                    <small>Kho video kỷ lục Mobile</small>
-                </span>
-            </Link>
+            <div className="site-header-left">
+                <Link
+                    to={ROUTES.home}
+                    className="header-chip header-chip--brand brand brand--compact"
+                    title="ZingSpeed Records"
+                >
+                    <span className="brand-mark">ZSM</span>
+                </Link>
 
-            <nav className="site-nav">
-                <NavLink to={ROUTES.home} end>
-                    Trang chủ
-                </NavLink>
-                <NavLink to={ROUTES.submit}>Đăng kỷ lục</NavLink>
-                {isAdmin && <NavLink to={ROUTES.admin}>Kiểm duyệt</NavLink>}
-            </nav>
+                <nav
+                    className="header-chip header-chip--nav site-nav site-nav--icons"
+                    aria-label="Điều hướng chính"
+                >
+                    {visibleNavItems.map((item) => (
+                        <NavLink
+                            key={item.to}
+                            to={item.to}
+                            end={item.end}
+                            className="site-nav-icon-btn"
+                            title={item.label}
+                        >
+                            <NavIcon name={item.icon} className="site-nav-icon" />
+                            <span className="sr-only">{item.label}</span>
+                        </NavLink>
+                    ))}
+                </nav>
 
-            <div className="site-user">
                 {user && (
-                    <>
-                        <span>{user.displayName || user.username}</span>
-                        <button type="button" className="ghost-btn" onClick={handleLogout}>
-                            Đăng xuất
+                    <div className="header-chip header-chip--user site-user site-user--compact">
+                        {user.avatarUrl ? (
+                            <img
+                                src={user.avatarUrl}
+                                alt=""
+                                className="site-user-avatar"
+                                loading="lazy"
+                            />
+                        ) : (
+                            <span
+                                className="site-user-avatar site-user-avatar--fallback"
+                                title={user.displayName || user.username}
+                            >
+                                {getUserInitials(
+                                    user.displayName,
+                                    user.username
+                                )}
+                            </span>
+                        )}
+                        <button
+                            type="button"
+                            className="site-nav-icon-btn"
+                            onClick={handleLogout}
+                            title="Đăng xuất"
+                        >
+                            <NavIcon name="logout" className="site-nav-icon" />
+                            <span className="sr-only">Đăng xuất</span>
                         </button>
-                    </>
+                    </div>
                 )}
             </div>
         </header>

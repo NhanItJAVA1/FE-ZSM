@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { ROUTES } from "../../../constants/routes.js";
+import { QUERY_KEYS } from "../../../constants/queryKeys.js";
 import { recordService } from "../../../services/api/recordService.js";
-import { pendingRecordStorage } from "../../../services/storage/pendingRecords.js";
-import { parseFinishTimeInput } from "../../../utils/format.js";
-import type { PendingRecord } from "../types.js";
+import { parseFinishTimeInput, secondsToTimeSpan } from "../../../utils/format.js";
 
 interface SubmitRecordInput {
     userId: number;
@@ -22,6 +22,7 @@ interface SubmitRecordInput {
 
 export function useSubmitRecord() {
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const [status, setStatus] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -49,11 +50,9 @@ export function useSubmitRecord() {
                 input.videoFile
             );
 
-            const pending: PendingRecord = {
-                id: crypto.randomUUID(),
-                status: "pending",
-                submittedAt: new Date().toISOString(),
-                racerName: input.racerName.trim(),
+            setStatus("Đang gửi kỷ lục...");
+            await recordService.create({
+                userId: input.userId,
                 mapId: input.mapId,
                 vehicleId: input.vehicleId,
                 gameModeId: input.gameModeId,
@@ -61,20 +60,22 @@ export function useSubmitRecord() {
                     input.title.trim() ||
                     `${input.mapName} - ${input.racerName.trim()}`,
                 videoUrl: uploadTarget.publicUrl,
-                finishTimeSeconds: finishSeconds,
-                description: input.description.trim(),
-                userId: input.userId,
-                mapName: input.mapName,
-                vehicleName: input.vehicleName,
-            };
+                finishTime: secondsToTimeSpan(finishSeconds),
+                description: input.description.trim() || undefined,
+            });
 
-            pendingRecordStorage.add(pending);
+            await queryClient.invalidateQueries({
+                queryKey: QUERY_KEYS.myRecords(input.userId),
+            });
+            await queryClient.invalidateQueries({
+                queryKey: QUERY_KEYS.pendingRecords,
+            });
 
             setStatus(
                 "Đã gửi kỷ lục thành công! Bản ghi đang chờ admin kiểm duyệt."
             );
 
-            setTimeout(() => navigate(ROUTES.home), 1800);
+            setTimeout(() => navigate(ROUTES.myRecords), 1800);
         } catch (error) {
             setStatus(
                 error instanceof Error

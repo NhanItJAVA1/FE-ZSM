@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../constants/routes.js";
+import { resolveSubmitGameModeId } from "../../../utils/catalog.js";
 import { formatToday } from "../../../utils/format.js";
+import { useGameModesQuery } from "../../catalog/hooks/useCatalogQueries.js";
 import MapPickerModal from "../../catalog/components/MapPickerModal.js";
 import VehiclePickerModal from "../../catalog/components/VehiclePickerModal.js";
-import type { GameModeDto, MapDto, VehicleDto } from "../../catalog/types.js";
+import type { MapDto, VehicleDto } from "../../catalog/types.js";
 import { useSubmitRecord } from "../hooks/useSubmitRecord.js";
 
 interface SubmitRecordFormProps {
     maps: MapDto[];
     vehicles: VehicleDto[];
-    gameModes: GameModeDto[];
     userId: number;
     defaultRacerName: string;
 }
@@ -18,16 +19,15 @@ interface SubmitRecordFormProps {
 export default function SubmitRecordForm({
     maps,
     vehicles,
-    gameModes,
     userId,
     defaultRacerName,
 }: SubmitRecordFormProps) {
     const navigate = useNavigate();
     const { submit, status, isSubmitting } = useSubmitRecord();
+    const gameModesQuery = useGameModesQuery();
 
     const [mapId, setMapId] = useState<number | null>(null);
     const [vehicleId, setVehicleId] = useState<number | null>(null);
-    const [gameModeId, setGameModeId] = useState<number | null>(null);
     const [racerName, setRacerName] = useState(defaultRacerName);
     const [finishTimeInput, setFinishTimeInput] = useState("");
     const [title, setTitle] = useState("");
@@ -39,6 +39,7 @@ export default function SubmitRecordForm({
 
     const selectedMap = maps.find((map) => map.id === mapId);
     const selectedVehicle = vehicles.find((vehicle) => vehicle.id === vehicleId);
+    const gameModeId = resolveSubmitGameModeId(gameModesQuery.data ?? []);
 
     async function handleSubmit(event: React.FormEvent) {
         event.preventDefault();
@@ -59,18 +60,11 @@ export default function SubmitRecordForm({
             return;
         }
 
-        const modeId = gameModeId ?? gameModes[0]?.id;
-
-        if (!modeId) {
-            setValidationError("Chưa có game mode trong hệ thống.");
-            return;
-        }
-
         await submit({
             userId,
             mapId,
             vehicleId,
-            gameModeId: modeId,
+            gameModeId,
             racerName,
             finishTimeInput,
             title,
@@ -104,22 +98,6 @@ export default function SubmitRecordForm({
                         <span>Xe đua</span>
                         <strong>{selectedVehicle?.name ?? "Chọn xe"}</strong>
                     </button>
-
-                    <label>
-                        Game mode
-                        <select
-                            value={gameModeId ?? gameModes[0]?.id ?? ""}
-                            onChange={(event) =>
-                                setGameModeId(Number(event.target.value))
-                            }
-                        >
-                            {gameModes.map((mode) => (
-                                <option key={mode.id} value={mode.id}>
-                                    {mode.name}
-                                </option>
-                            ))}
-                        </select>
-                    </label>
 
                     <label>
                         Tên người đua
@@ -205,6 +183,7 @@ export default function SubmitRecordForm({
                 maps={maps}
                 selectedId={mapId}
                 allowClear={false}
+                enableRateFilter
                 onSelect={(id) => id !== null && setMapId(id)}
                 onClose={() => setMapModalOpen(false)}
             />

@@ -1,6 +1,6 @@
 import AppLayout from "../../layouts/AppLayout.js";
 import PageHeading from "../../layouts/PageHeading.js";
-import { useGameModesQuery, useMapsQuery, useVehiclesQuery } from "../../features/catalog/hooks/useCatalogQueries.js";
+import { useMapsQuery, useVehiclesQuery } from "../../features/catalog/hooks/useCatalogQueries.js";
 import SubmitRecordForm from "../../features/records/components/SubmitRecordForm.js";
 import { useAppSelector } from "../../stores/hook.js";
 
@@ -9,7 +9,6 @@ export default function SubmitRecordPage() {
 
     const mapsQuery = useMapsQuery();
     const vehiclesQuery = useVehiclesQuery();
-    const gameModesQuery = useGameModesQuery();
 
     if (!user) {
         return null;
@@ -26,7 +25,6 @@ export default function SubmitRecordPage() {
             <SubmitRecordForm
                 maps={mapsQuery.data ?? []}
                 vehicles={vehiclesQuery.data ?? []}
-                gameModes={gameModesQuery.data ?? []}
                 userId={user.id}
                 defaultRacerName={user.displayName || user.username}
             />

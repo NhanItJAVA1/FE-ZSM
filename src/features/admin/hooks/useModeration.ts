@@ -1,44 +1,52 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../../../constants/queryKeys.js";
 import { recordService } from "../../../services/api/recordService.js";
-import { pendingRecordStorage } from "../../../services/storage/pendingRecords.js";
-import { secondsToTimeSpan } from "../../../utils/format.js";
-import type { PendingRecord } from "../types.js";
+import type { RecordDto } from "../../records/types.js";
+
+function toQueryError(error: unknown): Error | null {
+    if (!error) {
+        return null;
+    }
+
+    if (error instanceof Error) {
+        return error;
+    }
+
+    return new Error(String(error));
+}
 
 export function useModeration() {
     const queryClient = useQueryClient();
-    const [pending, setPending] = useState<PendingRecord[]>(
-        pendingRecordStorage.getPending()
-    );
-    const [processingId, setProcessingId] = useState<string | null>(null);
+    const [processingId, setProcessingId] = useState<number | null>(null);
     const [message, setMessage] = useState<string | null>(null);
 
-    function refreshList() {
-        setPending(pendingRecordStorage.getPending());
-    }
+    const pendingQuery = useQuery({
+        queryKey: QUERY_KEYS.pendingRecords,
+        queryFn: recordService.getPendingAdmin,
+        refetchOnMount: "always",
+        refetchOnWindowFocus: true,
+        retry: false,
+    });
 
-    async function approve(record: PendingRecord) {
+    async function approve(record: RecordDto) {
         setProcessingId(record.id);
         setMessage(null);
 
         try {
-            await recordService.create({
-                userId: record.userId,
-                mapId: record.mapId,
-                vehicleId: record.vehicleId,
-                gameModeId: record.gameModeId,
-                title: record.title,
-                videoUrl: record.videoUrl,
-                finishTime: secondsToTimeSpan(record.finishTimeSeconds),
-                description: record.description || undefined,
+            await recordService.approve(record.id);
+            await queryClient.invalidateQueries({
+                queryKey: QUERY_KEYS.pendingRecords,
             });
-
-            pendingRecordStorage.approve(record.id);
-            pendingRecordStorage.remove(record.id);
-            refreshList();
             await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.records });
-            setMessage(`Đã duyệt kỷ lục của ${record.racerName}.`);
+
+            if (record.user?.id) {
+                await queryClient.invalidateQueries({
+                    queryKey: QUERY_KEYS.myRecords(record.user.id),
+                });
+            }
+
+            setMessage(`Đã duyệt kỷ lục "${record.title}".`);
         } catch (error) {
             setMessage(
                 error instanceof Error
@@ -50,15 +58,40 @@ export function useModeration() {
         }
     }
 
-    function reject(record: PendingRecord) {
-        pendingRecordStorage.reject(record.id);
-        pendingRecordStorage.remove(record.id);
-        refreshList();
-        setMessage(`Đã từ chối kỷ lục của ${record.racerName}.`);
+    async function reject(record: RecordDto, reason?: string) {
+        setProcessingId(record.id);
+        setMessage(null);
+
+        try {
+            await recordService.reject(record.id, reason);
+            await queryClient.invalidateQueries({
+                queryKey: QUERY_KEYS.pendingRecords,
+            });
+
+            if (record.user?.id) {
+                await queryClient.invalidateQueries({
+                    queryKey: QUERY_KEYS.myRecords(record.user.id),
+                });
+            }
+
+            setMessage(`Đã từ chối kỷ lục "${record.title}".`);
+        } catch (error) {
+            setMessage(
+                error instanceof Error
+                    ? `Từ chối thất bại: ${error.message}`
+                    : "Từ chối thất bại."
+            );
+        } finally {
+            setProcessingId(null);
+        }
     }
 
     return {
-        pending,
+        pending: pendingQuery.data ?? [],
+        isLoading: pendingQuery.isLoading,
+        isFetching: pendingQuery.isFetching,
+        error: toQueryError(pendingQuery.error),
+        refetch: pendingQuery.refetch,
         processingId,
         message,
         approve,

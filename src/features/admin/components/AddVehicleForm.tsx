@@ -10,6 +10,7 @@ import {
     getVehicleTypeLabel,
     parseVehicleRank,
 } from "../../../constants/catalog.js";
+import { sortVehiclesByRank } from "../../../utils/catalog.js";
 import { resolveImageUrl } from "../../../utils/image.js";
 import { useVehiclesQuery } from "../../catalog/hooks/useCatalogQueries.js";
 import type { VehicleDto } from "../../catalog/types.js";
@@ -280,7 +281,7 @@ export default function AddVehicleForm() {
                     )
                 }
                 onDelete={handleDelete}
-                items={vehicles.map((vehicle) => ({
+                items={sortVehiclesByRank(vehicles).map((vehicle) => ({
                     id: vehicle.id,
                     name: vehicle.name,
                     imageUrl: vehicle.imageUrl,

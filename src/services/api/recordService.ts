@@ -5,6 +5,29 @@ import type {
     VideoUploadUrlResponse,
 } from "../../features/records/types.js";
 import { uploadFileToPresignedUrl } from "./uploadService.js";
+
+function normalizeRecordList(data: unknown): RecordDto[] {
+    if (Array.isArray(data)) {
+        return data;
+    }
+
+    if (data && typeof data === "object") {
+        const wrapped = data as {
+            data?: unknown;
+            items?: unknown;
+            records?: unknown;
+        };
+
+        for (const candidate of [wrapped.data, wrapped.items, wrapped.records]) {
+            if (Array.isArray(candidate)) {
+                return candidate;
+            }
+        }
+    }
+
+    return [];
+}
+
 export const recordService = {
     async getAll(): Promise<RecordDto[]> {
         const response = await api.get<RecordDto[]>("/Records");
@@ -49,5 +72,31 @@ export const recordService = {
             file,
             file.type || "video/mp4"
         );
+    },
+
+    async getByUser(userId: number): Promise<RecordDto[]> {
+        const response = await api.get<RecordDto[]>(
+            `/Records/records-by-user/${userId}`
+        );
+
+        return response.data;
+    },
+
+    async getPendingAdmin(): Promise<RecordDto[]> {
+        const response = await api.get<unknown>(
+            "/Records/admin/records/pending"
+        );
+
+        return normalizeRecordList(response.data);
+    },
+
+    async approve(id: number): Promise<void> {
+        await api.put(`/Records/admin/records/${id}/approve`);
+    },
+
+    async reject(id: number, reason?: string): Promise<void> {
+        await api.put(`/Records/admin/records/${id}/reject`, null, {
+            params: reason?.trim() ? { reason: reason.trim() } : undefined,
+        });
     },
 };

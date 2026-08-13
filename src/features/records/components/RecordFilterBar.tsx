@@ -1,4 +1,5 @@
 import StarRating from "../../../components/ui/StarRating.js";
+import FilterPickerTrigger from "../../../components/ui/FilterPickerTrigger.js";
 import VehicleRankPicker from "../../../components/ui/VehicleRankPicker.js";
 import VehicleTypePicker from "../../../components/ui/VehicleTypePicker.js";
 import type { MapDto, VehicleDto } from "../../catalog/types.js";
@@ -40,19 +41,19 @@ export default function RecordFilterBar({
                     />
                 </label>
 
-                <button type="button" className="filter-trigger" onClick={onOpenMapPicker}>
-                    Map
-                    <span>{selectedMap?.name ?? "Tất cả map"}</span>
-                </button>
+                <FilterPickerTrigger
+                    label="Map"
+                    selection={selectedMap}
+                    fallback="Tất cả map"
+                    onClick={onOpenMapPicker}
+                />
 
-                <button
-                    type="button"
-                    className="filter-trigger"
+                <FilterPickerTrigger
+                    label="Xe đua"
+                    selection={selectedVehicle}
+                    fallback="Tất cả xe"
                     onClick={onOpenVehiclePicker}
-                >
-                    Xe đua
-                    <span>{selectedVehicle?.name ?? "Tất cả xe"}</span>
-                </button>
+                />
 
                 <button type="button" className="ghost-btn" onClick={onReset}>
                     Reset filter
