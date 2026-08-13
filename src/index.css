@@ -69,8 +69,8 @@ dl {
 
 .site-header {
   display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
   padding: 0;
   border: none;
@@ -79,6 +79,7 @@ dl {
   backdrop-filter: none;
   min-height: 0;
   flex-wrap: nowrap;
+  gap: 10px;
 }
 
 .site-header-left {
@@ -86,6 +87,24 @@ dl {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.site-header-animation {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.site-header-animation--before-logout {
+  margin: 0 2px;
+}
+
+.site-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .header-chip {
@@ -109,11 +128,25 @@ dl {
 .header-chip--nav {
   padding: 0 6px;
   gap: 6px;
+  background: var(--header-chip-bg-light);
 }
 
 .header-chip--user {
-  gap: 8px;
-  padding: 8px 12px;
+  gap: 6px;
+  padding: 4px 10px;
+  min-height: 44px;
+  background: var(--header-chip-bg-light);
+}
+
+.header-chip--user .site-user-avatar {
+  width: 28px;
+  height: 28px;
+}
+
+.header-chip--user .site-nav-icon-btn {
+  width: 32px;
+  height: 32px;
+  min-height: 32px;
 }
 
 .site-header--compact {
@@ -185,9 +218,6 @@ dl {
   gap: 6px;
   align-items: flex-end;
   min-height: 40px;
-  border-radius: 0;
-  background: transparent;
-  border: none;
 }
 
 .site-nav a {

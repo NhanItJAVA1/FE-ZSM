@@ -76,6 +76,7 @@
 
   /* ── Header chips ── */
   --header-chip-bg: var(--overlay-white-glass);
+  --header-chip-bg-light: color-mix(in srgb, var(--field) 88%, var(--surface));
 
   /* ── Video ── */
   --video-bg: var(--color-charcoal-900);
