@@ -5,7 +5,11 @@ export type NavIconName =
     | "submit"
     | "records"
     | "admin"
-    | "logout";
+    | "logout"
+    | "search"
+    | "map"
+    | "car"
+    | "close";
 
 interface NavIconProps extends SVGProps<SVGSVGElement> {
     name: NavIconName;
@@ -55,6 +59,35 @@ export default function NavIcon({ name, ...props }: NavIconProps) {
                     <path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" />
                     <path d="M14 16l4-4-4-4" />
                     <path d="M18 12H9" />
+                </>
+            )}
+            {name === "search" && (
+                <>
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-3.2-3.2" />
+                </>
+            )}
+            {name === "map" && (
+                <>
+                    <path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4Z" />
+                    <path d="M9 4v14" />
+                    <path d="M15 6v14" />
+                </>
+            )}
+            {name === "car" && (
+                <>
+                    <path d="M4 16v-3.5l1.8-4.2A2 2 0 0 1 7.6 7h8.8a2 2 0 0 1 1.8 1.3L20 12.5V16" />
+                    <path d="M4 16h16" />
+                    <path d="M5 16v2M19 16v2" />
+                    <path d="M6.5 12.5h11" />
+                    <circle cx="8" cy="16" r="1.4" />
+                    <circle cx="16" cy="16" r="1.4" />
+                </>
+            )}
+            {name === "close" && (
+                <>
+                    <path d="M6 6l12 12" />
+                    <path d="M18 6 6 18" />
                 </>
             )}
         </svg>
