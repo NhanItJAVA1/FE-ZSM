@@ -12,7 +12,16 @@ export default function HomeHero({
     isLoading = false,
 }: HomeHeroProps) {
     return (
-        <section className="hero-banner hero-banner--split">
+        <section className="hero-banner hero-banner--split hero-banner--video">
+            <video
+                className="hero-banner-video"
+                src="/videos/background-video.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
+                aria-hidden="true"
+            />
             <div className="hero-banner-content">
                 <p className="eyebrow">ZingSpeed Mobile</p>
                 <h1>Video kỷ lục thời gian theo map</h1>
