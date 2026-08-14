@@ -417,6 +417,7 @@ dl {
 .hero-banner--video {
   position: relative;
   isolation: isolate;
+  background: none;
 }
 
 .hero-banner-video {
