@@ -7,9 +7,7 @@ interface FilterPickerSelection {
 }
 
 interface FilterPickerTriggerProps {
-    label: string;
     selection: FilterPickerSelection | null | undefined;
-    fallback: string;
     onClick: () => void;
     icon?: NavIconName;
     onClear?: () => void;
@@ -17,22 +15,18 @@ interface FilterPickerTriggerProps {
 }
 
 export default function FilterPickerTrigger({
-    label,
     selection,
-    fallback,
     onClick,
     icon,
     onClear,
     clearLabel,
 }: FilterPickerTriggerProps) {
-    const displayName = selection?.name ?? fallback;
     const showClear = Boolean(selection && onClear);
 
     return (
         <div
-            className={`filter-picker${selection ? " has-selection" : ""}${
-                showClear ? " is-clearable" : ""
-            }`}
+            className={`filter-picker${selection ? " has-selection" : ""}${showClear ? " is-clearable" : ""
+                }`}
         >
             <button
                 type="button"
@@ -41,7 +35,6 @@ export default function FilterPickerTrigger({
             >
                 <span className="filter-trigger-label">
                     {icon && <NavIcon name={icon} className="filter-trigger-icon" />}
-                    {label}
                 </span>
                 <div className="filter-picker-value">
                     {selection && (
@@ -58,7 +51,6 @@ export default function FilterPickerTrigger({
                             </span>
                         )
                     )}
-                    <strong>{displayName}</strong>
                 </div>
             </button>
 
@@ -67,7 +59,6 @@ export default function FilterPickerTrigger({
                     type="button"
                     className="filter-picker-clear"
                     onClick={onClear}
-                    aria-label={clearLabel ?? `Bỏ chọn ${label.toLowerCase()}`}
                 >
                     <NavIcon name="close" />
                 </button>

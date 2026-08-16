@@ -86,7 +86,7 @@ input,
 select,
 textarea,
 button {
-  min-height: 42px;
+  min-height: 12px;
   border-radius: 6px;
   font: inherit;
 }
@@ -340,6 +340,7 @@ button:disabled {
 }
 
 @media (max-width: 1100px) {
+
   .topbar,
   .content-grid {
     grid-template-columns: 1fr;

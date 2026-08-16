@@ -18,6 +18,8 @@ interface NavIconProps extends SVGProps<SVGSVGElement> {
 export default function NavIcon({ name, ...props }: NavIconProps) {
     return (
         <svg
+            width="22"
+            height="22"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -63,8 +65,8 @@ export default function NavIcon({ name, ...props }: NavIconProps) {
             )}
             {name === "search" && (
                 <>
-                    <circle cx="11" cy="11" r="7" />
-                    <path d="m20 20-3.2-3.2" />
+                    <circle cx="9" cy="9" r="3" />
+                    <path d="m13.5 13.5-1.5-1.5" />
                 </>
             )}
             {name === "map" && (
