@@ -5,13 +5,13 @@ import ImageUploadField from "../../../components/ui/ImageUploadField.js";
 import { MAP_DIFFICULTIES, formatMapRate } from "../../../constants/catalog.js";
 import { sortMapsByRate } from "../../../utils/catalog.js";
 import { resolveImageUrl } from "../../../utils/image.js";
-import { useMapsQuery } from "../../catalog/hooks/useCatalogQueries.js";
+import { useMapsQuery } from "../../../hooks/useCatalogQueries.js";
 import type { MapDto } from "../../catalog/types.js";
 import {
     useCreateMapMutation,
     useDeleteMapMutation,
     useUpdateMapMutation,
-} from "../hooks/useCatalogMutations.js";
+} from "../../../hooks/useCatalogMutations.js";
 import {
     mapFormSchema,
     type MapFormValues,

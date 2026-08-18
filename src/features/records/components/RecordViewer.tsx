@@ -11,8 +11,12 @@ interface RecordViewerProps {
     emptyAction?: ReactNode;
 }
 
-function parseMapRate(rate: string | undefined): number {
-    const parsed = Number.parseInt(rate ?? "", 10);
+function parseMapRate(rate: number | string | null | undefined): number {
+    if (typeof rate === "number") {
+        return rate;
+    }
+
+    const parsed = Number.parseInt(String(rate ?? ""), 10);
 
     return Number.isFinite(parsed) ? parsed : 0;
 }

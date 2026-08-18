@@ -7,13 +7,13 @@ import VehiclePickerModal from "../../features/catalog/components/VehiclePickerM
 import {
     useMapsQuery,
     useVehiclesQuery,
-} from "../../features/catalog/hooks/useCatalogQueries.js";
+} from "../../hooks/useCatalogQueries.js";
 import MyRecordFilterBar from "../../features/records/components/MyRecordFilterBar.js";
 import MyRecordInfoPanel from "../../features/records/components/MyRecordInfoPanel.js";
 import RecordChipList from "../../features/records/components/RecordChipList.js";
 import RecordViewer from "../../features/records/components/RecordViewer.js";
-import { useMyRecordFilters } from "../../features/records/hooks/useMyRecordFilters.js";
-import { useMyRecordsQuery } from "../../features/records/hooks/useMyRecordsQuery.js";
+import { useMyRecordFilters } from "../../hooks/useMyRecordFilters.js";
+import { useMyRecordsQuery } from "../../hooks/useMyRecordsQuery.js";
 import { ROUTES } from "../../constants/routes.js";
 import { parseVehicleRank } from "../../constants/catalog.js";
 import { useAppSelector } from "../../stores/hook.js";

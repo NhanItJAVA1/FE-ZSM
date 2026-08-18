@@ -1,26 +1,19 @@
 import { useMemo, useState } from "react";
-import { parseVehicleRank } from "../../../constants/catalog.js";
-import type { MyRecordFilters, RecordDto } from "../types.js";
-import {
-    DEFAULT_MY_RECORD_FILTERS,
-    normalizeRecordStatus,
-} from "../types.js";
+import { parseVehicleRank } from "../constants/catalog.js";
+import type { RecordDto, RecordFilters } from "../features/records/types.js";
 
-export function useMyRecordFilters(records: RecordDto[]) {
-    const [filters, setFilters] = useState<MyRecordFilters>(
-        DEFAULT_MY_RECORD_FILTERS
-    );
+export function useBaseRecordFilters<TFilters extends RecordFilters>(
+    records: RecordDto[],
+    initialFilters: TFilters,
+    customPredicate?: (record: RecordDto, filters: TFilters) => boolean,
+    sortFn?: (a: RecordDto, b: RecordDto) => number
+) {
+    const [filters, setFilters] = useState<TFilters>(initialFilters);
     const [selectedRecordId, setSelectedRecordId] = useState<number | null>(null);
 
     const filteredRecords = useMemo(() => {
         return records
             .filter((record) => {
-                const status = normalizeRecordStatus(record.status);
-
-                if (filters.status !== "all" && status !== filters.status) {
-                    return false;
-                }
-
                 if (filters.mapId !== null && record.map?.id !== filters.mapId) {
                     return false;
                 }
@@ -53,31 +46,14 @@ export function useMyRecordFilters(records: RecordDto[]) {
                     }
                 }
 
-                if (filters.search.trim()) {
-                    const keyword = filters.search.trim().toLowerCase();
-                    const haystack = [
-                        record.title,
-                        record.map?.name,
-                        record.vehicle?.name,
-                        record.description,
-                    ]
-                        .filter(Boolean)
-                        .join(" ")
-                        .toLowerCase();
-
-                    if (!haystack.includes(keyword)) {
-                        return false;
-                    }
+                if (customPredicate && !customPredicate(record, filters)) {
+                    return false;
                 }
 
                 return true;
             })
-            .sort(
-                (a, b) =>
-                    new Date(b.createdAt).getTime() -
-                    new Date(a.createdAt).getTime()
-            );
-    }, [records, filters]);
+            .sort(sortFn ?? ((a, b) => a.finishTime - b.finishTime));
+    }, [records, filters, customPredicate, sortFn]);
 
     const selectedRecord = useMemo(() => {
         if (selectedRecordId !== null) {
@@ -92,7 +68,7 @@ export function useMyRecordFilters(records: RecordDto[]) {
     }, [filteredRecords, selectedRecordId]);
 
     function resetFilters() {
-        setFilters(DEFAULT_MY_RECORD_FILTERS);
+        setFilters(initialFilters);
         setSelectedRecordId(null);
     }
 

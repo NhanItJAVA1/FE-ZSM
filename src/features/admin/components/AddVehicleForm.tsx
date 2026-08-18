@@ -12,13 +12,13 @@ import {
 } from "../../../constants/catalog.js";
 import { sortVehiclesByRank } from "../../../utils/catalog.js";
 import { resolveImageUrl } from "../../../utils/image.js";
-import { useVehiclesQuery } from "../../catalog/hooks/useCatalogQueries.js";
+import { useVehiclesQuery } from "../../../hooks/useCatalogQueries.js";
 import type { VehicleDto } from "../../catalog/types.js";
 import {
     useCreateVehicleMutation,
     useDeleteVehicleMutation,
     useUpdateVehicleMutation,
-} from "../hooks/useCatalogMutations.js";
+} from "../../../hooks/useCatalogMutations.js";
 import {
     vehicleFormSchema,
     type VehicleFormValues,

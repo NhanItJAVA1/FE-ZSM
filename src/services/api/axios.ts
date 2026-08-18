@@ -70,6 +70,37 @@ async function refreshAccessToken(): Promise<string> {
     return data.accessToken;
 }
 
+function parseAxiosErrorMessage(axiosError: AxiosError): string {
+    const data = axiosError.response?.data as
+        | {
+              message?: string;
+              title?: string;
+              detail?: string;
+              errors?: Record<string, string[]>;
+          }
+        | string
+        | undefined;
+
+    if (typeof data === "object" && data !== null && data.errors) {
+        const validationMessages = Object.values(data.errors).flat();
+        if (validationMessages.length > 0) {
+            return validationMessages.join("\n");
+        }
+    }
+
+    if (typeof data === "object" && data !== null) {
+        if (data.message) return data.message;
+        if (data.detail) return data.detail;
+        if (data.title) return data.title;
+    }
+
+    if (typeof data === "string" && data.trim()) {
+        return data;
+    }
+
+    return axiosError.message || "Đã xảy ra lỗi không xác định.";
+}
+
 api.interceptors.request.use(
     (config) => {
         const token = tokenStorage.get();
@@ -137,24 +168,6 @@ api.interceptors.response.use(
             }
         }
 
-        const data = axiosError.response?.data as
-            | {
-                  message?: string;
-                  title?: string;
-                  detail?: string;
-                  errors?: Record<string, string[]>;
-              }
-            | string
-            | undefined;
-        const validationMessage =
-            typeof data === "object" && data?.errors
-                ? Object.values(data.errors).flat().join("\n")
-                : null;
-        const message =
-            validationMessage ||
-            (typeof data === "object" && (data.message || data.detail || data.title)) ||
-            (typeof data === "string" ? data : axiosError.message);
-
         if (
             axiosError.response?.status === 403 &&
             originalRequest?.url?.includes("/Records/admin/")
@@ -166,7 +179,7 @@ api.interceptors.response.use(
             );
         }
 
-        return Promise.reject(new Error(message));
+        return Promise.reject(new Error(parseAxiosErrorMessage(axiosError)));
     }
 );
 

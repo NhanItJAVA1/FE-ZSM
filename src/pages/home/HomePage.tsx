@@ -6,13 +6,13 @@ import {
     useGameModesQuery,
     useMapsQuery,
     useVehiclesQuery,
-} from "../../features/catalog/hooks/useCatalogQueries.js";
+} from "../../hooks/useCatalogQueries.js";
 import HomeHero from "../../features/records/components/HomeHero.js";
 import RecordFilterBar from "../../features/records/components/RecordFilterBar.js";
 import RecordInfoPanel from "../../features/records/components/RecordInfoPanel.js";
 import RecordViewer from "../../features/records/components/RecordViewer.js";
-import { useRecordFilters } from "../../features/records/hooks/useRecordFilters.js";
-import { useRecordsQuery } from "../../features/records/hooks/useRecordsQuery.js";
+import { useRecordFilters } from "../../hooks/useRecordFilters.js";
+import { useRecordsQuery } from "../../hooks/useRecordsQuery.js";
 import { parseVehicleRank } from "../../constants/catalog.js";
 
 export default function HomePage() {

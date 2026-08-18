@@ -24,8 +24,11 @@ function getUserInitials(displayName: string, username: string): string {
     const source = displayName.trim() || username.trim();
     const parts = source.split(/\s+/).filter(Boolean);
 
-    if (parts.length >= 2) {
-        return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    const firstChar = parts[0]?.[0] ?? "";
+    const secondChar = parts[1]?.[0] ?? "";
+
+    if (firstChar && secondChar) {
+        return `${firstChar}${secondChar}`.toUpperCase();
     }
 
     return source.slice(0, 2).toUpperCase();
@@ -65,7 +68,7 @@ export default function SiteHeader() {
                         <NavLink
                             key={item.to}
                             to={item.to}
-                            end={item.end}
+                            end={item.end ?? false}
                             className="site-nav-icon-btn"
                             title={item.label}
                         >

@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ROUTES } from "../../../constants/routes.js";
-import { useAppDispatch } from "../../../stores/hook.js";
-import { setAuth } from "../../../stores/slices/authSlice.js";
-import { authService } from "../services/authService.js";
-import type { RegisterFormValues } from "../schemas/registerSchema.js";
+import { ROUTES } from "../constants/routes.js";
+import { useAppDispatch } from "../stores/hook.js";
+import { setAuth } from "../stores/slices/authSlice.js";
+import { authService } from "../services/api/authService.js";
+import type { RegisterFormValues } from "../features/auth/schemas/registerSchema.js";
 
 export function useRegister() {
     const dispatch = useAppDispatch();

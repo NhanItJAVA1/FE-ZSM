@@ -6,7 +6,7 @@ interface ImageUploadFieldProps {
     onImageUrlChange: (value: string) => void;
     imageFile: File | null;
     onImageFileChange: (file: File | null) => void;
-    error?: string;
+    error?: string | undefined;
 }
 
 export default function ImageUploadField({

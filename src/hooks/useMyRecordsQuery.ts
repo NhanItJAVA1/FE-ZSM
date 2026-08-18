@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { QUERY_KEYS } from "../../../constants/queryKeys.js";
-import { recordService } from "../../../services/api/recordService.js";
+import { QUERY_KEYS } from "../constants/queryKeys.js";
+import { recordService } from "../services/api/recordService.js";
 
 export function useMyRecordsQuery(userId: number | null | undefined) {
     return useQuery({

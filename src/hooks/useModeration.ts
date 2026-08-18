@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { QUERY_KEYS } from "../../../constants/queryKeys.js";
-import { recordService } from "../../../services/api/recordService.js";
-import type { RecordDto } from "../../records/types.js";
+import { QUERY_KEYS } from "../constants/queryKeys.js";
+import { recordService } from "../services/api/recordService.js";
+import type { RecordDto } from "../features/records/types.js";
 
 function toQueryError(error: unknown): Error | null {
     if (!error) {

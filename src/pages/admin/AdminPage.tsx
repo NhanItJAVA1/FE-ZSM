@@ -7,7 +7,7 @@ import AddVehicleForm from "../../features/admin/components/AddVehicleForm.js";
 import AdminTabs, {
     type AdminTab,
 } from "../../features/admin/components/AdminTabs.js";
-import { useModeration } from "../../features/admin/hooks/useModeration.js";
+import { useModeration } from "../../hooks/useModeration.js";
 
 const TAB_COPY: Record<
     AdminTab,

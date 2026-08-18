@@ -1,13 +1,13 @@
-import api from "../../../services/api/axios.js";
-import { tokenStorage } from "../../../services/storage/token.js";
-import { normalizeUserRole } from "../../../constants/roles.js";
+import api from "./axios.js";
+import { tokenStorage } from "../storage/token.js";
+import { normalizeUserRole } from "../../constants/roles.js";
 
 import type {
     LoginRequest,
     LoginResponse,
     RegisterRequest,
     User,
-} from "../types.js";
+} from "../../features/auth/types.js";
 
 type LoginResponseRaw = Omit<LoginResponse, "user"> & {
     user: Omit<User, "role"> & {

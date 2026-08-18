@@ -3,8 +3,8 @@ import { useEffect } from "react";
 export interface PickerItem {
     id: number;
     name: string;
-    imageUrl?: string | null;
-    subtitle?: string;
+    imageUrl?: string | null | undefined;
+    subtitle?: string | undefined;
 }
 
 interface ImagePickerModalProps {

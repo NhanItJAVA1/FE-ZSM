@@ -1,8 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { QUERY_KEYS } from "../../../constants/queryKeys.js";
-import { gameModeService } from "../../../services/api/gameModeService.js";
-import { mapService } from "../../../services/api/mapService.js";
-import { vehicleService } from "../../../services/api/vehicleService.js";
+import { QUERY_KEYS } from "../constants/queryKeys.js";
+import { gameModeService } from "../services/api/gameModeService.js";
+import { mapService } from "../services/api/mapService.js";
+import { vehicleService } from "../services/api/vehicleService.js";
 
 export function useMapsQuery() {
     return useQuery({

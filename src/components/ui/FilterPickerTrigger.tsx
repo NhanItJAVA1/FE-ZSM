@@ -7,6 +7,8 @@ interface FilterPickerSelection {
 }
 
 interface FilterPickerTriggerProps {
+    label?: string | undefined;
+    fallback?: string | undefined;
     selection: FilterPickerSelection | null | undefined;
     onClick: () => void;
     icon?: NavIconName;

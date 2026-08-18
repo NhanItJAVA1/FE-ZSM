@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ROUTES } from "../../../constants/routes.js";
-import { useAppDispatch } from "../../../stores/hook.js";
-import { setAuth } from "../../../stores/slices/authSlice.js";
-import { authService } from "../services/authService.js";
-import type { LoginFormValues } from "../schemas/loginSchema.js";
+import { ROUTES } from "../constants/routes.js";
+import { useAppDispatch } from "../stores/hook.js";
+import { setAuth } from "../stores/slices/authSlice.js";
+import { authService } from "../services/api/authService.js";
+import type { LoginFormValues } from "../features/auth/schemas/loginSchema.js";
 
 export function useLogin() {
     const dispatch = useAppDispatch();

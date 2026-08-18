@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { ROUTES } from "../../../constants/routes.js";
-import { QUERY_KEYS } from "../../../constants/queryKeys.js";
-import { recordService } from "../../../services/api/recordService.js";
-import { parseFinishTimeInput, secondsToTimeSpan } from "../../../utils/format.js";
+import { ROUTES } from "../constants/routes.js";
+import { QUERY_KEYS } from "../constants/queryKeys.js";
+import { recordService } from "../services/api/recordService.js";
+import { parseFinishTimeInput, secondsToTimeSpan } from "../utils/format.js";
+import type { CreateRecordPayload } from "../features/records/types.js";
 
-interface SubmitRecordInput {
+export interface SubmitRecordInput {
     userId: number;
     mapId: number;
     vehicleId: number;
@@ -16,8 +17,8 @@ interface SubmitRecordInput {
     title: string;
     description: string;
     videoFile: File;
-    mapName?: string;
-    vehicleName?: string;
+    mapName?: string | undefined;
+    vehicleName?: string | undefined;
 }
 
 export function useSubmitRecord() {
@@ -51,25 +52,37 @@ export function useSubmitRecord() {
             );
 
             setStatus("Đang gửi kỷ lục...");
-            await recordService.create({
+
+            const trimmedTitle = input.title.trim();
+            const fallbackTitle = input.mapName
+                ? `${input.mapName} - ${input.racerName.trim()}`
+                : input.racerName.trim();
+
+            const payload: CreateRecordPayload = {
                 userId: input.userId,
                 mapId: input.mapId,
                 vehicleId: input.vehicleId,
                 gameModeId: input.gameModeId,
-                title:
-                    input.title.trim() ||
-                    `${input.mapName} - ${input.racerName.trim()}`,
+                title: trimmedTitle || fallbackTitle,
                 videoUrl: uploadTarget.publicUrl,
                 finishTime: secondsToTimeSpan(finishSeconds),
-                description: input.description.trim() || undefined,
-            });
+            };
 
-            await queryClient.invalidateQueries({
-                queryKey: QUERY_KEYS.myRecords(input.userId),
-            });
-            await queryClient.invalidateQueries({
-                queryKey: QUERY_KEYS.pendingRecords,
-            });
+            const trimmedDesc = input.description.trim();
+            if (trimmedDesc) {
+                payload.description = trimmedDesc;
+            }
+
+            await recordService.create(payload);
+
+            await Promise.all([
+                queryClient.invalidateQueries({
+                    queryKey: QUERY_KEYS.myRecords(input.userId),
+                }),
+                queryClient.invalidateQueries({
+                    queryKey: QUERY_KEYS.pendingRecords,
+                }),
+            ]);
 
             setStatus(
                 "Đã gửi kỷ lục thành công! Bản ghi đang chờ admin kiểm duyệt."

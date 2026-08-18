@@ -1,13 +1,13 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { QUERY_KEYS } from "../../../constants/queryKeys.js";
+import { QUERY_KEYS } from "../constants/queryKeys.js";
 import type {
     CreateMapPayload,
     CreateVehiclePayload,
     UpdateMapPayload,
     UpdateVehiclePayload,
-} from "../../catalog/types.js";
-import { mapService } from "../../../services/api/mapService.js";
-import { vehicleService } from "../../../services/api/vehicleService.js";
+} from "../features/catalog/types.js";
+import { mapService } from "../services/api/mapService.js";
+import { vehicleService } from "../services/api/vehicleService.js";
 
 export function useCreateMapMutation() {
     const queryClient = useQueryClient();

@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../constants/routes.js";
 import { resolveSubmitGameModeId } from "../../../utils/catalog.js";
 import { formatToday } from "../../../utils/format.js";
-import { useGameModesQuery } from "../../catalog/hooks/useCatalogQueries.js";
+import { useGameModesQuery } from "../../../hooks/useCatalogQueries.js";
 import MapPickerModal from "../../catalog/components/MapPickerModal.js";
 import VehiclePickerModal from "../../catalog/components/VehiclePickerModal.js";
 import type { MapDto, VehicleDto } from "../../catalog/types.js";
-import { useSubmitRecord } from "../hooks/useSubmitRecord.js";
+import { useSubmitRecord } from "../../../hooks/useSubmitRecord.js";
 
 interface SubmitRecordFormProps {
     maps: MapDto[];
