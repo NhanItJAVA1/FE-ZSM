@@ -77,11 +77,25 @@ export function useSubmitRecord() {
 
             setTimeout(() => navigate(ROUTES.myRecords), 1800);
         } catch (error) {
-            setStatus(
-                error instanceof Error
-                    ? `Gửi thất bại: ${error.message}`
-                    : "Gửi thất bại."
-            );
+            let errorMessage = "Gửi thất bại.";
+
+            if (error instanceof Error) {
+                if (
+                    error.message === "Failed to fetch" ||
+                    error.message === "Network Error" ||
+                    error.message.includes("ERR_CONNECTION")
+                ) {
+                    errorMessage =
+                        "Không thể kết nối tới server. Kiểm tra kết nối mạng hoặc backend có đang chạy không.";
+                } else if (error.message.includes("CORS") || error.message.includes("blocked")) {
+                    errorMessage =
+                        "Lỗi CORS: Backend chưa cho phép domain này gọi API. Liên hệ admin để cấu hình CORS.";
+                } else {
+                    errorMessage = `Gửi thất bại: ${error.message}`;
+                }
+            }
+
+            setStatus(errorMessage);
         } finally {
             setIsSubmitting(false);
         }
