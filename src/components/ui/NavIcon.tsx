@@ -1,7 +1,9 @@
 import type { SVGProps } from "react";
 
 export type NavIconName =
+    | "apps"
     | "home"
+    | "todo"
     | "submit"
     | "records"
     | "admin"
@@ -29,10 +31,27 @@ export default function NavIcon({ name, ...props }: NavIconProps) {
             aria-hidden="true"
             {...props}
         >
+            {name === "apps" && (
+                <>
+                    <rect x="4" y="4" width="6.5" height="6.5" rx="1.5" />
+                    <rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" />
+                    <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" />
+                    <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" />
+                </>
+            )}
             {name === "home" && (
                 <>
                     <path d="M4 10.5 12 4l8 6.5V19a1.5 1.5 0 0 1-1.5 1.5H14v-5h-4v5H5.5A1.5 1.5 0 0 1 4 19v-8.5Z" />
                     <path d="M9 20.5V12h6v8.5" />
+                </>
+            )}
+            {name === "todo" && (
+                <>
+                    <rect x="4" y="4" width="16" height="16" rx="3" />
+                    <path d="m8 9 1.4 1.4L12 7.8" />
+                    <path d="M14 9h3" />
+                    <path d="m8 15 1.4 1.4L12 13.8" />
+                    <path d="M14 15h3" />
                 </>
             )}
             {name === "submit" && (

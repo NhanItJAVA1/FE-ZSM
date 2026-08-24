@@ -17,7 +17,7 @@ export function useLogin() {
         try {
             const response = await authService.login(values);
             dispatch(setAuth(response.user));
-            navigate(ROUTES.home, { replace: true });
+            navigate(ROUTES.apps, { replace: true });
         } catch (err) {
             const message =
                 err instanceof Error ? err.message : "Đăng nhập thất bại";

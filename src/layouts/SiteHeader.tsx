@@ -1,4 +1,5 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import PixelAnimation from "../components/animate/PixelAnimation.js";
 import { INDIVIDUAL_SPRITE_FRAMES } from "../components/animate/individualSpriteFrames.js";
 import NavIcon, { type NavIconName } from "../components/ui/NavIcon.js";
@@ -14,7 +15,9 @@ const NAV_ITEMS: Array<{
     end?: boolean;
     adminOnly?: boolean;
 }> = [
+    { to: ROUTES.apps, label: "Chọn app", icon: "apps" },
     { to: ROUTES.home, label: "Trang chủ", icon: "home", end: true },
+    { to: ROUTES.todo, label: "Todo", icon: "todo" },
     { to: ROUTES.submit, label: "Đăng kỷ lục", icon: "submit" },
     { to: ROUTES.myRecords, label: "Kỷ lục của tôi", icon: "records" },
     { to: ROUTES.admin, label: "Kiểm duyệt", icon: "admin", adminOnly: true },
@@ -36,26 +39,41 @@ function getUserInitials(displayName: string, username: string): string {
 
 export default function SiteHeader() {
     const dispatch = useAppDispatch();
+    const queryClient = useQueryClient();
+    const location = useLocation();
     const navigate = useNavigate();
     const { user } = useAppSelector((state) => state.auth);
     const isAdmin = useIsAdmin();
+    const isTodoWorkspace = location.pathname.startsWith(ROUTES.todo);
+    const isAppSelection = location.pathname === ROUTES.apps;
 
     function handleLogout() {
         dispatch(logout());
+        queryClient.clear();
         navigate(ROUTES.login);
     }
 
-    const visibleNavItems = NAV_ITEMS.filter(
-        (item) => !item.adminOnly || isAdmin
-    );
+    const visibleNavItems = NAV_ITEMS.filter((item) => {
+        if (item.adminOnly && !isAdmin) return false;
+
+        if (isTodoWorkspace) {
+            return item.to === ROUTES.apps || item.to === ROUTES.todo;
+        }
+
+        if (isAppSelection) {
+            return item.to === ROUTES.apps;
+        }
+
+        return item.to !== ROUTES.todo;
+    });
 
     return (
         <header className="site-header">
             <div className="site-header-left">
                 <Link
-                    to={ROUTES.home}
+                    to={ROUTES.apps}
                     className="header-chip header-chip--brand brand brand--compact"
-                    title="ZingSpeed Records"
+                    title="Chọn app"
                 >
                     <span className="brand-mark">ZSM</span>
                 </Link>

@@ -10,7 +10,7 @@ export default function GuestRoute({ children }: GuestRouteProps) {
     const { isAuthenticated } = useAppSelector((state) => state.auth);
 
     if (isAuthenticated) {
-        return <Navigate to={ROUTES.home} replace />;
+        return <Navigate to={ROUTES.apps} replace />;
     }
 
     return children;
