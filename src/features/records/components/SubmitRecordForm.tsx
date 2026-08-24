@@ -8,6 +8,7 @@ import MapPickerModal from "../../catalog/components/MapPickerModal.js";
 import VehiclePickerModal from "../../catalog/components/VehiclePickerModal.js";
 import type { MapDto, VehicleDto } from "../../catalog/types.js";
 import { useSubmitRecord } from "../../../hooks/useSubmitRecord.js";
+import FinishTimeInput from "../../../components/ui/FinishTimeInput.js";
 
 interface SubmitRecordFormProps {
     maps: MapDto[];
@@ -29,7 +30,9 @@ export default function SubmitRecordForm({
     const [mapId, setMapId] = useState<number | null>(null);
     const [vehicleId, setVehicleId] = useState<number | null>(null);
     const [racerName, setRacerName] = useState(defaultRacerName);
-    const [finishTimeInput, setFinishTimeInput] = useState("");
+    const [timeMinutes, setTimeMinutes] = useState("");
+    const [timeSeconds, setTimeSeconds] = useState("");
+    const [timeMillis, setTimeMillis] = useState("");
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -40,6 +43,13 @@ export default function SubmitRecordForm({
     const selectedMap = maps.find((map) => map.id === mapId);
     const selectedVehicle = vehicles.find((vehicle) => vehicle.id === vehicleId);
     const gameModeId = resolveSubmitGameModeId(gameModesQuery.data ?? []);
+
+    function buildFinishTimeInput(): string {
+        const min = timeMinutes || "0";
+        const sec = timeSeconds || "0";
+        const ms = timeMillis.padEnd(3, "0") || "000";
+        return `${min}:${sec}.${ms}`;
+    }
 
     async function handleSubmit(event: React.FormEvent) {
         event.preventDefault();
@@ -60,13 +70,23 @@ export default function SubmitRecordForm({
             return;
         }
 
+        if (!timeSeconds && !timeMinutes) {
+            setValidationError("Hãy nhập thời gian hoàn thành.");
+            return;
+        }
+
+        if (timeSeconds && Number(timeSeconds) > 59) {
+            setValidationError("Số giây phải nhỏ hơn 60.");
+            return;
+        }
+
         await submit({
             userId,
             mapId,
             vehicleId,
             gameModeId,
             racerName,
-            finishTimeInput,
+            finishTimeInput: buildFinishTimeInput(),
             title,
             description,
             videoFile,
@@ -109,17 +129,14 @@ export default function SubmitRecordForm({
                         />
                     </label>
 
-                    <label>
-                        Thời gian hoàn thành
-                        <input
-                            value={finishTimeInput}
-                            onChange={(event) =>
-                                setFinishTimeInput(event.target.value)
-                            }
-                            placeholder="1:27.421 hoặc 87.421"
-                            required
-                        />
-                    </label>
+                    <FinishTimeInput
+                        minutes={timeMinutes}
+                        seconds={timeSeconds}
+                        millis={timeMillis}
+                        onMinutesChange={setTimeMinutes}
+                        onSecondsChange={setTimeSeconds}
+                        onMillisChange={setTimeMillis}
+                    />
 
                     <label>
                         Ngày đăng
