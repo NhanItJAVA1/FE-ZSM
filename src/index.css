@@ -1894,6 +1894,8 @@ button:disabled {
 
 /* Todo workspace */
 .todo-workspace {
+  --todo-control: #303848;
+  --todo-control-hover: color-mix(in srgb, var(--accent) 32%, #303848);
   position: relative;
   isolation: isolate;
   display: grid;
@@ -1902,14 +1904,14 @@ button:disabled {
   gap: 18px;
   min-height: calc(100svh - 118px);
   padding: 18px;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid color-mix(in srgb, var(--border) 72%, var(--surface));
   border-radius: 34px;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.28), rgba(244, 246, 250, 0.5)),
     url("/images/image.png") center / cover;
   box-shadow:
-    0 26px 70px -48px rgba(18, 21, 28, 0.5),
+    0 26px 70px -48px rgba(38, 44, 56, 0.34),
     inset 0 1px 0 rgba(255, 255, 255, 0.78);
   transition: grid-template-columns 360ms cubic-bezier(0.32, 0.72, 0, 1);
 }
@@ -1922,7 +1924,7 @@ button:disabled {
   pointer-events: none;
   background:
     radial-gradient(circle at 12% 12%, rgba(255, 255, 255, 0.5), transparent 30%),
-    radial-gradient(circle at 88% 0%, rgba(18, 21, 28, 0.08), transparent 32%),
+    radial-gradient(circle at 88% 0%, rgba(38, 44, 56, 0.035), transparent 32%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.46));
 }
 
@@ -1966,7 +1968,7 @@ button:disabled {
     linear-gradient(180deg, rgba(255, 255, 255, 0.52), rgba(244, 246, 250, 0.44));
   backdrop-filter: blur(14px);
   border-radius: 28px;
-  box-shadow: 0 24px 64px -50px rgba(18, 21, 28, 0.46);
+  box-shadow: 0 24px 64px -50px rgba(38, 44, 56, 0.28);
 }
 
 .todo-rail-heading {
@@ -2011,8 +2013,8 @@ button:disabled {
   height: 38px;
   padding: 0;
   border-radius: 999px;
-  background: var(--button);
-  border: 1px solid var(--button);
+  background: var(--todo-control);
+  border: 1px solid var(--todo-control);
   overflow: hidden;
   transition:
     width 520ms cubic-bezier(0.32, 0.72, 0, 1),
@@ -2044,7 +2046,7 @@ button:disabled {
   background: rgba(255, 255, 255, 0.5);
   border-color: color-mix(in srgb, var(--border) 46%, transparent);
   backdrop-filter: blur(12px);
-  box-shadow: 0 18px 44px -36px rgba(18, 21, 28, 0.55);
+  box-shadow: 0 18px 44px -36px rgba(38, 44, 56, 0.34);
 }
 
 .todo-rail-form:hover::before,
@@ -2157,7 +2159,7 @@ button:disabled {
   backdrop-filter: blur(12px);
   color: inherit;
   text-align: left;
-  box-shadow: 0 20px 48px -40px rgba(18, 21, 28, 0.46);
+  box-shadow: 0 20px 48px -42px rgba(38, 44, 56, 0.3);
   transition:
     transform 520ms cubic-bezier(0.32, 0.72, 0, 1),
     background 520ms cubic-bezier(0.32, 0.72, 0, 1),
@@ -2173,7 +2175,7 @@ button:disabled {
   width: 16px;
   height: 16px;
   border-radius: 999px;
-  background: var(--button);
+  background: var(--todo-control);
   box-shadow: inset 0 0 0 4px color-mix(in srgb, var(--surface) 70%, var(--field));
 }
 
@@ -2190,12 +2192,12 @@ button:disabled {
   transform: translateY(-6px);
   border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
   background: rgba(255, 255, 255, 0.64);
-  box-shadow: 0 32px 70px -46px rgba(18, 21, 28, 0.58);
+  box-shadow: 0 30px 68px -48px rgba(38, 44, 56, 0.36);
 }
 
 .todo-train-car--engine {
   background:
-    linear-gradient(145deg, var(--color-charcoal-950), color-mix(in srgb, var(--accent) 78%, var(--color-charcoal-950)));
+    linear-gradient(145deg, var(--todo-control), var(--todo-control-hover));
   color: var(--text-on-dark);
   cursor: pointer;
 }
@@ -2203,7 +2205,7 @@ button:disabled {
 .todo-train-car--engine.active,
 .todo-train-car--engine:hover {
   background:
-    linear-gradient(145deg, var(--color-charcoal-950), color-mix(in srgb, var(--accent) 86%, var(--color-charcoal-950)));
+    linear-gradient(145deg, color-mix(in srgb, var(--todo-control) 92%, white), color-mix(in srgb, var(--accent) 46%, var(--todo-control)));
   border-color: rgba(255, 255, 255, 0.28);
   color: var(--text-on-dark);
 }
@@ -2313,7 +2315,7 @@ button:disabled {
   color: var(--text-h);
   font-size: 34px;
   line-height: 1;
-  box-shadow: 0 18px 44px -32px rgba(18, 21, 28, 0.5);
+  box-shadow: 0 18px 44px -34px rgba(38, 44, 56, 0.3);
   transform: translateY(-50%);
   transition:
     transform 420ms cubic-bezier(0.32, 0.72, 0, 1),
@@ -2323,7 +2325,7 @@ button:disabled {
 
 .todo-rail-arrow:hover {
   filter: none;
-  background: var(--button);
+  background: var(--todo-control);
   color: var(--text-on-dark);
   transform: translateY(-50%) scale(1.04);
 }
@@ -2347,7 +2349,7 @@ button:disabled {
   background: rgba(255, 255, 255, 0.42);
   backdrop-filter: blur(16px);
   border-radius: 28px;
-  box-shadow: 0 24px 64px -48px rgba(18, 21, 28, 0.45);
+  box-shadow: 0 24px 64px -50px rgba(38, 44, 56, 0.28);
 }
 
 .todo-left-panel {
@@ -2440,7 +2442,7 @@ button:disabled {
 }
 
 .todo-collapse-trigger:hover {
-  background: var(--button);
+  background: var(--todo-control);
   color: var(--text-on-dark);
 }
 
@@ -2461,9 +2463,9 @@ button:disabled {
   place-items: center;
   padding: 0;
   border-radius: 999px;
-  background: var(--button);
+  background: var(--todo-control);
   color: var(--text-on-dark);
-  box-shadow: 0 18px 42px -28px rgba(18, 21, 28, 0.62);
+  box-shadow: 0 18px 42px -30px rgba(38, 44, 56, 0.34);
 }
 
 .todo-door-trigger span:first-child {
@@ -2510,6 +2512,8 @@ button:disabled {
   gap: 10px;
   padding: 12px;
   border-radius: 20px;
+  position: relative;
+  z-index: 12;
   background: rgba(244, 246, 250, 0.36);
   border: 1px solid color-mix(in srgb, var(--border) 42%, transparent);
   backdrop-filter: blur(10px);
@@ -2518,6 +2522,11 @@ button:disabled {
 .todo-form-grid,
 .todo-filter-row {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.todo-filter-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
 }
 
 .todo-left-stage {
@@ -2533,6 +2542,7 @@ button:disabled {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 10px;
+  overflow: visible;
 }
 
 .todo-editor-door {
@@ -2542,14 +2552,17 @@ button:disabled {
   display: grid;
   gap: 10px;
   padding: 12px;
-  overflow: visible;
+  max-height: calc(100svh - 172px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   border-radius: 22px;
   border: 1px solid color-mix(in srgb, var(--accent) 24%, transparent);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(244, 246, 250, 0.5));
   backdrop-filter: blur(16px);
   box-shadow:
-    0 34px 80px -42px rgba(18, 21, 28, 0.68),
+    0 30px 74px -44px rgba(38, 44, 56, 0.42),
     inset 0 1px 0 rgba(255, 255, 255, 0.85);
   opacity: 0;
   pointer-events: none;
@@ -2572,7 +2585,7 @@ button:disabled {
   height: 16px;
   margin: 0 -12px -12px;
   border-radius: 0 0 22px 22px;
-  background: linear-gradient(90deg, transparent, rgba(18, 21, 28, 0.12), transparent);
+  background: linear-gradient(90deg, transparent, rgba(38, 44, 56, 0.06), transparent);
 }
 
 .todo-editor-door-handle {
@@ -2609,9 +2622,17 @@ button:disabled {
 }
 
 .todo-editor-actions {
+  position: sticky;
+  bottom: -12px;
+  z-index: 1;
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  margin: 2px -12px -12px;
+  padding: 10px 12px 12px;
+  border-radius: 0 0 22px 22px;
+  background: linear-gradient(180deg, rgba(244, 246, 250, 0), rgba(244, 246, 250, 0.72) 34%, rgba(244, 246, 250, 0.78));
+  backdrop-filter: blur(10px);
 }
 
 .todo-filter-row input {
@@ -2619,6 +2640,8 @@ button:disabled {
 }
 
 .todo-category-list {
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: 10px;
   align-content: start;
@@ -2626,6 +2649,8 @@ button:disabled {
 }
 
 .todo-task-list {
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: 7px;
   align-content: start;
@@ -2748,9 +2773,9 @@ button:disabled {
 }
 
 .todo-card-side-btn--status {
-  background: var(--button);
+  background: var(--todo-control);
   color: var(--text-on-dark);
-  border-color: var(--button);
+  border-color: var(--todo-control);
 }
 
 .todo-card-side-btn--status:hover {
@@ -2763,7 +2788,7 @@ button:disabled {
   transform: translateY(-2px);
   border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
   background: rgba(255, 255, 255, 0.62);
-  box-shadow: 0 18px 42px -34px rgba(18, 21, 28, 0.42);
+  box-shadow: 0 18px 42px -34px rgba(38, 44, 56, 0.28);
 }
 
 .todo-card h3 {
@@ -2795,6 +2820,11 @@ button:disabled {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+}
+
+.todo-status-actions {
+  position: relative;
+  z-index: 12;
 }
 
 .todo-card-meta {
@@ -2831,7 +2861,7 @@ button:disabled {
   display: inline-block;
   flex: 0 0 auto;
   border-radius: 999px;
-  border: 1px solid rgba(18, 21, 28, 0.12);
+  border: 1px solid rgba(38, 44, 56, 0.08);
   background: #f6f7f9;
 }
 
@@ -2850,7 +2880,7 @@ button:disabled {
   grid-template-rows: auto auto minmax(320px, 1fr) auto;
   gap: 14px;
   padding: 18px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .todo-timeline-legend span {
@@ -2961,7 +2991,7 @@ button:disabled {
 .todo-timeline-row.active .todo-timeline-bar {
   transform: translateY(-1px);
   box-shadow:
-    0 18px 38px -18px color-mix(in srgb, var(--accent) 46%, rgba(18, 21, 28, 0.42)),
+    0 18px 38px -18px color-mix(in srgb, var(--accent) 42%, rgba(38, 44, 56, 0.28)),
     0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
@@ -3018,12 +3048,12 @@ button:disabled {
   padding: 0 12px;
   overflow: hidden;
   border-radius: 999px;
-  border: 1px solid rgba(18, 21, 28, 0.1);
+  border: 1px solid rgba(38, 44, 56, 0.08);
   color: var(--text-h);
   font-size: 12px;
   font-weight: 900;
   white-space: nowrap;
-  box-shadow: 0 12px 28px -22px rgba(18, 21, 28, 0.45);
+  box-shadow: 0 12px 28px -22px rgba(38, 44, 56, 0.28);
 }
 
 .todo-timeline-bar--Todo {
@@ -3136,19 +3166,60 @@ button:disabled {
 }
 
 .todo-status-actions button.active {
-  background: var(--button);
+  background: var(--todo-control);
   color: var(--text-on-dark);
 }
 
 .todo-filter-menu {
   position: relative;
+  z-index: 20;
   display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.todo-filter-menu--inline {
+  justify-content: flex-end;
+}
+
+.todo-filter-menu--inline .todo-filter-drawer {
+  top: calc(100% + 8px);
+  right: 0;
+  bottom: auto;
+  left: auto;
+}
+
+.todo-filter-trigger {
+  min-height: 36px;
+  display: inline-grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-color: color-mix(in srgb, var(--border) 44%, transparent);
+  background: rgba(255, 255, 255, 0.42);
+  color: var(--muted);
+  backdrop-filter: blur(10px);
+}
+
+.todo-filter-trigger:hover,
+.todo-filter-trigger.active {
+  filter: none;
+  background: color-mix(in srgb, var(--accent) 13%, rgba(255, 255, 255, 0.64));
+  color: color-mix(in srgb, var(--accent) 82%, var(--text-h));
+  border-color: color-mix(in srgb, var(--accent) 28%, rgba(255, 255, 255, 0.48));
+}
+
+.todo-filter-trigger span {
+  color: currentColor;
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .todo-status-actions .todo-filter-trigger {
   width: 38px;
   min-width: 38px;
-  display: inline-grid;
   place-items: center;
   padding: 0;
 }
@@ -3161,19 +3232,51 @@ button:disabled {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 0;
-  z-index: 8;
+  z-index: 30;
   width: 190px;
   display: grid;
   gap: 6px;
   padding: 8px;
-  border: 1px solid color-mix(in srgb, var(--border) 48%, transparent);
+  border: 1px solid var(--border);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.58);
-  backdrop-filter: blur(16px);
-  box-shadow: 0 18px 42px -28px rgba(18, 21, 28, 0.58);
+  background: var(--surface);
+  backdrop-filter: none;
+  box-shadow:
+    0 18px 42px -32px rgba(38, 44, 56, 0.24),
+    inset 0 1px 0 var(--surface);
 }
 
-.todo-status-actions .todo-filter-option {
+.todo-filter-drawer--wide {
+  width: min(330px, calc(100vw - 48px));
+  gap: 10px;
+}
+
+.todo-filter-row > .todo-filter-drawer {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 12px;
+  bottom: auto;
+  left: auto;
+  width: min(330px, calc(100% - 24px));
+}
+
+.todo-filter-group {
+  display: grid;
+  gap: 6px;
+}
+
+.todo-filter-group > span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.todo-filter-group > div {
+  display: grid;
+  gap: 6px;
+}
+
+.todo-filter-option {
   width: 100%;
   min-height: 34px;
   display: flex;
@@ -3182,8 +3285,19 @@ button:disabled {
   gap: 10px;
   padding: 0 10px;
   border-radius: 10px;
+  border: 1px solid transparent;
+  background: var(--field);
+  color: var(--muted);
   font-size: 12px;
   font-weight: 900;
+}
+
+.todo-filter-option:hover,
+.todo-filter-option.active {
+  filter: none;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
+  color: color-mix(in srgb, var(--accent) 72%, var(--text-h));
 }
 
 .todo-filter-option span {
@@ -3198,14 +3312,36 @@ button:disabled {
   opacity: 0.7;
 }
 
+.todo-filter-clear-btn {
+  width: 26px;
+  min-width: 26px;
+  height: 26px;
+  min-height: 26px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 999px;
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, rgba(255, 255, 255, 0.32));
+  color: var(--accent);
+  font-size: 17px;
+  line-height: 1;
+}
+
+.todo-filter-clear-btn:hover {
+  filter: none;
+  background: var(--accent);
+  color: var(--text-on-dark);
+}
+
 .todo-status-filter-tab {
   min-height: 36px;
   display: inline-flex;
   align-items: center;
   padding: 0 12px;
-  border: 1px solid color-mix(in srgb, var(--button) 18%, var(--border));
+  border: 1px solid color-mix(in srgb, var(--todo-control) 14%, var(--border));
   border-radius: 999px;
-  background: color-mix(in srgb, var(--button) 8%, rgba(255, 255, 255, 0.36));
+  background: color-mix(in srgb, var(--todo-control) 7%, rgba(255, 255, 255, 0.36));
   color: var(--text-h);
   font-size: 12px;
   font-weight: 900;
@@ -3238,9 +3374,9 @@ button:disabled {
 
 .todo-dialog-backdrop {
   background:
-    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.16), transparent 34%),
-    rgba(18, 21, 28, 0.48);
-  backdrop-filter: blur(10px);
+    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.2), transparent 34%),
+    rgba(38, 44, 56, 0.32);
+  backdrop-filter: blur(12px);
 }
 
 .todo-dialog {
@@ -3254,7 +3390,7 @@ button:disabled {
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--surface) 98%, var(--field)), color-mix(in srgb, var(--field) 72%, var(--surface)));
   box-shadow:
-    0 34px 92px -46px rgba(18, 21, 28, 0.72),
+    0 34px 92px -46px rgba(38, 44, 56, 0.46),
     inset 0 1px 0 rgba(255, 255, 255, 0.82);
 }
 
@@ -3433,6 +3569,10 @@ button:disabled {
     max-height: none;
   }
 
+  .todo-editor-door {
+    max-height: calc(100svh - 150px);
+  }
+
   .viewer {
     border-right: 0;
     border-bottom: 1px solid var(--border);
@@ -3510,6 +3650,10 @@ button:disabled {
 
   .todo-workspace::after {
     border-radius: 23px;
+  }
+
+  .todo-editor-door {
+    max-height: calc(100svh - 116px);
   }
 
   .app-select-grid,

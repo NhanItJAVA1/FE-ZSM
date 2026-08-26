@@ -20,6 +20,13 @@ export const ACTIVITY_PAGE_SIZE = 5;
 const DAY_MS = 86_400_000;
 
 export type CategoryFilter = "all" | "uncategorized" | `category-${number}`;
+export type TodoOverdueFilter = "All" | "Overdue" | "NotOverdue";
+
+export const OVERDUE_FILTER_LABELS: Record<TodoOverdueFilter, string> = {
+    All: "All due",
+    Overdue: "Overdue",
+    NotOverdue: "Not overdue",
+};
 
 export interface TodoFormState {
     title: string;

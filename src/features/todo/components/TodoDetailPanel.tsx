@@ -1,12 +1,15 @@
 import type { Dispatch, SetStateAction } from "react";
-import type { TodoActivityDto, TodoDto, TodoStatus } from "../types.js";
+import type { TodoActivityDto, TodoDto, TodoPriority, TodoStatus } from "../types.js";
 import {
     ACTIVITY_PAGE_SIZE,
+    OVERDUE_FILTER_LABELS,
+    PRIORITIES,
     STATUSES,
     STATUS_LABELS,
     formatFullDate,
     getPriorityTone,
     type TodoCounts,
+    type TodoOverdueFilter,
 } from "../todoPageUtils.js";
 
 interface TodoDetailPanelProps {
@@ -15,18 +18,24 @@ interface TodoDetailPanelProps {
     activitiesLoading: boolean;
     clearFiltersVisible: boolean;
     counts: TodoCounts;
+    filterActive: boolean;
     historyOpen: boolean;
+    overdueFilter: TodoOverdueFilter;
     paginatedActivities: TodoActivityDto[];
+    priorityFilter: TodoPriority | "All";
     selectedTodo: TodoDto | null;
     statusFilter: TodoStatus | "All";
     statusFilterLabel: string;
     statusFilterOpen: boolean;
     totalActivityPages: number;
+    onClearAdvancedFilters: () => void;
     onClearFilters: () => void;
     onSetActivityPage: Dispatch<SetStateAction<number>>;
     onSetHistoryOpen: Dispatch<SetStateAction<boolean>>;
+    onSetOverdueFilter: (filter: TodoOverdueFilter) => void;
+    onSetPriorityFilter: (priority: TodoPriority | "All") => void;
     onSetStatusFilter: (status: TodoStatus | "All") => void;
-    onSetStatusFilterOpen: Dispatch<SetStateAction<boolean>>;
+    onToggleFilter: () => void;
 }
 
 export default function TodoDetailPanel({
@@ -35,18 +44,24 @@ export default function TodoDetailPanel({
     activitiesLoading,
     clearFiltersVisible,
     counts,
+    filterActive,
     historyOpen,
+    overdueFilter,
     paginatedActivities,
+    priorityFilter,
     selectedTodo,
     statusFilter,
     statusFilterLabel,
     statusFilterOpen,
     totalActivityPages,
+    onClearAdvancedFilters,
     onClearFilters,
     onSetActivityPage,
     onSetHistoryOpen,
+    onSetOverdueFilter,
+    onSetPriorityFilter,
     onSetStatusFilter,
-    onSetStatusFilterOpen,
+    onToggleFilter,
 }: TodoDetailPanelProps) {
     if (!selectedTodo) {
         return (
@@ -104,7 +119,7 @@ export default function TodoDetailPanel({
                     <button
                         type="button"
                         className={`todo-filter-trigger ${statusFilterOpen ? "active" : ""}`}
-                        onClick={() => onSetStatusFilterOpen((current) => !current)}
+                        onClick={onToggleFilter}
                         aria-expanded={statusFilterOpen}
                         aria-label="Chọn filter trạng thái"
                     >
@@ -123,42 +138,95 @@ export default function TodoDetailPanel({
                         </svg>
                     </button>
                     {statusFilterOpen && (
-                        <div className="todo-filter-drawer">
-                            <button
-                                type="button"
-                                className={`todo-filter-option ${statusFilter === "All" ? "active" : ""}`}
-                                onClick={() => {
-                                    onSetStatusFilter("All");
-                                    onSetStatusFilterOpen(false);
-                                }}
-                            >
-                                <span>All</span>
-                                <small>{counts.all}</small>
-                            </button>
-                            {STATUSES.map((status) => (
-                                <button
-                                    key={status}
-                                    type="button"
-                                    className={`todo-filter-option ${statusFilter === status ? "active" : ""}`}
-                                    onClick={() => {
-                                        onSetStatusFilter(status);
-                                        onSetStatusFilterOpen(false);
-                                    }}
-                                >
-                                    <span>
-                                        <i className={`todo-status-dot todo-status-dot--${status}`} />
-                                        {STATUS_LABELS[status]}
-                                    </span>
-                                    <small>
-                                        {status === "Todo" && counts.todo}
-                                        {status === "InProgress" && counts.progress}
-                                        {status === "Done" && counts.done}
-                                    </small>
-                                </button>
-                            ))}
+                        <div className="todo-filter-drawer todo-filter-drawer--wide">
+                            <div className="todo-filter-group">
+                                <span>Status</span>
+                                <div>
+                                    <button
+                                        type="button"
+                                        className={`todo-filter-option ${statusFilter === "All" ? "active" : ""}`}
+                                        onClick={() => {
+                                            onSetStatusFilter("All");
+                                        }}
+                                    >
+                                        <span>All status</span>
+                                        <small>{counts.all}</small>
+                                    </button>
+                                    {STATUSES.map((status) => (
+                                        <button
+                                            key={status}
+                                            type="button"
+                                            className={`todo-filter-option ${statusFilter === status ? "active" : ""}`}
+                                            onClick={() => {
+                                                onSetStatusFilter(status);
+                                            }}
+                                        >
+                                            <span>
+                                                <i className={`todo-status-dot todo-status-dot--${status}`} />
+                                                {STATUS_LABELS[status]}
+                                            </span>
+                                            <small>
+                                                {status === "Todo" && counts.todo}
+                                                {status === "InProgress" && counts.progress}
+                                                {status === "Done" && counts.done}
+                                            </small>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="todo-filter-group">
+                                <span>Priority</span>
+                                <div>
+                                    <button
+                                        type="button"
+                                        className={`todo-filter-option ${priorityFilter === "All" ? "active" : ""}`}
+                                        onClick={() => onSetPriorityFilter("All")}
+                                    >
+                                        <span>All priority</span>
+                                    </button>
+                                    {PRIORITIES.map((priority) => (
+                                        <button
+                                            key={priority}
+                                            type="button"
+                                            className={`todo-filter-option ${priorityFilter === priority ? "active" : ""}`}
+                                            onClick={() => onSetPriorityFilter(priority)}
+                                        >
+                                            <span className={getPriorityTone(priority)}>{priority}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="todo-filter-group">
+                                <span>Due state</span>
+                                <div>
+                                    {(Object.keys(OVERDUE_FILTER_LABELS) as TodoOverdueFilter[]).map((filter) => (
+                                        <button
+                                            key={filter}
+                                            type="button"
+                                            className={`todo-filter-option ${overdueFilter === filter ? "active" : ""}`}
+                                            onClick={() => onSetOverdueFilter(filter)}
+                                        >
+                                            <span>{OVERDUE_FILTER_LABELS[filter]}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     )}
                 </div>
+                {filterActive && (
+                    <button
+                        type="button"
+                        className="todo-filter-clear-btn"
+                        onClick={onClearAdvancedFilters}
+                        aria-label="Xóa bộ lọc"
+                        title="Xóa bộ lọc"
+                    >
+                        ×
+                    </button>
+                )}
                 <span className="todo-status-filter-tab">
                     Filter: {statusFilterLabel}
                 </span>

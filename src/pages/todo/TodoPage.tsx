@@ -4,10 +4,11 @@ import TodoDetailPanel from "../../features/todo/components/TodoDetailPanel.js";
 import TodoDialog from "../../features/todo/components/TodoDialog.js";
 import TodoLeftPanel from "../../features/todo/components/TodoLeftPanel.js";
 import TodoTimelinePanel from "../../features/todo/components/TodoTimelinePanel.js";
-import type { TodoCategoryDto, TodoDto, TodoStatus } from "../../features/todo/types.js";
+import type { TodoCategoryDto, TodoDto, TodoPriority, TodoQuery, TodoStatus } from "../../features/todo/types.js";
 import {
     ACTIVITY_PAGE_SIZE,
     LEFT_TASK_PAGE_SIZE,
+    OVERDUE_FILTER_LABELS,
     STATUS_LABELS,
     buildTimelineDates,
     countTodos,
@@ -19,11 +20,14 @@ import {
     type CategoryFilter,
     type TodoDialogState,
     type TodoFormState,
+    type TodoOverdueFilter,
 } from "../../features/todo/todoPageUtils.js";
 import { useTodoCategoriesQuery } from "../../hooks/useTodoCategoriesQuery.js";
 import { useTodoActivitiesQuery, useTodosQuery } from "../../hooks/useTodosQuery.js";
 import { useTodoMutations } from "../../hooks/useTodoMutations.js";
 import AppLayout from "../../layouts/AppLayout.js";
+
+type ActiveTodoFilterMenu = "left" | "detail" | null;
 
 export default function TodoPage() {
     const railRef = useRef<HTMLDivElement | null>(null);
@@ -37,10 +41,12 @@ export default function TodoPage() {
     });
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<TodoStatus | "All">("All");
+    const [priorityFilter, setPriorityFilter] = useState<TodoPriority | "All">("All");
+    const [overdueFilter, setOverdueFilter] = useState<TodoOverdueFilter>("All");
     const [taskPage, setTaskPage] = useState(1);
     const [activityPage, setActivityPage] = useState(1);
     const [historyOpen, setHistoryOpen] = useState(false);
-    const [statusFilterOpen, setStatusFilterOpen] = useState(false);
+    const [activeFilterMenu, setActiveFilterMenu] = useState<ActiveTodoFilterMenu>(null);
     const [selectedTodoId, setSelectedTodoId] = useState<number | null>(null);
     const [editingTodoId, setEditingTodoId] = useState<number | null>(null);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -53,46 +59,63 @@ export default function TodoPage() {
     const [todoDialog, setTodoDialog] = useState<TodoDialogState>(null);
     const [renameCategoryName, setRenameCategoryName] = useState("");
 
-    const todosQuery = useTodosQuery({
+    const selectedCategoryId = getCategoryIdFromFilter(selectedCategoryFilter);
+    const todoQuery = useMemo<TodoQuery>(() => {
+        const query: TodoQuery = {
+            page: taskPage,
+            pageSize: LEFT_TASK_PAGE_SIZE,
+            sortBy: "createdat",
+            isDescending: true,
+        };
+
+        const keyword = search.trim();
+        if (keyword) {
+            query.search = keyword;
+        }
+
+        if (statusFilter !== "All") {
+            query.status = statusFilter;
+        }
+
+        if (priorityFilter !== "All") {
+            query.priority = priorityFilter;
+        }
+
+        if (overdueFilter !== "All") {
+            query.isOverdue = overdueFilter === "Overdue";
+        }
+
+        if (selectedCategoryId !== null) {
+            query.categoryId = selectedCategoryId;
+        }
+
+        return query;
+    }, [overdueFilter, priorityFilter, search, selectedCategoryId, statusFilter, taskPage]);
+
+    const allTodosQuery = useTodosQuery({
         page: 1,
         pageSize: 100,
         sortBy: "createdat",
         isDescending: true,
     });
+    const todosQuery = useTodosQuery(todoQuery);
     const categoriesQuery = useTodoCategoriesQuery();
     const mutations = useTodoMutations();
 
     const todos = todosQuery.data?.items ?? [];
+    const allTodos = allTodosQuery.data?.items ?? [];
     const categories = categoriesQuery.data ?? [];
-    const loading = todosQuery.isLoading || categoriesQuery.isLoading;
+    const loading = todosQuery.isLoading || allTodosQuery.isLoading || categoriesQuery.isLoading;
 
     const visibleTodos = useMemo(() => {
-        const normalizedSearch = search.trim().toLowerCase();
-        const selectedCategoryId = getCategoryIdFromFilter(selectedCategoryFilter);
-
         return todos.filter((todo) => {
             if (selectedCategoryFilter === "uncategorized" && todo.categoryId !== null) {
                 return false;
             }
 
-            if (
-                selectedCategoryId !== null &&
-                todo.categoryId !== selectedCategoryId
-            ) {
-                return false;
-            }
-
-            if (statusFilter !== "All" && todo.status !== statusFilter) {
-                return false;
-            }
-
-            if (!normalizedSearch) return true;
-
-            return [todo.title, todo.description, todo.categoryName]
-                .filter(Boolean)
-                .some((value) => value!.toLowerCase().includes(normalizedSearch));
+            return true;
         });
-    }, [todos, search, statusFilter, selectedCategoryFilter]);
+    }, [todos, selectedCategoryFilter]);
 
     const selectedTodo =
         visibleTodos.find((todo) => todo.id === selectedTodoId) ??
@@ -114,21 +137,25 @@ export default function TodoPage() {
         "--timeline-days": timeline.ticks.length,
         "--timeline-track-min": `${230 + timeline.ticks.length * 88}px`,
     } as CSSProperties;
-    const totalTaskPages = Math.max(
-        1,
-        Math.ceil(visibleTodos.length / LEFT_TASK_PAGE_SIZE)
-    );
-    const paginatedTodos = useMemo(() => {
-        const start = (taskPage - 1) * LEFT_TASK_PAGE_SIZE;
+    const totalTaskPages = Math.max(1, todosQuery.data?.totalPages ?? 1);
+    const paginatedTodos = visibleTodos;
 
-        return visibleTodos.slice(start, start + LEFT_TASK_PAGE_SIZE);
-    }, [visibleTodos, taskPage]);
-
-    const counts = useMemo(() => countTodos(todos), [todos]);
+    const counts = useMemo(() => countTodos(allTodos), [allTodos]);
     const visibleCounts = useMemo(() => countTodos(visibleTodos), [visibleTodos]);
-    const clearFiltersVisible = Boolean(search || statusFilter !== "All");
-    const statusFilterLabel =
-        statusFilter === "All" ? "All" : STATUS_LABELS[statusFilter];
+    const advancedFiltersActive =
+        statusFilter !== "All" ||
+        priorityFilter !== "All" ||
+        overdueFilter !== "All";
+    const visibleTodoCount =
+        selectedCategoryFilter === "uncategorized"
+            ? visibleTodos.length
+            : todosQuery.data?.totalItems ?? visibleTodos.length;
+    const clearFiltersVisible = Boolean(search || advancedFiltersActive);
+    const statusFilterLabel = [
+        statusFilter === "All" ? null : STATUS_LABELS[statusFilter],
+        priorityFilter === "All" ? null : priorityFilter,
+        overdueFilter === "All" ? null : OVERDUE_FILTER_LABELS[overdueFilter],
+    ].filter(Boolean).join(" · ") || "All";
 
     const selectedCategoryName = useMemo(() => {
         if (selectedCategoryFilter === "all") return "All tracks";
@@ -140,7 +167,7 @@ export default function TodoPage() {
 
     useEffect(() => {
         setTaskPage(1);
-    }, [search, statusFilter, selectedCategoryFilter]);
+    }, [search, statusFilter, priorityFilter, overdueFilter, selectedCategoryFilter]);
 
     useEffect(() => {
         setTaskPage((current) => Math.min(current, totalTaskPages));
@@ -150,7 +177,7 @@ export default function TodoPage() {
         if (visibleTodos.length === 0) {
             setSelectedTodoId(null);
             setHistoryOpen(false);
-            setStatusFilterOpen(false);
+            setActiveFilterMenu(null);
             return;
         }
 
@@ -182,13 +209,19 @@ export default function TodoPage() {
     function selectTodo(todoId: number) {
         setSelectedTodoId(todoId);
         setHistoryOpen(false);
-        setStatusFilterOpen(false);
+        setActiveFilterMenu(null);
     }
 
     function clearTodoFilters() {
         setSearch("");
+        clearAdvancedFilters();
+    }
+
+    function clearAdvancedFilters() {
         setStatusFilter("All");
-        setStatusFilterOpen(false);
+        setPriorityFilter("All");
+        setOverdueFilter("All");
+        setActiveFilterMenu(null);
     }
 
     function scrollEditorDoorIntoView() {
@@ -353,10 +386,9 @@ export default function TodoPage() {
 
     function selectCategory(filter: CategoryFilter) {
         setSearch("");
-        setStatusFilter("All");
+        clearAdvancedFilters();
         setSelectedTodoId(null);
         setHistoryOpen(false);
-        setStatusFilterOpen(false);
         setSelectedCategoryFilter(filter);
     }
 
@@ -407,7 +439,7 @@ export default function TodoPage() {
                     railRef={railRef}
                     selectedCategoryFilter={selectedCategoryFilter}
                     selectedCategoryName={selectedCategoryName}
-                    todos={todos}
+                    todos={allTodos}
                     onCategoryNameChange={setCategoryName}
                     onDeleteCategory={deleteCategory}
                     onPointerDown={handleRailPointerDown}
@@ -432,20 +464,30 @@ export default function TodoPage() {
                     loading={loading}
                     paginatedTodos={paginatedTodos}
                     search={search}
+                    filterActive={advancedFiltersActive}
+                    filterOpen={activeFilterMenu === "left"}
+                    overdueFilter={overdueFilter}
+                    priorityFilter={priorityFilter}
                     selectedTodoId={selectedTodo?.id ?? null}
                     statusFilter={statusFilter}
                     taskPage={taskPage}
                     totalTaskPages={totalTaskPages}
-                    visibleTodosLength={visibleTodos.length}
+                    visibleTodosLength={visibleTodoCount}
                     onClearFilters={clearTodoFilters}
+                    onClearAdvancedFilters={clearAdvancedFilters}
                     onDeleteTodo={deleteTodo}
                     onEditTodo={editTodo}
                     onOpenNewTodoEditor={openNewTodoEditor}
                     onResetForm={resetForm}
                     onSearchChange={setSearch}
                     onSelectTodo={selectTodo}
+                    onToggleFilter={() =>
+                        setActiveFilterMenu((current) => current === "left" ? null : "left")
+                    }
                     onSetForm={setForm}
                     onSetIsLeftCollapsed={setIsLeftCollapsed}
+                    onSetOverdueFilter={setOverdueFilter}
+                    onSetPriorityFilter={setPriorityFilter}
                     onSetStatusFilter={setStatusFilter}
                     onSetTaskPage={setTaskPage}
                     onSubmitTodo={submitTodo}
@@ -472,18 +514,26 @@ export default function TodoPage() {
                         activitiesLoading={activitiesQuery.isLoading}
                         clearFiltersVisible={clearFiltersVisible}
                         counts={counts}
+                        filterActive={advancedFiltersActive}
                         historyOpen={historyOpen}
+                        overdueFilter={overdueFilter}
                         paginatedActivities={paginatedActivities}
+                        priorityFilter={priorityFilter}
                         selectedTodo={selectedTodo}
                         statusFilter={statusFilter}
                         statusFilterLabel={statusFilterLabel}
-                        statusFilterOpen={statusFilterOpen}
+                        statusFilterOpen={activeFilterMenu === "detail"}
                         totalActivityPages={totalActivityPages}
                         onClearFilters={clearTodoFilters}
+                        onClearAdvancedFilters={clearAdvancedFilters}
                         onSetActivityPage={setActivityPage}
                         onSetHistoryOpen={setHistoryOpen}
+                        onSetOverdueFilter={setOverdueFilter}
+                        onSetPriorityFilter={setPriorityFilter}
                         onSetStatusFilter={setStatusFilter}
-                        onSetStatusFilterOpen={setStatusFilterOpen}
+                        onToggleFilter={() =>
+                            setActiveFilterMenu((current) => current === "detail" ? null : "detail")
+                        }
                     />
                 </TodoTimelinePanel>
             </main>
