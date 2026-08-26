@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import AppLayout from "../../layouts/AppLayout.js";
 import { useTodoCategoriesQuery } from "../../hooks/useTodoCategoriesQuery.js";
 import { useTodoActivitiesQuery, useTodosQuery } from "../../hooks/useTodosQuery.js";
@@ -21,6 +21,7 @@ const PRIORITIES: TodoPriority[] = ["Low", "Medium", "High"];
 const STATUSES: TodoStatus[] = ["Todo", "InProgress", "Done"];
 const LEFT_TASK_PAGE_SIZE = 10;
 const ACTIVITY_PAGE_SIZE = 5;
+const DAY_MS = 86_400_000;
 type CategoryFilter = "all" | "uncategorized" | `category-${number}`;
 
 interface TodoFormState {
@@ -30,6 +31,12 @@ interface TodoFormState {
     dueDate: string;
     categoryId: string;
 }
+
+type TodoDialogState =
+    | { type: "deleteTodo"; todo: TodoDto }
+    | { type: "deleteCategory"; category: TodoCategoryDto }
+    | { type: "renameCategory"; category: TodoCategoryDto }
+    | null;
 
 const emptyForm: TodoFormState = {
     title: "",
@@ -61,10 +68,14 @@ function fromInputDateTime(value: string) {
 function formatShortDate(value: string | null) {
     if (!value) return "No due date";
 
+    return formatTimelineTick(parseBackendDate(value));
+}
+
+function formatTimelineTick(date: Date) {
     return new Intl.DateTimeFormat("vi-VN", {
         day: "2-digit",
         month: "short",
-    }).format(parseBackendDate(value));
+    }).format(date);
 }
 
 function formatFullDate(value: string | null) {
@@ -117,20 +128,23 @@ function buildTimelineDates(todos: TodoDto[]) {
     ]).filter((value) => !Number.isNaN(value));
 
     const now = Date.now();
-    const min = dates.length ? Math.min(...dates, now) : now;
-    const max = dates.length ? Math.max(...dates, now) : now + 3 * 86_400_000;
+    const min = dates.length ? Math.min(...dates) : now;
+    const max = dates.length ? Math.max(...dates) : now + 3 * DAY_MS;
     const start = new Date(min);
-    const end = new Date(max);
     start.setHours(0, 0, 0, 0);
-    end.setHours(23, 59, 59, 999);
+    start.setDate(start.getDate() - 1);
 
-    if (end.getTime() - start.getTime() < 2 * 86_400_000) {
-        end.setDate(end.getDate() + 2);
+    const end = new Date(max);
+    end.setHours(0, 0, 0, 0);
+    end.setDate(end.getDate() + 2);
+
+    if (end.getTime() - start.getTime() < 3 * DAY_MS) {
+        end.setTime(start.getTime() + 3 * DAY_MS);
     }
 
     const ticks: Date[] = [];
     const cursor = new Date(start);
-    while (cursor <= end && ticks.length < 10) {
+    while (cursor < end) {
         ticks.push(new Date(cursor));
         cursor.setDate(cursor.getDate() + 1);
     }
@@ -183,12 +197,15 @@ export default function TodoPage() {
     const [selectedTodoId, setSelectedTodoId] = useState<number | null>(null);
     const [editingTodoId, setEditingTodoId] = useState<number | null>(null);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
+    const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
     const [form, setForm] = useState<TodoFormState>(emptyForm);
     const [categoryName, setCategoryName] = useState("");
     const [selectedCategoryFilter, setSelectedCategoryFilter] =
         useState<CategoryFilter>("all");
     const [isRailDragging, setIsRailDragging] = useState(false);
     const [formError, setFormError] = useState<string | null>(null);
+    const [todoDialog, setTodoDialog] = useState<TodoDialogState>(null);
+    const [renameCategoryName, setRenameCategoryName] = useState("");
 
     const todosQuery = useTodosQuery({
         page: 1,
@@ -246,6 +263,10 @@ export default function TodoPage() {
         return activities.slice(start, start + ACTIVITY_PAGE_SIZE);
     }, [activities, activityPage]);
     const timeline = useMemo(() => buildTimelineDates(visibleTodos), [visibleTodos]);
+    const timelineGridStyle = {
+        "--timeline-days": timeline.ticks.length,
+        "--timeline-track-min": `${230 + timeline.ticks.length * 88}px`,
+    } as CSSProperties;
     const totalTaskPages = Math.max(
         1,
         Math.ceil(visibleTodos.length / LEFT_TASK_PAGE_SIZE)
@@ -277,7 +298,7 @@ export default function TodoPage() {
 
     const selectedCategoryName = useMemo(() => {
         if (selectedCategoryFilter === "all") return "All tracks";
-        if (selectedCategoryFilter === "uncategorized") return "Không category";
+        if (selectedCategoryFilter === "uncategorized") return "others";
 
         const id = getCategoryIdFromFilter(selectedCategoryFilter);
         return categories.find((category) => category.id === id)?.name ?? "Category";
@@ -304,7 +325,8 @@ export default function TodoPage() {
                 return current;
             }
 
-            return visibleTodos[0].id;
+            const [firstTodo] = visibleTodos;
+            return firstTodo?.id ?? null;
         });
     }, [visibleTodos]);
 
@@ -380,6 +402,7 @@ export default function TodoPage() {
     }
 
     function openNewTodoEditor() {
+        setIsLeftCollapsed(false);
         setEditingTodoId(null);
         setForm(emptyForm);
         setFormError(null);
@@ -388,6 +411,7 @@ export default function TodoPage() {
     }
 
     function editTodo(todo: TodoDto) {
+        setIsLeftCollapsed(false);
         selectTodo(todo.id);
         setEditingTodoId(todo.id);
         setForm({
@@ -435,17 +459,25 @@ export default function TodoPage() {
         setCategoryName("");
     }
 
-    async function deleteTodo(todo: TodoDto) {
-        if (!window.confirm(`Xóa task "${todo.title}"?`)) return;
+    function deleteTodo(todo: TodoDto) {
+        setTodoDialog({ type: "deleteTodo", todo });
+    }
+
+    async function confirmDeleteTodo(todo: TodoDto) {
         await mutations.deleteTodo.mutateAsync(todo.id);
         if (selectedTodoId === todo.id) setSelectedTodoId(null);
         if (editingTodoId === todo.id) resetForm();
+        setTodoDialog(null);
     }
 
-    async function deleteCategory(category: TodoCategoryDto) {
-        const deleteTodos = window.confirm(
-            `OK: xóa cả todo trong "${category.name}". Cancel: giữ todo và bỏ category.`
-        );
+    function deleteCategory(category: TodoCategoryDto) {
+        setTodoDialog({ type: "deleteCategory", category });
+    }
+
+    async function confirmDeleteCategory(
+        category: TodoCategoryDto,
+        deleteTodos: boolean
+    ) {
         await mutations.deleteCategory.mutateAsync({
             id: category.id,
             deleteTodos,
@@ -454,12 +486,28 @@ export default function TodoPage() {
         if (selectedCategoryFilter === getCategoryFilterId(category.id)) {
             setSelectedCategoryFilter("all");
         }
+
+        setTodoDialog(null);
     }
 
-    async function renameCategory(category: TodoCategoryDto) {
-        const name = window.prompt("Tên category mới", category.name);
-        if (!name?.trim() || name.trim() === category.name) return;
-        await mutations.updateCategory.mutateAsync({ id: category.id, name });
+    function renameCategory(category: TodoCategoryDto) {
+        setRenameCategoryName(category.name);
+        setTodoDialog({ type: "renameCategory", category });
+    }
+
+    async function confirmRenameCategory(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+
+        if (todoDialog?.type !== "renameCategory") return;
+        const name = renameCategoryName.trim();
+        if (!name || name === todoDialog.category.name) return;
+
+        await mutations.updateCategory.mutateAsync({
+            id: todoDialog.category.id,
+            name,
+        });
+        setTodoDialog(null);
+        setRenameCategoryName("");
     }
 
     function scrollRail(direction: "left" | "right") {
@@ -519,7 +567,7 @@ export default function TodoPage() {
 
     return (
         <AppLayout>
-            <main className="todo-workspace">
+            <main className={`todo-workspace ${isLeftCollapsed ? "todo-workspace--left-collapsed" : ""}`}>
                 <section className="todo-category-rail" aria-label="Category rail">
                     <div className="todo-rail-heading">
                         <div className="todo-rail-breadcrumb">
@@ -602,8 +650,8 @@ export default function TodoPage() {
                                 className={`todo-train-car todo-train-car--tail ${selectedCategoryFilter === "uncategorized" ? "active" : ""}`}
                                 onClick={() => selectCategory("uncategorized")}
                             >
-                                <span>NA</span>
-                                <strong>Không category</strong>
+                                <span>Others</span>
+                                <strong>others</strong>
                                 <small>{todos.filter((todo) => todo.categoryId === null).length} tasks</small>
                             </button>
                         </div>
@@ -619,29 +667,71 @@ export default function TodoPage() {
                     </div>
                 </section>
 
-                <section className="todo-left-panel" ref={leftPanelRef}>
+                <section
+                    className={`todo-left-panel ${isLeftCollapsed ? "todo-left-panel--collapsed" : ""}`}
+                    ref={leftPanelRef}
+                >
                     <div className="todo-panel-heading">
                         <div>
-                            <p className="eyebrow">Todo control</p>
+                            <p className="eyebrow">Todo</p>
+                            <strong className="todo-left-collapsed-label">{visibleTodos.length}</strong>
                         </div>
-                        <button
-                            type="button"
-                            className={`todo-door-trigger ${isEditorOpen ? "active" : ""}`}
-                            onClick={() => {
-                                if (isEditorOpen) {
-                                    resetForm();
-                                    return;
-                                }
+                        <div className="todo-panel-actions">
+                            <button
+                                type="button"
+                                className="todo-collapse-trigger"
+                                onClick={() => {
+                                    if (!isLeftCollapsed && isEditorOpen) {
+                                        resetForm();
+                                    }
+                                    setIsLeftCollapsed((current) => !current);
+                                }}
+                                title={isLeftCollapsed ? "Mở rộng danh sách task" : "Thu gọn danh sách task"}
+                                aria-label={isLeftCollapsed ? "Mở rộng danh sách task" : "Thu gọn danh sách task"}
+                            >
+                                <svg
+                                    width="16"
+                                    height="16"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.9"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    aria-hidden="true"
+                                >
+                                    {isLeftCollapsed ? (
+                                        <>
+                                            <path d="m9 6 6 6-6 6" />
+                                            <path d="M4 4v16" />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <path d="m15 6-6 6 6 6" />
+                                            <path d="M20 4v16" />
+                                        </>
+                                    )}
+                                </svg>
+                            </button>
+                            <button
+                                type="button"
+                                className={`todo-door-trigger ${isEditorOpen ? "active" : ""}`}
+                                onClick={() => {
+                                    if (isEditorOpen) {
+                                        resetForm();
+                                        return;
+                                    }
 
-                                openNewTodoEditor();
-                            }}
-                            title={isEditorOpen ? "Đóng form" : "Tạo task mới"}
-                        >
-                            <span>{isEditorOpen ? "×" : "+"}</span>
-                            <span className="sr-only">
-                                {isEditorOpen ? "Đóng form" : "Tạo task mới"}
-                            </span>
-                        </button>
+                                    openNewTodoEditor();
+                                }}
+                                title={isEditorOpen ? "Đóng form" : "Tạo task mới"}
+                            >
+                                <span>{isEditorOpen ? "×" : "+"}</span>
+                                <span className="sr-only">
+                                    {isEditorOpen ? "Đóng form" : "Tạo task mới"}
+                                </span>
+                            </button>
+                        </div>
                     </div>
 
                     <div className="todo-stat-row">
@@ -655,7 +745,7 @@ export default function TodoPage() {
                             <div className="todo-filter-row">
                                 <input
                                     value={search}
-                                    placeholder="Search task hoặc category"
+                                    placeholder="Search task/category"
                                     onChange={(event) => setSearch(event.target.value)}
                                 />
                                 <select
@@ -678,10 +768,7 @@ export default function TodoPage() {
 
                                 {!loading && visibleTodos.length === 0 && (
                                     <div className="empty-state empty-state--composed">
-                                        <p className="empty-state-title">Chưa có task phù hợp</p>
-                                        <p className="empty-state-desc">
-                                            Tạo task đầu tiên hoặc đổi bộ lọc để thấy timeline.
-                                        </p>
+                                        <p className="empty-state-desc">Hãy tạo task đầu tiên!</p>
                                         {(search || statusFilter !== "All") && (
                                             <button
                                                 type="button"
@@ -744,7 +831,7 @@ export default function TodoPage() {
                                                         <div className="todo-card-meta">
                                                             <span className={`todo-status-dot todo-status-dot--${todo.status}`} />
                                                             <span>{STATUS_LABELS[todo.status]}</span>
-                                                            <span>{todo.categoryName || "Không category"}</span>
+                                                            <span>{todo.categoryName || "others"}</span>
                                                             <span>{formatShortDate(todo.dueDate)}</span>
                                                         </div>
                                                     </div>
@@ -826,7 +913,6 @@ export default function TodoPage() {
                             <div className="todo-editor-door-header">
                                 <div>
                                     <p className="eyebrow">{editingTodoId ? "Edit task" : "New task"}</p>
-                                    <h2>{editingTodoId ? "Update briefing" : "Roll down form"}</h2>
                                 </div>
                                 <button type="button" className="ghost-btn" onClick={resetForm}>
                                     Close
@@ -908,7 +994,7 @@ export default function TodoPage() {
                                         }))
                                     }
                                 >
-                                    <option value="">Không category</option>
+                                    <option value="">others</option>
                                     {categories.map((category) => (
                                         <option key={category.id} value={category.id}>
                                             {category.name}
@@ -934,8 +1020,8 @@ export default function TodoPage() {
                 <section className="todo-timeline-panel">
                     <div className="todo-timeline-header">
                         <div>
-                            <p className="eyebrow">Jira style timeline</p>
-                            <h2>Schedule map</h2>
+                            <p className="eyebrow">Schedule</p>
+                            {/* <h2>Schedule map</h2> */}
                         </div>
                         <div className="todo-timeline-legend">
                             <span><i className="todo-status-dot todo-status-dot--Todo" />Todo</span>
@@ -950,11 +1036,11 @@ export default function TodoPage() {
                         <span><b>{visibleCounts.done}</b> Done</span>
                     </div>
 
-                    <div className="todo-timeline">
+                    <div className="todo-timeline" style={timelineGridStyle}>
                         <div className="todo-timeline-axis">
                             <span>Task</span>
                             {timeline.ticks.map((tick) => (
-                                <span key={tick.toISOString()}>{formatShortDate(tick.toISOString())}</span>
+                                <span key={tick.toISOString()}>{formatTimelineTick(tick)}</span>
                             ))}
                         </div>
 
@@ -968,7 +1054,7 @@ export default function TodoPage() {
                                 >
                                     <span className="todo-timeline-title">
                                         <b>{todo.title}</b>
-                                        <small>{todo.categoryName || "Không category"}</small>
+                                        <small>{todo.categoryName || "others"}</small>
                                     </span>
                                     <span className="todo-timeline-track">
                                         {timeline.ticks.map((tick) => (
@@ -985,7 +1071,7 @@ export default function TodoPage() {
                             ))}
                             {!loading && visibleTodos.length === 0 && (
                                 <div className="todo-timeline-empty">
-                                    <p>Không có task phù hợp với filter hiện tại.</p>
+                                    <p>no data</p>
                                     {(search || statusFilter !== "All") && (
                                         <button
                                             type="button"
@@ -1022,7 +1108,7 @@ export default function TodoPage() {
                                     </div>
                                     <div>
                                         <dt>Category</dt>
-                                        <dd>{selectedTodo.categoryName || "Không category"}</dd>
+                                        <dd>{selectedTodo.categoryName || "others"}</dd>
                                     </div>
                                     <div>
                                         <dt>Status</dt>
@@ -1181,9 +1267,8 @@ export default function TodoPage() {
                         <aside className="todo-detail-panel todo-detail-panel--empty">
                             <div>
                                 <p className="eyebrow">No task selected</p>
-                                <h3>Chưa có task để xem chi tiết</h3>
                                 <p>
-                                    Bộ lọc hiện tại không có dữ liệu. Bỏ filter hoặc chọn category khác có task phù hợp.
+                                    no data
                                 </p>
                             </div>
                             {(search || statusFilter !== "All") && (
@@ -1199,6 +1284,183 @@ export default function TodoPage() {
                     )}
                 </section>
             </main>
+
+            {todoDialog && (
+                <div
+                    className="modal-backdrop todo-dialog-backdrop"
+                    role="presentation"
+                    onClick={() => setTodoDialog(null)}
+                >
+                    <section
+                        className="modal-panel todo-dialog"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="todo-dialog-title"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        {todoDialog.type === "deleteTodo" && (
+                            <>
+                                <div className="todo-dialog-mark todo-dialog-mark--danger">
+                                    <svg
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="1.8"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        aria-hidden="true"
+                                    >
+                                        <path d="M4 7h16" />
+                                        <path d="M10 11v6" />
+                                        <path d="M14 11v6" />
+                                        <path d="M6 7l1 14h10l1-14" />
+                                        <path d="M9 7V4h6v3" />
+                                    </svg>
+                                </div>
+                                <div className="todo-dialog-copy">
+                                    {/* <p className="eyebrow">Delete task</p> */}
+                                    <p>
+                                        Task "{todoDialog.todo.title}" sẽ bị xóa khỏi danh sách và timeline.
+                                    </p>
+                                </div>
+                                <div className="todo-dialog-actions">
+                                    <button
+                                        type="button"
+                                        className="ghost-btn"
+                                        onClick={() => setTodoDialog(null)}
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="todo-danger-btn"
+                                        disabled={mutations.deleteTodo.isPending}
+                                        onClick={() => void confirmDeleteTodo(todoDialog.todo)}
+                                    >
+                                        Xóa task
+                                    </button>
+                                </div>
+                            </>
+                        )}
+
+                        {todoDialog.type === "deleteCategory" && (
+                            <>
+                                <div className="todo-dialog-mark todo-dialog-mark--danger">
+                                    <svg
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="1.8"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        aria-hidden="true"
+                                    >
+                                        <path d="M4 7h16" />
+                                        <path d="M10 11v6" />
+                                        <path d="M14 11v6" />
+                                        <path d="M6 7l1 14h10l1-14" />
+                                        <path d="M9 7V4h6v3" />
+                                    </svg>
+                                </div>
+                                <div className="todo-dialog-copy">
+                                    <p className="eyebrow">Delete category</p>
+                                    {/* <h2 id="todo-dialog-title">Xóa category "{todoDialog.category.name}"?</h2> */}
+                                    <p>
+                                        Bạn có thể giữ lại các task và bỏ category, hoặc xóa luôn các task trong category này.
+                                    </p>
+                                </div>
+                                <div className="todo-dialog-actions todo-dialog-actions--stacked">
+                                    <button
+                                        type="button"
+                                        className="ghost-btn"
+                                        onClick={() => setTodoDialog(null)}
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="ghost-btn"
+                                        disabled={mutations.deleteCategory.isPending}
+                                        onClick={() =>
+                                            void confirmDeleteCategory(todoDialog.category, false)
+                                        }
+                                    >
+                                        Giữ task
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="todo-danger-btn"
+                                        disabled={mutations.deleteCategory.isPending}
+                                        onClick={() =>
+                                            void confirmDeleteCategory(todoDialog.category, true)
+                                        }
+                                    >
+                                        Xóa cả task
+                                    </button>
+                                </div>
+                            </>
+                        )}
+
+                        {todoDialog.type === "renameCategory" && (
+                            <form className="todo-dialog-form" onSubmit={confirmRenameCategory}>
+                                <div className="todo-dialog-mark">
+                                    <svg
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="1.8"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        aria-hidden="true"
+                                    >
+                                        <path d="M12 20h9" />
+                                        <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                                    </svg>
+                                </div>
+                                <div className="todo-dialog-copy">
+                                    <p className="eyebrow">Rename category</p>
+                                    <h2 id="todo-dialog-title">Đổi tên category</h2>
+                                    <label>
+                                        Tên mới
+                                        <input
+                                            value={renameCategoryName}
+                                            autoFocus
+                                            onChange={(event) =>
+                                                setRenameCategoryName(event.target.value)
+                                            }
+                                        />
+                                    </label>
+                                </div>
+                                <div className="todo-dialog-actions">
+                                    <button
+                                        type="button"
+                                        className="ghost-btn"
+                                        onClick={() => setTodoDialog(null)}
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={
+                                            mutations.updateCategory.isPending ||
+                                            !renameCategoryName.trim() ||
+                                            renameCategoryName.trim() === todoDialog.category.name
+                                        }
+                                    >
+                                        Lưu tên
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+                    </section>
+                </div>
+            )}
         </AppLayout>
     );
 }
