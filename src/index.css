@@ -2401,10 +2401,8 @@ button:disabled {
   z-index: 2;
   display: grid;
   gap: 10px;
-  max-height: min(520px, calc(100svh - 260px));
   padding: 12px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  overflow: visible;
   border-radius: 22px;
   border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border));
   background:

@@ -39,9 +39,14 @@ const emptyForm: TodoFormState = {
     categoryId: "",
 };
 
+function parseBackendDate(value: string) {
+    const hasTimezone = /(?:Z|[+-]\d{2}:\d{2})$/i.test(value);
+    return new Date(hasTimezone ? value : `${value}Z`);
+}
+
 function toInputDateTime(value: string | null) {
     if (!value) return "";
-    const date = new Date(value);
+    const date = parseBackendDate(value);
     if (Number.isNaN(date.getTime())) return "";
 
     const offset = date.getTimezoneOffset();
@@ -59,7 +64,7 @@ function formatShortDate(value: string | null) {
     return new Intl.DateTimeFormat("vi-VN", {
         day: "2-digit",
         month: "short",
-    }).format(new Date(value));
+    }).format(parseBackendDate(value));
 }
 
 function formatFullDate(value: string | null) {
@@ -71,7 +76,7 @@ function formatFullDate(value: string | null) {
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit",
-    }).format(new Date(value));
+    }).format(parseBackendDate(value));
 }
 
 function getPriorityTone(priority: TodoPriority) {
@@ -107,8 +112,8 @@ function toPayload(form: TodoFormState): CreateTodoPayload {
 
 function buildTimelineDates(todos: TodoDto[]) {
     const dates = todos.flatMap((todo) => [
-        new Date(todo.createdAt).getTime(),
-        todo.dueDate ? new Date(todo.dueDate).getTime() : NaN,
+        parseBackendDate(todo.createdAt).getTime(),
+        todo.dueDate ? parseBackendDate(todo.dueDate).getTime() : NaN,
     ]).filter((value) => !Number.isNaN(value));
 
     const now = Date.now();
@@ -136,9 +141,9 @@ function buildTimelineDates(todos: TodoDto[]) {
 function getTimelineStyle(todo: TodoDto, start: Date, end: Date) {
     const startMs = start.getTime();
     const range = Math.max(end.getTime() - startMs, 1);
-    const taskStart = new Date(todo.createdAt).getTime();
+    const taskStart = parseBackendDate(todo.createdAt).getTime();
     const taskEnd = todo.dueDate
-        ? new Date(todo.dueDate).getTime()
+        ? parseBackendDate(todo.dueDate).getTime()
         : taskStart + 12 * 60 * 60 * 1000;
     const left = Math.max(0, ((taskStart - startMs) / range) * 100);
     const right = Math.min(100, ((Math.max(taskEnd, taskStart + 3_600_000) - startMs) / range) * 100);
@@ -161,6 +166,8 @@ function getCategoryIdFromFilter(filter: CategoryFilter) {
 
 export default function TodoPage() {
     const railRef = useRef<HTMLDivElement | null>(null);
+    const leftPanelRef = useRef<HTMLElement | null>(null);
+    const editorDoorRef = useRef<HTMLFormElement | null>(null);
     const dragStateRef = useRef({
         active: false,
         didDrag: false,
@@ -328,11 +335,56 @@ export default function TodoPage() {
         setStatusFilterOpen(false);
     }
 
+    function scrollEditorDoorIntoView() {
+        const editor = editorDoorRef.current;
+
+        if (!editor) {
+            leftPanelRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+            });
+            return;
+        }
+
+        const margin = 18;
+        const rect = editor.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const availableHeight = viewportHeight - margin * 2;
+        let scrollTop = 0;
+
+        if (rect.height >= availableHeight) {
+            scrollTop = rect.top - margin;
+        } else if (rect.top < margin) {
+            scrollTop = rect.top - margin;
+        } else if (rect.bottom > viewportHeight - margin) {
+            scrollTop = rect.bottom - viewportHeight + margin;
+        }
+
+        if (Math.abs(scrollTop) > 1) {
+            window.scrollBy({
+                top: scrollTop,
+                behavior: "smooth",
+            });
+        }
+    }
+
+    function scheduleEditorDoorScroll() {
+        window.requestAnimationFrame(() => {
+            leftPanelRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+            });
+            window.setTimeout(scrollEditorDoorIntoView, 260);
+            window.setTimeout(scrollEditorDoorIntoView, 760);
+        });
+    }
+
     function openNewTodoEditor() {
         setEditingTodoId(null);
         setForm(emptyForm);
         setFormError(null);
         setIsEditorOpen(true);
+        scheduleEditorDoorScroll();
     }
 
     function editTodo(todo: TodoDto) {
@@ -347,6 +399,7 @@ export default function TodoPage() {
         });
         setFormError(null);
         setIsEditorOpen(true);
+        scheduleEditorDoorScroll();
     }
 
     async function submitTodo(event: React.FormEvent<HTMLFormElement>) {
@@ -566,7 +619,7 @@ export default function TodoPage() {
                     </div>
                 </section>
 
-                <section className="todo-left-panel">
+                <section className="todo-left-panel" ref={leftPanelRef}>
                     <div className="todo-panel-heading">
                         <div>
                             <p className="eyebrow">Todo control</p>
@@ -762,6 +815,7 @@ export default function TodoPage() {
                         </div>
 
                         <form
+                            ref={editorDoorRef}
                             className={`todo-editor-door ${isEditorOpen ? "open" : ""}`}
                             onSubmit={submitTodo}
                             aria-hidden={!isEditorOpen}
