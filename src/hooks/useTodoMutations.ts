@@ -4,7 +4,7 @@ import { todoCategoryService } from "../services/api/todoCategoryService.js";
 import { todoService } from "../services/api/todoService.js";
 import { useAppSelector } from "../stores/hook.js";
 import type {
-    CreateTodoPayload,
+    CreateTodosPayload,
     TodoStatus,
     UpdateTodoPayload,
 } from "../features/todo/types.js";
@@ -23,7 +23,7 @@ export function useTodoMutations() {
     }
 
     const createTodo = useMutation({
-        mutationFn: (payload: CreateTodoPayload) => todoService.create(payload),
+        mutationFn: (payloads: CreateTodosPayload) => todoService.create(payloads),
         onSuccess: invalidateTodos,
     });
 

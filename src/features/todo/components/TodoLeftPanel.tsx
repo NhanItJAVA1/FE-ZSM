@@ -21,6 +21,7 @@ interface TodoLeftPanelProps {
     editorDoorRef: RefObject<HTMLFormElement | null>;
     form: TodoFormState;
     formError: string | null;
+    isBulkCreateOpen: boolean;
     isEditorOpen: boolean;
     isLeftCollapsed: boolean;
     leftPanelRef: RefObject<HTMLElement | null>;
@@ -63,6 +64,7 @@ export default function TodoLeftPanel({
     editorDoorRef,
     form,
     formError,
+    isBulkCreateOpen,
     isEditorOpen,
     isLeftCollapsed,
     leftPanelRef,
@@ -146,7 +148,7 @@ export default function TodoLeftPanel({
                     </button>
                     <button
                         type="button"
-                        className={`todo-door-trigger ${isEditorOpen ? "active" : ""}`}
+                        className={`todo-door-trigger ${isEditorOpen || isBulkCreateOpen ? "active" : ""}`}
                         onClick={() => {
                             if (isEditorOpen) {
                                 onResetForm();
@@ -155,7 +157,7 @@ export default function TodoLeftPanel({
 
                             onOpenNewTodoEditor();
                         }}
-                        title={isEditorOpen ? "Đóng form" : "Tạo task mới"}
+                        title={isEditorOpen || isBulkCreateOpen ? "Đang tạo task" : "Tạo task mới"}
                     >
                         <span>{isEditorOpen ? "×" : "+"}</span>
                         <span className="sr-only">

@@ -3394,6 +3394,120 @@ button:disabled {
     inset 0 1px 0 rgba(255, 255, 255, 0.82);
 }
 
+.todo-bulk-modal {
+  width: min(1120px, calc(100vw - 32px));
+  max-height: min(88svh, 820px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: 14px;
+  overflow: hidden;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, var(--surface));
+  background: var(--surface);
+  box-shadow:
+    0 34px 92px -46px rgba(38, 44, 56, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+
+.todo-bulk-header,
+.todo-bulk-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.todo-bulk-header h2 {
+  margin: 4px 0 0;
+  color: var(--text-h);
+  font-size: clamp(28px, 3.2vw, 40px);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+}
+
+.todo-bulk-table-wrap {
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--field);
+}
+
+.todo-bulk-table {
+  width: 100%;
+  min-width: 980px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.todo-bulk-table th,
+.todo-bulk-table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.todo-bulk-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.todo-bulk-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.todo-bulk-table input,
+.todo-bulk-table select {
+  width: 100%;
+  min-height: 38px;
+  background: var(--surface);
+}
+
+.todo-bulk-table td:first-child {
+  width: 24%;
+}
+
+.todo-bulk-table td:nth-child(2) {
+  width: 26%;
+}
+
+.todo-bulk-table td:nth-child(3),
+.todo-bulk-table td:nth-child(4),
+.todo-bulk-table td:nth-child(5) {
+  width: 16%;
+}
+
+.todo-bulk-table td:last-child {
+  width: 44px;
+  text-align: center;
+}
+
+.todo-bulk-remove-btn {
+  width: 34px;
+  min-width: 34px;
+  min-height: 34px;
+  padding: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  color: var(--accent);
+}
+
+.todo-bulk-actions {
+  align-items: center;
+}
+
+.todo-bulk-actions > div {
+  display: inline-flex;
+  gap: 8px;
+}
+
 .todo-dialog-form {
   display: grid;
   gap: 14px;

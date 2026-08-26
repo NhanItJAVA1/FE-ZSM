@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import TodoCategoryRail from "../../features/todo/components/TodoCategoryRail.js";
+import TodoBulkCreateModal, {
+    createTodoBulkDraft,
+    type TodoBulkDraft,
+} from "../../features/todo/components/TodoBulkCreateModal.js";
 import TodoDetailPanel from "../../features/todo/components/TodoDetailPanel.js";
 import TodoDialog from "../../features/todo/components/TodoDialog.js";
 import TodoLeftPanel from "../../features/todo/components/TodoLeftPanel.js";
@@ -50,8 +54,13 @@ export default function TodoPage() {
     const [selectedTodoId, setSelectedTodoId] = useState<number | null>(null);
     const [editingTodoId, setEditingTodoId] = useState<number | null>(null);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
+    const [isBulkCreateOpen, setIsBulkCreateOpen] = useState(false);
     const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
     const [form, setForm] = useState<TodoFormState>(emptyForm);
+    const [bulkDrafts, setBulkDrafts] = useState<TodoBulkDraft[]>(() => [
+        createTodoBulkDraft(),
+    ]);
+    const [bulkCreateError, setBulkCreateError] = useState<string | null>(null);
     const [categoryName, setCategoryName] = useState("");
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<CategoryFilter>("all");
     const [isRailDragging, setIsRailDragging] = useState(false);
@@ -271,14 +280,35 @@ export default function TodoPage() {
     function openNewTodoEditor() {
         setIsLeftCollapsed(false);
         setEditingTodoId(null);
-        setForm(emptyForm);
         setFormError(null);
-        setIsEditorOpen(true);
-        scheduleEditorDoorScroll();
+        setBulkCreateError(null);
+        setBulkDrafts([createTodoBulkDraft()]);
+        setActiveFilterMenu(null);
+        setIsEditorOpen(false);
+        setIsBulkCreateOpen(true);
+    }
+
+    function closeBulkCreateModal() {
+        setIsBulkCreateOpen(false);
+        setBulkCreateError(null);
+        setBulkDrafts([createTodoBulkDraft()]);
+    }
+
+    function addBulkDraftRow() {
+        setBulkDrafts((current) => [...current, createTodoBulkDraft()]);
+    }
+
+    function removeBulkDraftRow(id: string) {
+        setBulkDrafts((current) => {
+            if (current.length === 1) return current;
+
+            return current.filter((draft) => draft.id !== id);
+        });
     }
 
     function editTodo(todo: TodoDto) {
         setIsLeftCollapsed(false);
+        setIsBulkCreateOpen(false);
         selectTodo(todo.id);
         setEditingTodoId(todo.id);
         setForm({
@@ -303,18 +333,39 @@ export default function TodoPage() {
         }
 
         try {
-            if (editingTodoId) {
-                await mutations.updateTodo.mutateAsync({
-                    id: editingTodoId,
-                    payload: toPayload(form),
-                });
-            } else {
-                await mutations.createTodo.mutateAsync(toPayload(form));
-            }
+            if (!editingTodoId) return;
+
+            await mutations.updateTodo.mutateAsync({
+                id: editingTodoId,
+                payload: toPayload(form),
+            });
 
             resetForm();
         } catch (error) {
             setFormError(error instanceof Error ? error.message : "Không thể lưu todo.");
+        }
+    }
+
+    async function submitBulkTodos(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        setBulkCreateError(null);
+
+        const invalidRowIndex = bulkDrafts.findIndex(
+            (draft) => !draft.title.trim()
+        );
+
+        if (invalidRowIndex !== -1) {
+            setBulkCreateError(`Dòng ${invalidRowIndex + 1} cần có title.`);
+            return;
+        }
+
+        try {
+            await mutations.createTodo.mutateAsync(bulkDrafts.map(toPayload));
+            closeBulkCreateModal();
+        } catch (error) {
+            setBulkCreateError(
+                error instanceof Error ? error.message : "Không thể tạo todo."
+            );
         }
     }
 
@@ -459,6 +510,7 @@ export default function TodoPage() {
                     form={form}
                     formError={formError}
                     isEditorOpen={isEditorOpen}
+                    isBulkCreateOpen={isBulkCreateOpen}
                     isLeftCollapsed={isLeftCollapsed}
                     leftPanelRef={leftPanelRef}
                     loading={loading}
@@ -552,6 +604,20 @@ export default function TodoPage() {
                 onConfirmRenameCategory={confirmRenameCategory}
                 onRenameCategoryNameChange={setRenameCategoryName}
             />
+
+            {isBulkCreateOpen && (
+                <TodoBulkCreateModal
+                    categories={categories}
+                    drafts={bulkDrafts}
+                    error={bulkCreateError}
+                    saving={mutations.createTodo.isPending}
+                    onAddRow={addBulkDraftRow}
+                    onCancel={closeBulkCreateModal}
+                    onRemoveRow={removeBulkDraftRow}
+                    onSetDrafts={setBulkDrafts}
+                    onSubmit={submitBulkTodos}
+                />
+            )}
         </AppLayout>
     );
 }

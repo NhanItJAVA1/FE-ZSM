@@ -62,4 +62,6 @@ export interface CreateTodoPayload {
     categoryId?: number | null;
 }
 
+export type CreateTodosPayload = CreateTodoPayload[];
+
 export type UpdateTodoPayload = CreateTodoPayload;

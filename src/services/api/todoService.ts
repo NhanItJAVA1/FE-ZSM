@@ -1,6 +1,7 @@
 import api from "./axios.js";
 import type {
     CreateTodoPayload,
+    CreateTodosPayload,
     PagedResult,
     TodoActivityDto,
     TodoDto,
@@ -28,8 +29,8 @@ export const todoService = {
         return response.data;
     },
 
-    async create(payload: CreateTodoPayload): Promise<void> {
-        await api.post("/todos", cleanTodoPayload(payload));
+    async create(payloads: CreateTodosPayload): Promise<void> {
+        await api.post("/todos", payloads.map(cleanTodoPayload));
     },
 
     async update(id: number, payload: UpdateTodoPayload): Promise<void> {
