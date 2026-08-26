@@ -55,6 +55,7 @@ interface TodoLeftPanelProps {
     onToggleFilter: () => void;
     onUpdateStatus: (id: number, status: TodoStatus) => void;
     savingTodo: boolean;
+    allowCollapse?: boolean;
 }
 
 export default function TodoLeftPanel({
@@ -98,6 +99,7 @@ export default function TodoLeftPanel({
     onToggleFilter,
     onUpdateStatus,
     savingTodo,
+    allowCollapse = true,
 }: TodoLeftPanelProps) {
     return (
         <section
@@ -110,42 +112,44 @@ export default function TodoLeftPanel({
                     <strong className="todo-left-collapsed-label">{visibleTodosLength}</strong>
                 </div>
                 <div className="todo-panel-actions">
-                    <button
-                        type="button"
-                        className="todo-collapse-trigger"
-                        onClick={() => {
-                            if (!isLeftCollapsed && isEditorOpen) {
-                                onResetForm();
-                            }
-                            onSetIsLeftCollapsed((current) => !current);
-                        }}
-                        title={isLeftCollapsed ? "Mở rộng danh sách task" : "Thu gọn danh sách task"}
-                        aria-label={isLeftCollapsed ? "Mở rộng danh sách task" : "Thu gọn danh sách task"}
-                    >
-                        <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.9"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden="true"
+                    {allowCollapse && (
+                        <button
+                            type="button"
+                            className="todo-collapse-trigger"
+                            onClick={() => {
+                                if (!isLeftCollapsed && isEditorOpen) {
+                                    onResetForm();
+                                }
+                                onSetIsLeftCollapsed((current) => !current);
+                            }}
+                            title={isLeftCollapsed ? "Mở rộng danh sách task" : "Thu gọn danh sách task"}
+                            aria-label={isLeftCollapsed ? "Mở rộng danh sách task" : "Thu gọn danh sách task"}
                         >
-                            {isLeftCollapsed ? (
-                                <>
-                                    <path d="m9 6 6 6-6 6" />
-                                    <path d="M4 4v16" />
-                                </>
-                            ) : (
-                                <>
-                                    <path d="m15 6-6 6 6 6" />
-                                    <path d="M20 4v16" />
-                                </>
-                            )}
-                        </svg>
-                    </button>
+                            <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.9"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                            >
+                                {isLeftCollapsed ? (
+                                    <>
+                                        <path d="m9 6 6 6-6 6" />
+                                        <path d="M4 4v16" />
+                                    </>
+                                ) : (
+                                    <>
+                                        <path d="m15 6-6 6 6 6" />
+                                        <path d="M20 4v16" />
+                                    </>
+                                )}
+                            </svg>
+                        </button>
+                    )}
                     <button
                         type="button"
                         className={`todo-door-trigger ${isEditorOpen || isBulkCreateOpen ? "active" : ""}`}
@@ -178,7 +182,7 @@ export default function TodoLeftPanel({
                     <div className="todo-filter-row">
                         <input
                             value={search}
-                            placeholder="Search task/category"
+                            placeholder="Search task"
                             onChange={(event) => onSearchChange(event.target.value)}
                         />
                         <div className="todo-filter-menu todo-filter-menu--inline">

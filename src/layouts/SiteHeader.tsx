@@ -17,7 +17,8 @@ const NAV_ITEMS: Array<{
 }> = [
     { to: ROUTES.apps, label: "Chọn app", icon: "apps" },
     { to: ROUTES.home, label: "Trang chủ", icon: "home", end: true },
-    { to: ROUTES.todo, label: "Todo", icon: "todo" },
+    { to: ROUTES.todo, label: "Todo timeline", icon: "todo", end: true },
+    { to: ROUTES.todoList, label: "Todo list", icon: "todoList" },
     { to: ROUTES.submit, label: "Đăng kỷ lục", icon: "submit" },
     { to: ROUTES.myRecords, label: "Kỷ lục của tôi", icon: "records" },
     { to: ROUTES.admin, label: "Kiểm duyệt", icon: "admin", adminOnly: true },
@@ -44,7 +45,9 @@ export default function SiteHeader() {
     const navigate = useNavigate();
     const { user } = useAppSelector((state) => state.auth);
     const isAdmin = useIsAdmin();
-    const isTodoWorkspace = location.pathname.startsWith(ROUTES.todo);
+    const isTodoWorkspace =
+        location.pathname === ROUTES.todo ||
+        location.pathname === ROUTES.todoList;
     const isAppSelection = location.pathname === ROUTES.apps;
 
     function handleLogout() {
@@ -57,14 +60,18 @@ export default function SiteHeader() {
         if (item.adminOnly && !isAdmin) return false;
 
         if (isTodoWorkspace) {
-            return item.to === ROUTES.apps || item.to === ROUTES.todo;
+            return (
+                item.to === ROUTES.apps ||
+                item.to === ROUTES.todo ||
+                item.to === ROUTES.todoList
+            );
         }
 
         if (isAppSelection) {
             return item.to === ROUTES.apps;
         }
 
-        return item.to !== ROUTES.todo;
+        return item.to !== ROUTES.todo && item.to !== ROUTES.todoList;
     });
 
     return (

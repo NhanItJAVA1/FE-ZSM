@@ -4,6 +4,7 @@ export type NavIconName =
     | "apps"
     | "home"
     | "todo"
+    | "todoList"
     | "submit"
     | "records"
     | "admin"
@@ -52,6 +53,16 @@ export default function NavIcon({ name, ...props }: NavIconProps) {
                     <path d="M14 9h3" />
                     <path d="m8 15 1.4 1.4L12 13.8" />
                     <path d="M14 15h3" />
+                </>
+            )}
+            {name === "todoList" && (
+                <>
+                    <path d="M8 6h12" />
+                    <path d="M8 12h12" />
+                    <path d="M8 18h12" />
+                    <path d="m3.5 6 1 1 2-2" />
+                    <path d="m3.5 12 1 1 2-2" />
+                    <path d="m3.5 18 1 1 2-2" />
                 </>
             )}
             {name === "submit" && (
