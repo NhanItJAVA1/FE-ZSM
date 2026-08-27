@@ -14,7 +14,7 @@ export const STATUS_LABELS: Record<TodoStatus, string> = {
 
 export const PRIORITIES: TodoPriority[] = ["Low", "Medium", "High"];
 export const STATUSES: TodoStatus[] = ["Todo", "InProgress", "Done"];
-export const LEFT_TASK_PAGE_SIZE = 10;
+export const LEFT_TASK_PAGE_SIZE = 6;
 export const ACTIVITY_PAGE_SIZE = 5;
 
 const DAY_MS = 86_400_000;

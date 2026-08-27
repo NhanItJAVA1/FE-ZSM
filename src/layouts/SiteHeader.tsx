@@ -1,7 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import PixelAnimation from "../components/animate/PixelAnimation.js";
-import { INDIVIDUAL_SPRITE_FRAMES } from "../components/animate/individualSpriteFrames.js";
 import NavIcon, { type NavIconName } from "../components/ui/NavIcon.js";
 import { ROUTES } from "../constants/routes.js";
 import { useIsAdmin } from "../hooks/useIsAdmin.js";
@@ -124,10 +122,10 @@ export default function SiteHeader() {
                             </span>
                         )}
                         <div className="site-header-animation site-header-animation--before-logout">
-                            <PixelAnimation
-                                frames={INDIVIDUAL_SPRITE_FRAMES}
-                                intervalMs={80}
-                                className="h-[40px] w-auto object-contain"
+                            <img
+                                src="/animations/Pixel fire asset pack v1.2/Pixel Fire Asset Pack Colored/fire asset purple/Group 7 - 1/Group 7 - 1.gif"
+                                alt=""
+                                className="site-user-fire"
                             />
                         </div>
                         <button
@@ -144,9 +142,11 @@ export default function SiteHeader() {
             </div>
 
             <div className="site-header-right">
-                <PixelAnimation folder="jump" frameCount={11} intervalMs={90} />
-                <PixelAnimation folder="Run" frameCount={8} intervalMs={100} />
-                <PixelAnimation folder="Spell" frameCount={10} intervalMs={110} />
+                <img
+                    src="/animations/Pixel fire asset pack v1.2/Pixel Fire Asset Pack Colored/fire asset red/Group 5 - 1/Group 5 - 1.gif"
+                    alt=""
+                    className="site-header-fire"
+                />
             </div>
         </header>
     );

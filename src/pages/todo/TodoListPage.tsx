@@ -173,6 +173,19 @@ export default function TodoListPage() {
         setFilterOpen(false);
     }
 
+    function scrollEditorIntoView() {
+        const scrollToEditor = () => {
+            editorDoorRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+            });
+        };
+
+        window.requestAnimationFrame(scrollToEditor);
+        window.setTimeout(scrollToEditor, 260);
+        window.setTimeout(scrollToEditor, 760);
+    }
+
     function editTodo(todo: TodoDto) {
         setIsBulkCreateOpen(false);
         selectTodo(todo.id);
@@ -186,6 +199,7 @@ export default function TodoListPage() {
         });
         setFormError(null);
         setIsEditorOpen(true);
+        scrollEditorIntoView();
     }
 
     async function submitTodo(event: React.FormEvent<HTMLFormElement>) {
