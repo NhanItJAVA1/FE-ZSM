@@ -36,8 +36,13 @@ export interface TodoFormState {
     categoryId: string;
 }
 
+export interface TodoInlineDraft extends TodoFormState {
+    id: string;
+}
+
 export type TodoDialogState =
     | { type: "deleteTodo"; todo: TodoDto }
+    | { type: "deleteTodos"; todos: TodoDto[] }
     | { type: "deleteCategory"; category: TodoCategoryDto }
     | { type: "renameCategory"; category: TodoCategoryDto }
     | null;
@@ -57,6 +62,18 @@ export const emptyForm: TodoFormState = {
     dueDate: "",
     categoryId: "",
 };
+
+let todoInlineDraftId = 0;
+
+export function createTodoInlineDraft(categoryId = ""): TodoInlineDraft {
+    todoInlineDraftId += 1;
+
+    return {
+        ...emptyForm,
+        id: `todo-draft-${Date.now()}-${todoInlineDraftId}`,
+        categoryId,
+    };
+}
 
 export function parseBackendDate(value: string) {
     const hasTimezone = /(?:Z|[+-]\d{2}:\d{2})$/i.test(value);

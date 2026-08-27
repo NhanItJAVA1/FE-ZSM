@@ -141,13 +141,6 @@ export default function SiteHeader() {
                 )}
             </div>
 
-            <div className="site-header-right">
-                <img
-                    src="/animations/fire-red.gif"
-                    alt=""
-                    className="site-header-fire"
-                />
-            </div>
         </header>
     );
 }

@@ -1,4 +1,4 @@
-import type { Dispatch, FormEvent, RefObject, SetStateAction } from "react";
+import type { Dispatch, FormEvent, RefObject, SetStateAction, SyntheticEvent } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import type { TodoCategoryDto, TodoDto, TodoPriority, TodoStatus } from "../types.js";
 import {
@@ -10,8 +10,10 @@ import {
     formatShortDate,
     getNextStatusAction,
     getPriorityTone,
+    toInputDateTime,
     type TodoCounts,
     type TodoFormState,
+    type TodoInlineDraft,
     type TodoOverdueFilter,
 } from "../todoPageUtils.js";
 
@@ -28,6 +30,7 @@ interface TodoLeftPanelProps {
     editorDoorRef: RefObject<HTMLFormElement | null>;
     form: TodoFormState;
     formError: string | null;
+    inlineDrafts?: TodoInlineDraft[];
     isBulkCreateOpen: boolean;
     isEditorOpen: boolean;
     isLeftCollapsed: boolean;
@@ -40,6 +43,8 @@ interface TodoLeftPanelProps {
     overdueFilter: TodoOverdueFilter;
     priorityFilter: TodoPriority | "All";
     selectedTodoId: number | null;
+    bulkDeleteMode?: boolean;
+    selectedDeleteIds?: number[];
     statusFilter: TodoStatus | "All";
     taskPage: number;
     totalTaskPages: number;
@@ -47,12 +52,15 @@ interface TodoLeftPanelProps {
     onClearAdvancedFilters: () => void;
     onClearFilters: () => void;
     onDeleteTodo: (todo: TodoDto) => void;
+    onDeleteSelectedTodos?: () => void;
     onEditTodo: (todo: TodoDto) => void;
     onOpenNewTodoEditor: () => void;
     onResetForm: () => void;
     onSearchChange: (value: string) => void;
     onSelectTodo: (todoId: number) => void;
+    onRemoveInlineDraft?: (id: string) => void;
     onSetForm: Dispatch<SetStateAction<TodoFormState>>;
+    onSetInlineDraft?: (id: string, patch: Partial<TodoFormState>) => void;
     onSetIsLeftCollapsed: Dispatch<SetStateAction<boolean>>;
     onSetOverdueFilter: (filter: TodoOverdueFilter) => void;
     onSetPriorityFilter: (priority: TodoPriority | "All") => void;
@@ -60,9 +68,12 @@ interface TodoLeftPanelProps {
     onSetTaskPage: Dispatch<SetStateAction<number>>;
     onSubmitTodo: (event: FormEvent<HTMLFormElement>) => void;
     onToggleFilter: () => void;
+    onToggleDeleteSelection?: (todoId: number) => void;
     onUpdateStatus: (id: number, status: TodoStatus) => void;
+    onSaveInlineTodo?: () => void;
     savingTodo: boolean;
     allowCollapse?: boolean;
+    inlineMode?: boolean;
 }
 
 export default function TodoLeftPanel({
@@ -72,6 +83,7 @@ export default function TodoLeftPanel({
     editorDoorRef,
     form,
     formError,
+    inlineDrafts = [],
     isBulkCreateOpen,
     isEditorOpen,
     isLeftCollapsed,
@@ -84,6 +96,8 @@ export default function TodoLeftPanel({
     overdueFilter,
     priorityFilter,
     selectedTodoId,
+    bulkDeleteMode = false,
+    selectedDeleteIds = [],
     statusFilter,
     taskPage,
     totalTaskPages,
@@ -91,12 +105,15 @@ export default function TodoLeftPanel({
     onClearAdvancedFilters,
     onClearFilters,
     onDeleteTodo,
+    onDeleteSelectedTodos,
     onEditTodo,
     onOpenNewTodoEditor,
     onResetForm,
     onSearchChange,
     onSelectTodo,
+    onRemoveInlineDraft,
     onSetForm,
+    onSetInlineDraft,
     onSetIsLeftCollapsed,
     onSetOverdueFilter,
     onSetPriorityFilter,
@@ -104,13 +121,29 @@ export default function TodoLeftPanel({
     onSetTaskPage,
     onSubmitTodo,
     onToggleFilter,
+    onToggleDeleteSelection,
     onUpdateStatus,
+    onSaveInlineTodo,
     savingTodo,
     allowCollapse = true,
+    inlineMode = false,
 }: TodoLeftPanelProps) {
+    const showInlineDraft = inlineMode && inlineDrafts.length > 0;
+    const hasInlineWork = inlineMode && (isEditorOpen || showInlineDraft || editingTodoId !== null);
+    const showTaskTable = visibleTodosLength > 0 || showInlineDraft;
+
+    function beginInlineEdit(todo: TodoDto) {
+        if (!inlineMode || editingTodoId === todo.id) return;
+        onEditTodo(todo);
+    }
+
+    function stopRowClick(event: SyntheticEvent) {
+        event.stopPropagation();
+    }
+
     return (
         <section
-            className={`todo-left-panel ${isLeftCollapsed ? "todo-left-panel--collapsed" : ""}`}
+            className={`todo-left-panel ${isLeftCollapsed ? "todo-left-panel--collapsed" : ""} ${inlineMode ? "todo-left-panel--inline" : ""}`}
             ref={leftPanelRef}
         >
             <div className="todo-panel-heading">
@@ -270,22 +303,33 @@ export default function TodoLeftPanel({
                             </svg>
                         </button>
                     )}
+                    {hasInlineWork && (
+                        <button
+                            type="button"
+                            className="todo-inline-save-trigger"
+                            onClick={onSaveInlineTodo}
+                            title="Lưu task"
+                            disabled={savingTodo}
+                        >
+                            SAVE
+                        </button>
+                    )}
                     <button
                         type="button"
-                        className={`todo-door-trigger ${isEditorOpen || isBulkCreateOpen ? "active" : ""}`}
+                        className={`todo-door-trigger ${!inlineMode && (isEditorOpen || isBulkCreateOpen) ? "active" : ""}`}
                         onClick={() => {
-                            if (isEditorOpen) {
+                            if (!inlineMode && isEditorOpen) {
                                 onResetForm();
                                 return;
                             }
 
                             onOpenNewTodoEditor();
                         }}
-                        title={isEditorOpen || isBulkCreateOpen ? "Đang tạo task" : "Tạo task mới"}
+                        title={!inlineMode && (isEditorOpen || isBulkCreateOpen) ? "Đang tạo task" : "Tạo task mới"}
                     >
-                        <span>{isEditorOpen ? "×" : "+"}</span>
+                        <span>{!inlineMode && isEditorOpen ? "×" : "+"}</span>
                         <span className="sr-only">
-                            {isEditorOpen ? "Đóng form" : "Tạo task mới"}
+                            {!inlineMode && isEditorOpen ? "Đóng form" : "Tạo task mới"}
                         </span>
                     </button>
                 </div>
@@ -296,7 +340,7 @@ export default function TodoLeftPanel({
                     <div className="todo-category-list">
                         {loading && <div className="empty-state">Đang tải todo...</div>}
 
-                        {!loading && visibleTodosLength === 0 && (
+                        {!loading && visibleTodosLength === 0 && !showInlineDraft && (
                             <div className="empty-state empty-state--composed">
                                 <p className="empty-state-desc">Hãy tạo task đầu tiên!</p>
                                 {(search || filterActive) && (
@@ -311,87 +355,313 @@ export default function TodoLeftPanel({
                             </div>
                         )}
 
-                        {!loading && visibleTodosLength > 0 && (
+                        {!loading && showTaskTable && (
                             <div className="todo-task-list">
-                                <div className="todo-task-table-head" aria-hidden="true">
+                                <div className="todo-task-table-head">
                                     <span>Task Name</span>
                                     <span>Description</span>
                                     <span>Duedate</span>
                                     <span>Labels</span>
-                                    <span />
+                                    <span className="todo-task-delete-head">
+                                        {inlineMode && (
+                                            <button
+                                                type="button"
+                                                className={`todo-bulk-delete-trigger ${bulkDeleteMode ? "active" : ""}`}
+                                                title={bulkDeleteMode && selectedDeleteIds.length > 0 ? "Xóa task đã chọn" : bulkDeleteMode ? "Tắt chọn nhiều" : "Chọn nhiều để xóa"}
+                                                aria-label={bulkDeleteMode && selectedDeleteIds.length > 0 ? "Xóa task đã chọn" : bulkDeleteMode ? "Tắt chọn nhiều" : "Chọn nhiều để xóa"}
+                                                onClick={onDeleteSelectedTodos}
+                                            >
+                                                {bulkDeleteMode && selectedDeleteIds.length > 0 ? (
+                                                    selectedDeleteIds.length
+                                                ) : (
+                                                    <Trash2 size={13} strokeWidth={2.3} />
+                                                )}
+                                            </button>
+                                        )}
+                                    </span>
                                 </div>
+                                {inlineMode && formError && (
+                                    <p className="todo-inline-error">{formError}</p>
+                                )}
+                                {inlineMode && inlineDrafts.map((draft, index) => (
+                                    <article
+                                        key={draft.id}
+                                        className="todo-card todo-card--editing todo-card--draft"
+                                    >
+                                        <div className="todo-card-body">
+                                            <div className="todo-card-name">
+                                                <textarea
+                                                    className="todo-inline-field todo-inline-field--strong"
+                                                    value={draft.title}
+                                                    placeholder="Task name"
+                                                    rows={2}
+                                                    autoFocus={index === inlineDrafts.length - 1}
+                                                    onChange={(event) =>
+                                                        onSetInlineDraft?.(draft.id, {
+                                                            title: event.target.value,
+                                                        })
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="todo-card-description">
+                                                <textarea
+                                                    className="todo-inline-field todo-inline-field--textarea"
+                                                    value={draft.description}
+                                                    placeholder="Description"
+                                                    rows={2}
+                                                    onChange={(event) =>
+                                                        onSetInlineDraft?.(draft.id, {
+                                                            description: event.target.value,
+                                                        })
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="todo-card-due">
+                                                <input
+                                                    className="todo-inline-field todo-inline-field--date"
+                                                    type="datetime-local"
+                                                    value={draft.dueDate}
+                                                    onChange={(event) =>
+                                                        onSetInlineDraft?.(draft.id, {
+                                                            dueDate: event.target.value,
+                                                        })
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="todo-card-labels">
+                                                <select
+                                                    className="todo-inline-field todo-inline-field--label"
+                                                    value={draft.priority}
+                                                    onChange={(event) =>
+                                                        onSetInlineDraft?.(draft.id, {
+                                                            priority: event.target.value as TodoPriority,
+                                                        })
+                                                    }
+                                                >
+                                                    {PRIORITIES.map((priority) => (
+                                                        <option key={priority} value={priority}>
+                                                            {priority}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                <select
+                                                    className="todo-inline-field todo-inline-field--label"
+                                                    value={draft.categoryId}
+                                                    onChange={(event) =>
+                                                        onSetInlineDraft?.(draft.id, {
+                                                            categoryId: event.target.value,
+                                                        })
+                                                    }
+                                                >
+                                                    <option value={emptyForm.categoryId}>others</option>
+                                                    {categories.map((category) => (
+                                                        <option key={category.id} value={category.id}>
+                                                            {category.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div className="todo-card-actions">
+                                            <button
+                                                type="button"
+                                                className="todo-card-side-btn todo-card-side-btn--danger todo-card-side-btn--single"
+                                                title="Hủy"
+                                                aria-label="Hủy tạo task"
+                                                onClick={() => onRemoveInlineDraft?.(draft.id)}
+                                            >
+                                                <Trash2 size={13} strokeWidth={2.3} />
+                                            </button>
+                                        </div>
+                                    </article>
+                                ))}
                                 {paginatedTodos.map((todo) => {
                                     const nextStatusAction = getNextStatusAction(todo.status);
+                                    const isRowEditing = inlineMode && editingTodoId === todo.id;
 
                                     return (
                                         <article
                                             key={todo.id}
-                                            className={`todo-card ${selectedTodoId === todo.id ? "active" : ""}`}
+                                            className={`todo-card ${selectedTodoId === todo.id ? "active" : ""} ${isRowEditing ? "todo-card--editing" : ""}`}
                                             onClick={() => onSelectTodo(todo.id)}
                                         >
                                             <div className="todo-card-body">
                                                 <div className="todo-card-name">
-                                                    <h3>{todo.title}</h3>
+                                                    {inlineMode ? (
+                                                        <textarea
+                                                            className="todo-inline-field todo-inline-field--strong"
+                                                            value={isRowEditing ? form.title : todo.title}
+                                                            placeholder="Task name"
+                                                            rows={2}
+                                                            onClick={stopRowClick}
+                                                            onFocus={() => beginInlineEdit(todo)}
+                                                            onChange={(event) => {
+                                                                beginInlineEdit(todo);
+                                                                onSetForm((current) => ({
+                                                                    ...current,
+                                                                    title: event.target.value,
+                                                                }));
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <h3>{todo.title}</h3>
+                                                    )}
                                                 </div>
                                                 <div className="todo-card-description">
-                                                    <p>{todo.description || "Không có mô tả"}</p>
+                                                    {inlineMode ? (
+                                                        <textarea
+                                                            className="todo-inline-field todo-inline-field--textarea"
+                                                            value={isRowEditing ? form.description : todo.description ?? ""}
+                                                            placeholder="Description"
+                                                            rows={2}
+                                                            onClick={stopRowClick}
+                                                            onFocus={() => beginInlineEdit(todo)}
+                                                            onChange={(event) => {
+                                                                beginInlineEdit(todo);
+                                                                onSetForm((current) => ({
+                                                                    ...current,
+                                                                    description: event.target.value,
+                                                                }));
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <p>{todo.description || "Không có mô tả"}</p>
+                                                    )}
                                                 </div>
                                                 <div className="todo-card-due">
-                                                    <span>{formatShortDate(todo.dueDate)}</span>
+                                                    {inlineMode ? (
+                                                        <input
+                                                            className="todo-inline-field todo-inline-field--date"
+                                                            type="datetime-local"
+                                                            value={isRowEditing ? form.dueDate : toInputDateTime(todo.dueDate)}
+                                                            placeholder={formatShortDate(todo.dueDate)}
+                                                            onClick={stopRowClick}
+                                                            onFocus={() => beginInlineEdit(todo)}
+                                                            onChange={(event) => {
+                                                                beginInlineEdit(todo);
+                                                                onSetForm((current) => ({
+                                                                    ...current,
+                                                                    dueDate: event.target.value,
+                                                                }));
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <span>{formatShortDate(todo.dueDate)}</span>
+                                                    )}
                                                 </div>
                                                 <div className="todo-card-labels">
-                                                    <span className={getPriorityTone(todo.priority)}>
-                                                        {todo.priority}
-                                                    </span>
-                                                    <span className="todo-category-label">
-                                                        {todo.categoryName || "others"}
-                                                    </span>
+                                                    {inlineMode ? (
+                                                        <>
+                                                            <select
+                                                                className="todo-inline-field todo-inline-field--label"
+                                                                value={isRowEditing ? form.priority : todo.priority}
+                                                                onClick={stopRowClick}
+                                                                onFocus={() => beginInlineEdit(todo)}
+                                                                onChange={(event) => {
+                                                                    beginInlineEdit(todo);
+                                                                    onSetForm((current) => ({
+                                                                        ...current,
+                                                                        priority: event.target.value as TodoPriority,
+                                                                    }));
+                                                                }}
+                                                            >
+                                                                {PRIORITIES.map((priority) => (
+                                                                    <option key={priority} value={priority}>
+                                                                        {priority}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                            <select
+                                                                className="todo-inline-field todo-inline-field--label"
+                                                                value={isRowEditing ? form.categoryId : todo.categoryId ? String(todo.categoryId) : ""}
+                                                                onClick={stopRowClick}
+                                                                onFocus={() => beginInlineEdit(todo)}
+                                                                onChange={(event) => {
+                                                                    beginInlineEdit(todo);
+                                                                    onSetForm((current) => ({
+                                                                        ...current,
+                                                                        categoryId: event.target.value,
+                                                                    }));
+                                                                }}
+                                                            >
+                                                                <option value={emptyForm.categoryId}>others</option>
+                                                                {categories.map((category) => (
+                                                                    <option key={category.id} value={category.id}>
+                                                                        {category.name}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span className={getPriorityTone(todo.priority)}>
+                                                                {todo.priority}
+                                                            </span>
+                                                            <span className="todo-category-label">
+                                                                {todo.categoryName || "others"}
+                                                            </span>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </div>
 
                                             <div className="todo-card-actions">
-                                                <button
-                                                    type="button"
-                                                    className="todo-card-side-btn todo-card-side-btn--status"
-                                                    title={nextStatusAction.label}
-                                                    aria-label={`${nextStatusAction.label} task ${todo.title}`}
-                                                    disabled={todo.status === "Done"}
-                                                    onClick={(event) => {
-                                                        event.stopPropagation();
-                                                        if (todo.status === "Done") return;
-                                                        onUpdateStatus(todo.id, nextStatusAction.nextStatus);
-                                                    }}
-                                                >
-                                                    <img
-                                                        src={STATUS_ICONS[todo.status]}
-                                                        alt=""
-                                                        className="todo-status-action-icon"
-                                                    />
-                                                </button>
-                                                <div className="todo-card-edit-stack">
+                                                {!inlineMode && (
                                                     <button
                                                         type="button"
-                                                        className="todo-card-side-btn"
-                                                        title="Sửa task"
-                                                        aria-label={`Sửa task ${todo.title}`}
+                                                        className="todo-card-side-btn todo-card-side-btn--status"
+                                                        title={nextStatusAction.label}
+                                                        aria-label={`${nextStatusAction.label} task ${todo.title}`}
+                                                        disabled={todo.status === "Done"}
                                                         onClick={(event) => {
                                                             event.stopPropagation();
-                                                            onEditTodo(todo);
+                                                            if (todo.status === "Done") return;
+                                                            onUpdateStatus(todo.id, nextStatusAction.nextStatus);
                                                         }}
                                                     >
-                                                        <Pencil size={13} strokeWidth={2.3} />
+                                                        <img
+                                                            src={STATUS_ICONS[todo.status]}
+                                                            alt=""
+                                                            className="todo-status-action-icon"
+                                                        />
                                                     </button>
+                                                )}
+                                                <div className="todo-card-edit-stack">
+                                                    {!inlineMode && (
+                                                        <button
+                                                            type="button"
+                                                            className="todo-card-side-btn"
+                                                            title="Sửa task"
+                                                            aria-label={`Sửa task ${todo.title}`}
+                                                            onClick={(event) => {
+                                                                event.stopPropagation();
+                                                                onEditTodo(todo);
+                                                            }}
+                                                        >
+                                                            <Pencil size={13} strokeWidth={2.3} />
+                                                        </button>
+                                                    )}
                                                     <button
                                                         type="button"
-                                                        className="todo-card-side-btn todo-card-side-btn--danger"
-                                                        title="Xóa task"
-                                                        aria-label={`Xóa task ${todo.title}`}
+                                                        className={`todo-card-side-btn todo-card-side-btn--danger ${inlineMode ? "todo-card-side-btn--single" : ""}`}
+                                                        title={bulkDeleteMode ? "Chọn task để xóa" : "Xóa task"}
+                                                        aria-label={bulkDeleteMode ? `Chọn task ${todo.title} để xóa` : `Xóa task ${todo.title}`}
                                                         onClick={(event) => {
                                                             event.stopPropagation();
+                                                            if (bulkDeleteMode) {
+                                                                onToggleDeleteSelection?.(todo.id);
+                                                                return;
+                                                            }
                                                             onDeleteTodo(todo);
                                                         }}
                                                     >
-                                                        <Trash2 size={13} strokeWidth={2.3} />
+                                                        {bulkDeleteMode ? (
+                                                            <span
+                                                                className={`todo-delete-select-dot ${selectedDeleteIds.includes(todo.id) ? "active" : ""}`}
+                                                            />
+                                                        ) : (
+                                                            <Trash2 size={13} strokeWidth={2.3} />
+                                                        )}
                                                     </button>
                                                 </div>
                                             </div>
@@ -435,7 +705,8 @@ export default function TodoLeftPanel({
                     </div>
                 </div>
 
-                <form
+                {!inlineMode && (
+                    <form
                     ref={editorDoorRef}
                     className={`todo-editor-door ${isEditorOpen ? "open" : ""}`}
                     onSubmit={onSubmitTodo}
@@ -547,7 +818,8 @@ export default function TodoLeftPanel({
                             {editingTodoId ? "Save task" : "Create task"}
                         </button>
                     </div>
-                </form>
+                    </form>
+                )}
             </div>
         </section>
     );

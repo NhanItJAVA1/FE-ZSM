@@ -1,15 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
-import TodoBulkCreateModal, {
-    createTodoBulkDraft,
-    type TodoBulkDraft,
-} from "../../features/todo/components/TodoBulkCreateModal.js";
 import TodoDialog from "../../features/todo/components/TodoDialog.js";
 import TodoLeftPanel from "../../features/todo/components/TodoLeftPanel.js";
 import type { TodoDto, TodoPriority, TodoQuery, TodoStatus } from "../../features/todo/types.js";
 import {
     LEFT_TASK_PAGE_SIZE,
     countTodos,
+    createTodoInlineDraft,
     emptyForm,
     getCategoryFilterId,
     getCategoryIdFromFilter,
@@ -18,6 +15,7 @@ import {
     type CategoryFilter,
     type TodoDialogState,
     type TodoFormState,
+    type TodoInlineDraft,
     type TodoOverdueFilter,
 } from "../../features/todo/todoPageUtils.js";
 import { useTodoCategoriesQuery } from "../../hooks/useTodoCategoriesQuery.js";
@@ -35,15 +33,13 @@ export default function TodoListPage() {
     const [taskPage, setTaskPage] = useState(1);
     const [filterOpen, setFilterOpen] = useState(false);
     const [selectedTodoId, setSelectedTodoId] = useState<number | null>(null);
+    const [bulkDeleteMode, setBulkDeleteMode] = useState(false);
+    const [selectedDeleteIds, setSelectedDeleteIds] = useState<number[]>([]);
     const [editingTodoId, setEditingTodoId] = useState<number | null>(null);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
-    const [isBulkCreateOpen, setIsBulkCreateOpen] = useState(false);
     const [form, setForm] = useState<TodoFormState>(emptyForm);
+    const [inlineDrafts, setInlineDrafts] = useState<TodoInlineDraft[]>([]);
     const [formError, setFormError] = useState<string | null>(null);
-    const [bulkDrafts, setBulkDrafts] = useState<TodoBulkDraft[]>(() => [
-        createTodoBulkDraft(),
-    ]);
-    const [bulkCreateError, setBulkCreateError] = useState<string | null>(null);
     const [categoryName, setCategoryName] = useState("");
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<CategoryFilter>("all");
     const [todoDialog, setTodoDialog] = useState<TodoDialogState>(null);
@@ -100,6 +96,9 @@ export default function TodoListPage() {
             : todosQuery.data?.totalItems ?? visibleTodos.length;
     const totalTaskPages = Math.max(1, todosQuery.data?.totalPages ?? 1);
     const selectedTodo = visibleTodos.find((todo) => todo.id === selectedTodoId) ?? null;
+    const selectedDeleteTodos = visibleTodos.filter((todo) =>
+        selectedDeleteIds.includes(todo.id)
+    );
 
     useEffect(() => {
         setTaskPage(1);
@@ -112,6 +111,7 @@ export default function TodoListPage() {
     useEffect(() => {
         if (visibleTodos.length === 0) {
             setSelectedTodoId(null);
+            setSelectedDeleteIds([]);
             return;
         }
 
@@ -122,11 +122,15 @@ export default function TodoListPage() {
 
             return visibleTodos[0]?.id ?? null;
         });
+        setSelectedDeleteIds((current) =>
+            current.filter((id) => visibleTodos.some((todo) => todo.id === id))
+        );
     }, [visibleTodos]);
 
     function resetForm() {
         setEditingTodoId(null);
         setForm(emptyForm);
+        setInlineDrafts([]);
         setFormError(null);
         setIsEditorOpen(false);
     }
@@ -144,28 +148,38 @@ export default function TodoListPage() {
     }
 
     function openNewTodoEditor() {
-        resetForm();
-        setBulkCreateError(null);
-        setBulkDrafts([createTodoBulkDraft()]);
-        setIsBulkCreateOpen(true);
+        const categoryId =
+            selectedCategoryFilter.startsWith("category-")
+                ? selectedCategoryFilter.replace("category-", "")
+                : "";
+
+        setInlineDrafts((current) => [
+            ...current,
+            createTodoInlineDraft(categoryId),
+        ]);
+        setFormError(null);
+        setFilterOpen(false);
+        setIsEditorOpen(true);
     }
 
-    function closeBulkCreateModal() {
-        setIsBulkCreateOpen(false);
-        setBulkCreateError(null);
-        setBulkDrafts([createTodoBulkDraft()]);
+    function updateInlineDraft(id: string, patch: Partial<TodoFormState>) {
+        setInlineDrafts((current) =>
+            current.map((draft) =>
+                draft.id === id ? { ...draft, ...patch } : draft
+            )
+        );
+        setFormError(null);
+        setIsEditorOpen(true);
     }
 
-    function addBulkDraftRow() {
-        setBulkDrafts((current) => [...current, createTodoBulkDraft()]);
-    }
+    function removeInlineDraft(id: string) {
+        const nextDrafts = inlineDrafts.filter((draft) => draft.id !== id);
 
-    function removeBulkDraftRow(id: string) {
-        setBulkDrafts((current) => {
-            if (current.length === 1) return current;
-
-            return current.filter((draft) => draft.id !== id);
-        });
+        setInlineDrafts(nextDrafts);
+        setFormError(null);
+        if (nextDrafts.length === 0 && editingTodoId === null) {
+            setIsEditorOpen(false);
+        }
     }
 
     function selectTodo(todoId: number) {
@@ -173,21 +187,30 @@ export default function TodoListPage() {
         setFilterOpen(false);
     }
 
-    function scrollEditorIntoView() {
-        const scrollToEditor = () => {
-            editorDoorRef.current?.scrollIntoView({
-                behavior: "smooth",
-                block: "center",
-            });
-        };
+    function toggleBulkDeleteMode() {
+        if (!bulkDeleteMode) {
+            setBulkDeleteMode(true);
+            setSelectedDeleteIds([]);
+            return;
+        }
 
-        window.requestAnimationFrame(scrollToEditor);
-        window.setTimeout(scrollToEditor, 260);
-        window.setTimeout(scrollToEditor, 760);
+        if (selectedDeleteTodos.length > 0) {
+            setTodoDialog({ type: "deleteTodos", todos: selectedDeleteTodos });
+            return;
+        }
+
+        setBulkDeleteMode(false);
+    }
+
+    function toggleDeleteSelection(todoId: number) {
+        setSelectedDeleteIds((current) =>
+            current.includes(todoId)
+                ? current.filter((id) => id !== todoId)
+                : [...current, todoId]
+        );
     }
 
     function editTodo(todo: TodoDto) {
-        setIsBulkCreateOpen(false);
         selectTodo(todo.id);
         setEditingTodoId(todo.id);
         setForm({
@@ -199,25 +222,38 @@ export default function TodoListPage() {
         });
         setFormError(null);
         setIsEditorOpen(true);
-        scrollEditorIntoView();
     }
 
-    async function submitTodo(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault();
+    async function saveInlineTodo() {
         setFormError(null);
 
-        if (!form.title.trim()) {
+        if (editingTodoId && !form.title.trim()) {
             setFormError("Tiêu đề task là bắt buộc.");
             return;
         }
 
-        try {
-            if (!editingTodoId) return;
+        const invalidDraftIndex = inlineDrafts.findIndex(
+            (draft) => !draft.title.trim()
+        );
 
-            await mutations.updateTodo.mutateAsync({
-                id: editingTodoId,
-                payload: toPayload(form),
-            });
+        if (invalidDraftIndex >= 0) {
+            setFormError(`Dòng ${invalidDraftIndex + 1} cần có tiêu đề task.`);
+            return;
+        }
+
+        if (!editingTodoId && inlineDrafts.length === 0) return;
+
+        try {
+            if (editingTodoId) {
+                await mutations.updateTodo.mutateAsync({
+                    id: editingTodoId,
+                    payload: toPayload(form),
+                });
+            }
+
+            if (inlineDrafts.length > 0) {
+                await mutations.createTodo.mutateAsync(inlineDrafts.map(toPayload));
+            }
 
             resetForm();
         } catch (error) {
@@ -225,25 +261,9 @@ export default function TodoListPage() {
         }
     }
 
-    async function submitBulkTodos(event: React.FormEvent<HTMLFormElement>) {
+    async function submitTodo(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
-        setBulkCreateError(null);
-
-        const invalidRowIndex = bulkDrafts.findIndex((draft) => !draft.title.trim());
-
-        if (invalidRowIndex !== -1) {
-            setBulkCreateError(`Dòng ${invalidRowIndex + 1} cần có title.`);
-            return;
-        }
-
-        try {
-            await mutations.createTodo.mutateAsync(bulkDrafts.map(toPayload));
-            closeBulkCreateModal();
-        } catch (error) {
-            setBulkCreateError(
-                error instanceof Error ? error.message : "Không thể tạo todo."
-            );
-        }
+        await saveInlineTodo();
     }
 
     async function submitCategory(event: React.FormEvent<HTMLFormElement>) {
@@ -259,6 +279,7 @@ export default function TodoListPage() {
         setSearch("");
         clearAdvancedFilters();
         setSelectedTodoId(null);
+        resetForm();
         setSelectedCategoryFilter(filter);
     }
 
@@ -279,6 +300,24 @@ export default function TodoListPage() {
         await mutations.deleteTodo.mutateAsync(todo.id);
         if (selectedTodoId === todo.id) setSelectedTodoId(null);
         if (editingTodoId === todo.id) resetForm();
+        setTodoDialog(null);
+    }
+
+    async function confirmDeleteTodos(todos: TodoDto[]) {
+        for (const todo of todos) {
+            await mutations.deleteTodo.mutateAsync(todo.id);
+        }
+
+        if (todos.some((todo) => todo.id === selectedTodoId)) {
+            setSelectedTodoId(null);
+        }
+
+        if (editingTodoId && todos.some((todo) => todo.id === editingTodoId)) {
+            resetForm();
+        }
+
+        setSelectedDeleteIds([]);
+        setBulkDeleteMode(false);
         setTodoDialog(null);
     }
 
@@ -415,8 +454,9 @@ export default function TodoListPage() {
                         editorDoorRef={editorDoorRef}
                         form={form}
                         formError={formError}
+                        inlineDrafts={inlineDrafts}
                         isEditorOpen={isEditorOpen}
-                        isBulkCreateOpen={isBulkCreateOpen}
+                        isBulkCreateOpen={false}
                         isLeftCollapsed={false}
                         leftPanelRef={leftPanelRef}
                         loading={loading}
@@ -427,6 +467,8 @@ export default function TodoListPage() {
                         overdueFilter={overdueFilter}
                         priorityFilter={priorityFilter}
                         selectedTodoId={selectedTodo?.id ?? null}
+                        bulkDeleteMode={bulkDeleteMode}
+                        selectedDeleteIds={selectedDeleteIds}
                         statusFilter={statusFilter}
                         taskPage={taskPage}
                         totalTaskPages={totalTaskPages}
@@ -434,26 +476,30 @@ export default function TodoListPage() {
                         onClearFilters={clearTodoFilters}
                         onClearAdvancedFilters={clearAdvancedFilters}
                         onDeleteTodo={deleteTodo}
+                        onDeleteSelectedTodos={toggleBulkDeleteMode}
                         onEditTodo={editTodo}
                         onOpenNewTodoEditor={openNewTodoEditor}
                         onResetForm={resetForm}
                         onSearchChange={setSearch}
                         onSelectTodo={selectTodo}
+                        onRemoveInlineDraft={removeInlineDraft}
                         onToggleFilter={() =>
                             setFilterOpen((current) => !current)
                         }
+                        onToggleDeleteSelection={toggleDeleteSelection}
                         onSetForm={setForm}
+                        onSetInlineDraft={updateInlineDraft}
                         onSetIsLeftCollapsed={() => undefined}
                         onSetOverdueFilter={setOverdueFilter}
                         onSetPriorityFilter={setPriorityFilter}
                         onSetStatusFilter={setStatusFilter}
                         onSetTaskPage={setTaskPage}
                         onSubmitTodo={submitTodo}
-                        onUpdateStatus={(id, status) =>
-                            mutations.updateStatus.mutate({ id, status })
-                        }
+                        onSaveInlineTodo={() => void saveInlineTodo()}
+                        onUpdateStatus={(id, status) => mutations.updateStatus.mutate({ id, status })}
                         savingTodo={mutations.createTodo.isPending || mutations.updateTodo.isPending}
                         allowCollapse={false}
+                        inlineMode
                     />
                 </div>
             </main>
@@ -469,23 +515,11 @@ export default function TodoListPage() {
                     void confirmDeleteCategory(category, deleteTodos)
                 }
                 onConfirmDeleteTodo={(todo) => void confirmDeleteTodo(todo)}
+                onConfirmDeleteTodos={(todos) => void confirmDeleteTodos(todos)}
                 onConfirmRenameCategory={confirmRenameCategory}
                 onRenameCategoryNameChange={setRenameCategoryName}
             />
 
-            {isBulkCreateOpen && (
-                <TodoBulkCreateModal
-                    categories={categories}
-                    drafts={bulkDrafts}
-                    error={bulkCreateError}
-                    saving={mutations.createTodo.isPending}
-                    onAddRow={addBulkDraftRow}
-                    onCancel={closeBulkCreateModal}
-                    onRemoveRow={removeBulkDraftRow}
-                    onSetDrafts={setBulkDrafts}
-                    onSubmit={submitBulkTodos}
-                />
-            )}
         </AppLayout>
     );
 }

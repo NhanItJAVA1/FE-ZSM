@@ -107,22 +107,6 @@ dl {
   image-rendering: pixelated;
 }
 
-.site-header-right {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-.site-header-fire {
-  width: 44px;
-  height: 64px;
-  object-fit: contain;
-  display: block;
-  image-rendering: pixelated;
-}
-
 .header-chip {
   display: flex;
   align-items: center;
@@ -1978,7 +1962,7 @@ button:disabled {
   --todo-control-hover: color-mix(in srgb, var(--accent) 32%, #303848);
   min-height: calc(100svh - 118px);
   display: grid;
-  grid-template-columns: minmax(220px, 280px) minmax(0, 760px);
+  grid-template-columns: minmax(200px, 250px) minmax(0, 980px);
   justify-content: center;
   align-items: start;
   gap: 1px;
@@ -2027,13 +2011,13 @@ button:disabled {
   margin: 0;
 }
 
-.todo-simple-category-heading .todo-simple-category-stats {
+.todo-simple-category-heading .todo-stat-row.todo-simple-category-stats {
   grid-template-columns: repeat(3, max-content);
   gap: 4px;
   max-width: none;
 }
 
-.todo-simple-category-heading .todo-simple-category-stats span {
+.todo-simple-category-heading .todo-stat-row.todo-simple-category-stats span {
   min-height: 22px;
   display: inline-flex;
   align-items: center;
@@ -2044,7 +2028,7 @@ button:disabled {
   line-height: 1;
 }
 
-.todo-simple-category-heading .todo-simple-category-stats b {
+.todo-simple-category-heading .todo-stat-row.todo-simple-category-stats b {
   font-size: 11px;
   line-height: 1;
 }
@@ -2738,6 +2722,11 @@ button:disabled {
   gap: 8px;
 }
 
+.todo-left-panel--inline .todo-panel-heading {
+  grid-template-columns: minmax(180px, 640px) auto;
+  justify-content: end;
+}
+
 .todo-panel-actions {
   display: inline-flex;
   align-items: center;
@@ -2813,6 +2802,32 @@ button:disabled {
 
 .todo-door-trigger.active {
   background: var(--accent);
+}
+
+.todo-inline-save-trigger {
+  width: 58px;
+  height: 38px;
+  min-height: 38px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 9px;
+  background: var(--todo-control);
+  color: var(--text-on-dark);
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.todo-inline-save-trigger:hover {
+  filter: none;
+  background: var(--todo-control-hover);
+}
+
+.todo-inline-save-trigger:disabled {
+  cursor: default;
+  opacity: 0.62;
 }
 
 .todo-stat-row,
@@ -3019,8 +3034,8 @@ button:disabled {
 
 .todo-task-table-head {
   display: grid;
-  grid-template-columns: minmax(130px, 1fr) minmax(170px, 1.35fr) 86px minmax(92px, 0.72fr) 79px;
-  gap: 10px;
+  grid-template-columns: minmax(88px, 0.52fr) minmax(220px, 1.7fr) 150px 60px 79px;
+  gap: 8px;
   align-items: center;
   min-height: 34px;
   padding: 0 9px;
@@ -3030,6 +3045,59 @@ button:disabled {
   font-size: 10px;
   font-weight: 900;
   text-transform: uppercase;
+}
+
+.todo-task-table-head span:nth-child(3),
+.todo-task-table-head span:nth-child(4) {
+  text-align: right;
+}
+
+.todo-left-panel--inline .todo-task-table-head {
+  grid-template-columns: minmax(88px, 0.52fr) minmax(220px, 1.7fr) 150px 60px 36px;
+  gap: 0;
+}
+
+.todo-left-panel--inline .todo-task-table-head span {
+  padding-inline: 7px;
+}
+
+.todo-left-panel--inline .todo-task-table-head span:nth-child(3),
+.todo-left-panel--inline .todo-task-table-head span:nth-child(4) {
+  text-align: left;
+}
+
+.todo-left-panel--inline .todo-task-table-head span:last-child {
+  padding-inline: 0;
+}
+
+.todo-task-delete-head {
+  display: grid;
+  place-items: center;
+}
+
+.todo-bulk-delete-trigger {
+  width: 26px;
+  min-width: 26px;
+  height: 26px;
+  min-height: 26px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 46%, transparent);
+  background: rgba(255, 255, 255, 0.48);
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.todo-bulk-delete-trigger:hover,
+.todo-bulk-delete-trigger.active {
+  filter: none;
+  border-color: color-mix(in srgb, var(--accent) 32%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, rgba(255, 255, 255, 0.62));
+  color: var(--accent);
 }
 
 .todo-list-pagination {
@@ -3070,9 +3138,9 @@ button:disabled {
 
 .todo-card {
   display: grid;
-  grid-template-columns: minmax(130px, 1fr) minmax(170px, 1.35fr) 86px minmax(92px, 0.72fr) 79px;
-  align-items: center;
-  gap: 10px;
+  grid-template-columns: minmax(88px, 0.52fr) minmax(220px, 1.7fr) 150px 60px 79px;
+  align-items: stretch;
+  gap: 8px;
   min-height: 66px;
   padding: 7px 9px;
   border: 0;
@@ -3088,8 +3156,23 @@ button:disabled {
     box-shadow 420ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 
+.todo-left-panel--inline .todo-card {
+  grid-template-columns: minmax(88px, 0.52fr) minmax(220px, 1.7fr) 150px 60px 36px;
+  gap: 0;
+  padding: 0 9px;
+}
+
 .todo-card:last-child {
   border-bottom: 0;
+}
+
+.todo-card--editing {
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: inset 3px 0 0 color-mix(in srgb, var(--accent) 74%, transparent);
+}
+
+.todo-card--draft {
+  background: color-mix(in srgb, var(--accent) 8%, rgba(255, 255, 255, 0.78));
 }
 
 .todo-card-body {
@@ -3102,8 +3185,9 @@ button:disabled {
 .todo-card-due,
 .todo-card-labels {
   min-width: 0;
+  height: 100%;
   display: grid;
-  align-content: center;
+  align-content: stretch;
   gap: 5px;
 }
 
@@ -3112,10 +3196,86 @@ button:disabled {
   font-family: var(--mono);
   font-size: 11px;
   font-weight: 900;
+  justify-items: end;
+  text-align: right;
 }
 
 .todo-card-labels {
-  justify-items: start;
+  justify-items: end;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.todo-left-panel--inline .todo-card-labels {
+  gap: 0;
+}
+
+.todo-inline-field {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  padding: 5px 7px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-h);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+  box-shadow: none;
+}
+
+.todo-left-panel--inline .todo-inline-field {
+  border-radius: 0;
+}
+
+.todo-inline-field:hover,
+.todo-inline-field:focus {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: none;
+}
+
+.todo-inline-field--strong {
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.todo-card-name .todo-inline-field--strong {
+  resize: none;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.todo-inline-field--textarea {
+  height: 100%;
+  resize: none;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.todo-inline-field--date,
+.todo-inline-field--label {
+  height: 100%;
+  padding-inline: 4px;
+  font-size: 10px;
+}
+
+.todo-inline-field--date {
+  font-size: 11px;
+}
+
+.todo-inline-error {
+  margin: 0;
+  padding: 7px 9px;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 18%, var(--border));
+  background: color-mix(in srgb, var(--accent) 8%, rgba(255, 255, 255, 0.48));
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 900;
 }
 
 .todo-category-label {
@@ -3138,6 +3298,10 @@ button:disabled {
   align-content: start;
   gap: 5px;
   justify-content: end;
+}
+
+.todo-left-panel--inline .todo-card-actions {
+  grid-template-columns: 36px;
 }
 
 .todo-card-edit-stack {
@@ -3193,6 +3357,24 @@ button:disabled {
   color: var(--text-on-dark);
 }
 
+.todo-card-side-btn--single {
+  height: 57px;
+}
+
+.todo-delete-select-dot {
+  width: 14px;
+  height: 14px;
+  display: block;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+}
+
+.todo-delete-select-dot.active {
+  border-color: var(--text-on-dark);
+  background: var(--text-on-dark);
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+
 .todo-card-side-btn--status {
   height: 57px;
   padding: 0;
@@ -3234,15 +3416,18 @@ button:disabled {
   letter-spacing: 0;
 }
 
-.todo-card p {
+.todo-card-description p {
   margin: 0;
   color: var(--muted);
   font-size: 12px;
   line-height: 1.35;
   display: -webkit-box;
   overflow: hidden;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  word-break: break-word;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
+  -webkit-line-clamp: 2;
 }
 
 .todo-timeline-legend,

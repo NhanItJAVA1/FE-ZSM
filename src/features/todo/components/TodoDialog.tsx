@@ -11,6 +11,7 @@ interface TodoDialogProps {
     onCancel: () => void;
     onConfirmDeleteCategory: (category: TodoCategoryDto, deleteTodos: boolean) => void;
     onConfirmDeleteTodo: (todo: TodoDto) => void;
+    onConfirmDeleteTodos?: (todos: TodoDto[]) => void;
     onConfirmRenameCategory: (event: FormEvent<HTMLFormElement>) => void;
     onRenameCategoryNameChange: (value: string) => void;
 }
@@ -46,6 +47,7 @@ export default function TodoDialog({
     onCancel,
     onConfirmDeleteCategory,
     onConfirmDeleteTodo,
+    onConfirmDeleteTodos,
     onConfirmRenameCategory,
     onRenameCategoryNameChange,
 }: TodoDialogProps) {
@@ -84,6 +86,32 @@ export default function TodoDialog({
                                 className="todo-danger-btn"
                                 disabled={deleteTodoPending}
                                 onClick={() => onConfirmDeleteTodo(dialog.todo)}
+                            >
+                                Xóa task
+                            </button>
+                        </div>
+                    </>
+                )}
+
+                {dialog.type === "deleteTodos" && (
+                    <>
+                        <div className="todo-dialog-mark todo-dialog-mark--danger">
+                            <TrashIcon />
+                        </div>
+                        <div className="todo-dialog-copy">
+                            <p>
+                                {dialog.todos.length} task đã chọn sẽ bị xóa khỏi danh sách và timeline.
+                            </p>
+                        </div>
+                        <div className="todo-dialog-actions">
+                            <button type="button" className="ghost-btn" onClick={onCancel}>
+                                Hủy
+                            </button>
+                            <button
+                                type="button"
+                                className="todo-danger-btn"
+                                disabled={deleteTodoPending}
+                                onClick={() => onConfirmDeleteTodos?.(dialog.todos)}
                             >
                                 Xóa task
                             </button>
