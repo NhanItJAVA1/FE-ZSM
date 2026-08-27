@@ -143,7 +143,7 @@ export default function SiteHeader() {
 
             <div className="site-header-right">
                 <img
-                    src="/animations/Pixel fire asset pack v1.2/Pixel Fire Asset Pack Colored/fire asset red/Group 5 - 1/Group 5 - 1.gif"
+                    src="/animations/fire-red.gif"
                     alt=""
                     className="site-header-fire"
                 />
