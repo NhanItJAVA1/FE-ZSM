@@ -1,4 +1,5 @@
 import type { Dispatch, FormEvent, RefObject, SetStateAction } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import type { TodoCategoryDto, TodoDto, TodoPriority, TodoStatus } from "../types.js";
 import {
     OVERDUE_FILTER_LABELS,
@@ -13,6 +14,12 @@ import {
     type TodoFormState,
     type TodoOverdueFilter,
 } from "../todoPageUtils.js";
+
+const STATUS_ICONS: Record<TodoStatus, string> = {
+    Todo: "/images/check-start.png",
+    InProgress: "/images/check-inprogress.png",
+    Done: "/images/check-done.png",
+};
 
 interface TodoLeftPanelProps {
     categories: TodoCategoryDto[];
@@ -111,6 +118,11 @@ export default function TodoLeftPanel({
                     <p className="eyebrow">Todo</p>
                     <strong className="todo-left-collapsed-label">{visibleTodosLength}</strong>
                 </div>
+                <div className="todo-stat-row">
+                    <span><b>{counts.all}</b> Total</span>
+                    <span><b>{counts.progress}</b> Running</span>
+                    <span><b>{counts.overdue}</b> Overdue</span>
+                </div>
                 <div className="todo-panel-actions">
                     {allowCollapse && (
                         <button
@@ -169,12 +181,6 @@ export default function TodoLeftPanel({
                         </span>
                     </button>
                 </div>
-            </div>
-
-            <div className="todo-stat-row">
-                <span><b>{counts.all}</b> Total</span>
-                <span><b>{counts.progress}</b> Running</span>
-                <span><b>{counts.overdue}</b> Overdue</span>
             </div>
 
             <div className="todo-left-stage">
@@ -330,34 +336,6 @@ export default function TodoLeftPanel({
                                                     <span className={getPriorityTone(todo.priority)}>
                                                         {todo.priority}
                                                     </span>
-                                                    <button
-                                                        type="button"
-                                                        className="todo-card-trash-btn"
-                                                        title="Xóa task"
-                                                        onClick={(event) => {
-                                                            event.stopPropagation();
-                                                            onDeleteTodo(todo);
-                                                        }}
-                                                    >
-                                                        <svg
-                                                            width="15"
-                                                            height="15"
-                                                            viewBox="0 0 24 24"
-                                                            fill="none"
-                                                            stroke="currentColor"
-                                                            strokeWidth="1.8"
-                                                            strokeLinecap="round"
-                                                            strokeLinejoin="round"
-                                                            aria-hidden="true"
-                                                        >
-                                                            <path d="M4 7h16" />
-                                                            <path d="M10 11v6" />
-                                                            <path d="M14 11v6" />
-                                                            <path d="M6 7l1 14h10l1-14" />
-                                                            <path d="M9 7V4h6v3" />
-                                                        </svg>
-                                                        <span className="sr-only">Xóa task</span>
-                                                    </button>
                                                 </div>
                                                 <h3>{todo.title}</h3>
                                                 <p>{todo.description || "Không có mô tả"}</p>
@@ -373,22 +351,44 @@ export default function TodoLeftPanel({
                                                 <button
                                                     type="button"
                                                     className="todo-card-side-btn"
+                                                    title="Sửa task"
+                                                    aria-label={`Sửa task ${todo.title}`}
                                                     onClick={(event) => {
                                                         event.stopPropagation();
                                                         onEditTodo(todo);
                                                     }}
                                                 >
-                                                    Edit
+                                                    <Pencil size={13} strokeWidth={2.3} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="todo-card-side-btn todo-card-side-btn--danger"
+                                                    title="Xóa task"
+                                                    aria-label={`Xóa task ${todo.title}`}
+                                                    onClick={(event) => {
+                                                        event.stopPropagation();
+                                                        onDeleteTodo(todo);
+                                                    }}
+                                                >
+                                                    <Trash2 size={13} strokeWidth={2.3} />
                                                 </button>
                                                 <button
                                                     type="button"
                                                     className="todo-card-side-btn todo-card-side-btn--status"
+                                                    title={nextStatusAction.label}
+                                                    aria-label={`${nextStatusAction.label} task ${todo.title}`}
+                                                    disabled={todo.status === "Done"}
                                                     onClick={(event) => {
                                                         event.stopPropagation();
+                                                        if (todo.status === "Done") return;
                                                         onUpdateStatus(todo.id, nextStatusAction.nextStatus);
                                                     }}
                                                 >
-                                                    {nextStatusAction.label}
+                                                    <img
+                                                        src={STATUS_ICONS[todo.status]}
+                                                        alt=""
+                                                        className="todo-status-action-icon"
+                                                    />
                                                 </button>
                                             </div>
                                         </article>

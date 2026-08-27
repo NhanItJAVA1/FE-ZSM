@@ -50,8 +50,8 @@ export default function TodoCategoryRail({
                 <form className="todo-rail-form" onSubmit={onSubmitCategory}>
                     <input
                         value={categoryName}
-                        placeholder="Tạo category mới"
-                        aria-label="Tạo category mới"
+                        placeholder="enter để tạo category mới"
+                        aria-label="enter để tạo category mới"
                         onChange={(event) => onCategoryNameChange(event.target.value)}
                     />
                 </form>

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../constants/queryKeys.js";
 import { todoService } from "../services/api/todoService.js";
 import { useAppSelector } from "../stores/hook.js";
@@ -13,6 +13,7 @@ export function useTodosQuery(query?: TodoQuery) {
             : ["todos", "anonymous", query],
         queryFn: () => todoService.getAll(query),
         enabled: userId !== undefined,
+        placeholderData: keepPreviousData,
     });
 }
 

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Pencil, Trash2 } from "lucide-react";
 import TodoBulkCreateModal, {
     createTodoBulkDraft,
     type TodoBulkDraft,
@@ -251,10 +252,35 @@ export default function TodoListPage() {
         setTodoDialog({ type: "deleteTodo", todo });
     }
 
+    function deleteCategory(category: { id: number; name: string }) {
+        setTodoDialog({ type: "deleteCategory", category });
+    }
+
+    function renameCategory(category: { id: number; name: string }) {
+        setRenameCategoryName(category.name);
+        setTodoDialog({ type: "renameCategory", category });
+    }
+
     async function confirmDeleteTodo(todo: TodoDto) {
         await mutations.deleteTodo.mutateAsync(todo.id);
         if (selectedTodoId === todo.id) setSelectedTodoId(null);
         if (editingTodoId === todo.id) resetForm();
+        setTodoDialog(null);
+    }
+
+    async function confirmDeleteCategory(
+        category: { id: number; name: string },
+        deleteTodos: boolean
+    ) {
+        await mutations.deleteCategory.mutateAsync({
+            id: category.id,
+            deleteTodos,
+        });
+
+        if (selectedCategoryFilter === getCategoryFilterId(category.id)) {
+            setSelectedCategoryFilter("all");
+        }
+
         setTodoDialog(null);
     }
 
@@ -277,28 +303,28 @@ export default function TodoListPage() {
         <AppLayout>
             <main className="todo-list-page">
                 <aside className="todo-simple-category-panel" aria-label="Todo categories">
-                    <div className="todo-panel-heading">
+                    <div className="todo-panel-heading todo-simple-category-heading">
                         <div>
                             <p className="eyebrow">Category</p>
                         </div>
-                    </div>
 
-                    <form className="todo-simple-category-form" onSubmit={submitCategory}>
-                        <input
-                            value={categoryName}
-                            placeholder="Tạo category mới"
-                            aria-label="Tạo category mới"
-                            onChange={(event) => setCategoryName(event.target.value)}
-                        />
-                        <button
-                            type="submit"
-                            disabled={mutations.createCategory.isPending}
-                            aria-label="Thêm category"
-                            title="Thêm category"
-                        >
-                            +
-                        </button>
-                    </form>
+                        <form className="todo-simple-category-form" onSubmit={submitCategory}>
+                            <input
+                                value={categoryName}
+                                placeholder="Enter for new category"
+                                aria-label="Enter for new category"
+                                onChange={(event) => setCategoryName(event.target.value)}
+                            />
+                            <button
+                                type="submit"
+                                disabled={mutations.createCategory.isPending}
+                                aria-label="Thêm category"
+                                title="Thêm category"
+                            >
+                                +
+                            </button>
+                        </form>
+                    </div>
 
                     <div className="todo-simple-category-list">
                         <button
@@ -317,15 +343,37 @@ export default function TodoListPage() {
                             ).length;
 
                             return (
-                                <button
+                                <article
                                     key={category.id}
-                                    type="button"
-                                    className={`todo-simple-category-item ${selectedCategoryFilter === filterId ? "active" : ""}`}
-                                    onClick={() => selectCategory(filterId)}
+                                    className={`todo-simple-category-row ${selectedCategoryFilter === filterId ? "active" : ""}`}
                                 >
-                                    <span>{category.name}</span>
-                                    <small>{taskCount}</small>
-                                </button>
+                                    <button
+                                        type="button"
+                                        className="todo-simple-category-item todo-simple-category-item--main"
+                                        onClick={() => selectCategory(filterId)}
+                                    >
+                                        <span>{category.name}</span>
+                                        <small>{taskCount}</small>
+                                    </button>
+                                    <div className="todo-simple-category-actions">
+                                        <button
+                                            type="button"
+                                            aria-label={`Đổi tên category ${category.name}`}
+                                            title="Đổi tên category"
+                                            onClick={() => renameCategory(category)}
+                                        >
+                                            <Pencil size={13} strokeWidth={2.3} />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            aria-label={`Xóa category ${category.name}`}
+                                            title="Xóa category"
+                                            onClick={() => deleteCategory(category)}
+                                        >
+                                            <Trash2 size={13} strokeWidth={2.3} />
+                                        </button>
+                                    </div>
+                                </article>
                             );
                         })}
 
@@ -399,10 +447,7 @@ export default function TodoListPage() {
                 updateCategoryPending={mutations.updateCategory.isPending}
                 onCancel={() => setTodoDialog(null)}
                 onConfirmDeleteCategory={(category, deleteTodos) =>
-                    void mutations.deleteCategory.mutateAsync({
-                        id: category.id,
-                        deleteTodos,
-                    }).then(() => setTodoDialog(null))
+                    void confirmDeleteCategory(category, deleteTodos)
                 }
                 onConfirmDeleteTodo={(todo) => void confirmDeleteTodo(todo)}
                 onConfirmRenameCategory={confirmRenameCategory}

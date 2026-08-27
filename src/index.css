@@ -1994,12 +1994,20 @@ button:disabled {
   box-shadow: 0 24px 64px -50px rgba(38, 44, 56, 0.28);
 }
 
-.todo-simple-category-form {
+.todo-simple-category-heading {
   position: relative;
+  min-height: 42px;
+  align-items: center;
+}
+
+.todo-simple-category-form {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 4;
   display: grid;
   width: 42px;
   height: 42px;
-  margin-left: auto;
   overflow: hidden;
   border: 1px solid var(--todo-control);
   border-radius: 999px;
@@ -2076,6 +2084,13 @@ button:disabled {
   gap: 7px;
 }
 
+.todo-simple-category-row {
+  position: relative;
+  min-height: 48px;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
 .todo-simple-category-item {
   width: 100%;
   min-height: 48px;
@@ -2092,13 +2107,89 @@ button:disabled {
   font-weight: 900;
 }
 
+.todo-simple-category-item--main {
+  position: relative;
+  z-index: 2;
+  transition:
+    width 420ms cubic-bezier(0.32, 0.72, 0, 1),
+    transform 420ms cubic-bezier(0.32, 0.72, 0, 1),
+    border-color 420ms cubic-bezier(0.32, 0.72, 0, 1),
+    background 420ms cubic-bezier(0.32, 0.72, 0, 1),
+    color 420ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 .todo-simple-category-item:hover,
-.todo-simple-category-item.active {
+.todo-simple-category-item.active,
+.todo-simple-category-row:hover .todo-simple-category-item--main,
+.todo-simple-category-row.active .todo-simple-category-item--main {
   filter: none;
   border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
   background: rgba(255, 255, 255, 0.62);
   color: var(--accent);
   transform: translateY(-1px);
+}
+
+.todo-simple-category-row:hover .todo-simple-category-item--main,
+.todo-simple-category-row:focus-within .todo-simple-category-item--main {
+  width: calc(100% - 50px);
+}
+
+.todo-simple-category-actions {
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 1;
+  width: 44px;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-content: stretch;
+  gap: 4px;
+  padding-left: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(10px);
+  transition:
+    opacity 320ms cubic-bezier(0.32, 0.72, 0, 1),
+    transform 420ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.todo-simple-category-row:hover .todo-simple-category-actions,
+.todo-simple-category-row:focus-within .todo-simple-category-actions {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+.todo-simple-category-actions button {
+  width: 38px;
+  min-width: 38px;
+  min-height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 14px;
+  border-color: color-mix(in srgb, var(--border) 46%, transparent);
+  background: rgba(255, 255, 255, 0.46);
+  color: var(--text-h);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.todo-simple-category-actions button svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+  color: currentColor;
+  stroke: currentColor;
+}
+
+.todo-simple-category-actions button:hover {
+  filter: none;
+  background: var(--todo-control);
+  color: var(--text-on-dark);
+}
+
+.todo-simple-category-actions button:last-child:hover {
+  background: var(--accent);
 }
 
 .todo-simple-category-item span {
@@ -2590,6 +2681,10 @@ button:disabled {
   gap: 14px;
 }
 
+.todo-left-panel .todo-panel-heading {
+  align-items: center;
+}
+
 .todo-panel-actions {
   display: inline-flex;
   align-items: center;
@@ -2659,6 +2754,14 @@ button:disabled {
   gap: 8px;
 }
 
+.todo-panel-heading .todo-stat-row {
+  flex: 1;
+  grid-template-columns: repeat(3, minmax(58px, 1fr));
+  gap: 6px;
+  max-width: 250px;
+  align-self: center;
+}
+
 .todo-stat-row span,
 .todo-board-summary span {
   display: grid;
@@ -2673,11 +2776,24 @@ button:disabled {
   font-weight: 800;
 }
 
+.todo-panel-heading .todo-stat-row span {
+  min-height: 36px;
+  padding: 6px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  line-height: 1.1;
+}
+
 .todo-stat-row b,
 .todo-board-summary b {
   color: var(--text-h);
   font-family: var(--mono);
   font-size: 20px;
+}
+
+.todo-panel-heading .todo-stat-row b {
+  font-size: 14px;
+  line-height: 1;
 }
 
 .todo-filter-row {
@@ -2939,21 +3055,57 @@ button:disabled {
   text-orientation: initial;
 }
 
+.todo-card-side-btn svg {
+  display: block;
+  margin: 0 auto;
+  color: currentColor;
+  stroke: currentColor;
+}
+
+.todo-status-action-icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+  margin: 0 auto;
+  object-fit: contain;
+}
+
 .todo-card-side-btn:hover {
   filter: none;
   color: var(--text-h);
   background: rgba(244, 246, 250, 0.54);
 }
 
-.todo-card-side-btn--status {
-  background: var(--todo-control);
+.todo-card-side-btn--danger {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 24%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, rgba(255, 255, 255, 0.38));
+}
+
+.todo-card-side-btn--danger:hover {
+  background: var(--accent);
   color: var(--text-on-dark);
-  border-color: var(--todo-control);
+}
+
+.todo-card-side-btn--status {
+  background: rgba(244, 246, 250, 0.74);
+  color: var(--text-h);
+  border-color: color-mix(in srgb, var(--border) 54%, transparent);
 }
 
 .todo-card-side-btn--status:hover {
-  background: var(--accent);
-  color: var(--text-on-dark);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--text-h);
+}
+
+.todo-card-side-btn--status:disabled {
+  cursor: default;
+  opacity: 0.72;
+}
+
+.todo-card-side-btn--status:disabled:hover {
+  background: rgba(244, 246, 250, 0.74);
+  color: var(--text-h);
 }
 
 .todo-card:hover,
