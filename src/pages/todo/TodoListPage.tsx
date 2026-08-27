@@ -147,15 +147,16 @@ export default function TodoListPage() {
         clearAdvancedFilters();
     }
 
-    function openNewTodoEditor() {
-        const categoryId =
-            selectedCategoryFilter.startsWith("category-")
-                ? selectedCategoryFilter.replace("category-", "")
-                : "";
+    function getDraftCategoryId() {
+        return selectedCategoryFilter.startsWith("category-")
+            ? selectedCategoryFilter.replace("category-", "")
+            : "";
+    }
 
+    function openNewTodoEditor() {
         setInlineDrafts((current) => [
             ...current,
-            createTodoInlineDraft(categoryId),
+            createTodoInlineDraft(getDraftCategoryId()),
         ]);
         setFormError(null);
         setFilterOpen(false);
@@ -173,11 +174,9 @@ export default function TodoListPage() {
     }
 
     function removeInlineDraft(id: string) {
-        const nextDrafts = inlineDrafts.filter((draft) => draft.id !== id);
-
-        setInlineDrafts(nextDrafts);
+        setInlineDrafts((current) => current.filter((draft) => draft.id !== id));
         setFormError(null);
-        if (nextDrafts.length === 0 && editingTodoId === null) {
+        if (inlineDrafts.length <= 1 && editingTodoId === null) {
             setIsEditorOpen(false);
         }
     }
@@ -188,18 +187,13 @@ export default function TodoListPage() {
     }
 
     function toggleBulkDeleteMode() {
-        if (!bulkDeleteMode) {
-            setBulkDeleteMode(true);
-            setSelectedDeleteIds([]);
-            return;
-        }
+        setBulkDeleteMode((current) => !current);
+        setSelectedDeleteIds([]);
+    }
 
-        if (selectedDeleteTodos.length > 0) {
-            setTodoDialog({ type: "deleteTodos", todos: selectedDeleteTodos });
-            return;
-        }
-
-        setBulkDeleteMode(false);
+    function deleteSelectedTodos() {
+        if (selectedDeleteTodos.length === 0) return;
+        setTodoDialog({ type: "deleteTodos", todos: selectedDeleteTodos });
     }
 
     function toggleDeleteSelection(todoId: number) {
@@ -476,7 +470,7 @@ export default function TodoListPage() {
                         onClearFilters={clearTodoFilters}
                         onClearAdvancedFilters={clearAdvancedFilters}
                         onDeleteTodo={deleteTodo}
-                        onDeleteSelectedTodos={toggleBulkDeleteMode}
+                        onDeleteSelectedTodos={deleteSelectedTodos}
                         onEditTodo={editTodo}
                         onOpenNewTodoEditor={openNewTodoEditor}
                         onResetForm={resetForm}
@@ -486,6 +480,7 @@ export default function TodoListPage() {
                         onToggleFilter={() =>
                             setFilterOpen((current) => !current)
                         }
+                        onToggleBulkDeleteMode={toggleBulkDeleteMode}
                         onToggleDeleteSelection={toggleDeleteSelection}
                         onSetForm={setForm}
                         onSetInlineDraft={updateInlineDraft}

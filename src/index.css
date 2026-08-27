@@ -2723,7 +2723,7 @@ button:disabled {
 }
 
 .todo-left-panel--inline .todo-panel-heading {
-  grid-template-columns: minmax(180px, 640px) auto;
+  grid-template-columns: minmax(140px, 1fr) auto auto;
   justify-content: end;
 }
 
@@ -2828,6 +2828,74 @@ button:disabled {
 .todo-inline-save-trigger:disabled {
   cursor: default;
   opacity: 0.62;
+}
+
+.todo-header-action-table {
+  display: grid;
+  grid-template-columns: repeat(3, 32px);
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border) 48%, transparent);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.todo-header-action-btn {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid color-mix(in srgb, var(--border) 42%, transparent);
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  opacity: 0.34;
+  box-shadow: none;
+}
+
+.todo-header-action-btn:last-child {
+  border-right: 0;
+}
+
+.todo-header-action-btn.active {
+  opacity: 1;
+  color: var(--text-h);
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.todo-header-action-btn--save.active {
+  color: #ffffff;
+  background: #16a34a;
+}
+
+.todo-header-action-btn--cancel.active {
+  color: #ffffff;
+  background: #dc2626;
+}
+
+.todo-header-action-btn--danger.active {
+  color: var(--accent);
+}
+
+.todo-header-action-btn:disabled {
+  cursor: default;
+}
+
+.todo-header-action-btn.active:hover {
+  filter: none;
+  background: rgba(244, 246, 250, 0.78);
+}
+
+.todo-header-action-btn--save.active:hover {
+  background: #15803d;
+}
+
+.todo-header-action-btn--cancel.active:hover {
+  background: #b91c1c;
 }
 
 .todo-stat-row,
@@ -3075,7 +3143,8 @@ button:disabled {
   place-items: center;
 }
 
-.todo-bulk-delete-trigger {
+.todo-bulk-delete-trigger,
+.todo-bulk-select-trigger {
   width: 26px;
   min-width: 26px;
   height: 26px;
@@ -3093,7 +3162,9 @@ button:disabled {
 }
 
 .todo-bulk-delete-trigger:hover,
-.todo-bulk-delete-trigger.active {
+.todo-bulk-delete-trigger.active,
+.todo-bulk-select-trigger:hover,
+.todo-bulk-select-trigger.active {
   filter: none;
   border-color: color-mix(in srgb, var(--accent) 32%, transparent);
   background: color-mix(in srgb, var(--accent) 12%, rgba(255, 255, 255, 0.62));
@@ -3196,8 +3267,16 @@ button:disabled {
   font-family: var(--mono);
   font-size: 11px;
   font-weight: 900;
-  justify-items: end;
-  text-align: right;
+  justify-items: stretch;
+  text-align: left;
+}
+
+.todo-card-due span {
+  min-width: 0;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.2;
 }
 
 .todo-card-labels {
@@ -3266,6 +3345,9 @@ button:disabled {
 
 .todo-inline-field--date {
   font-size: 11px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
 }
 
 .todo-inline-error {
