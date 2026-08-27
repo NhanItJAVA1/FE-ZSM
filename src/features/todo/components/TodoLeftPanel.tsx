@@ -114,14 +114,122 @@ export default function TodoLeftPanel({
             ref={leftPanelRef}
         >
             <div className="todo-panel-heading">
-                <div>
-                    <p className="eyebrow">Todo</p>
-                    <strong className="todo-left-collapsed-label">{visibleTodosLength}</strong>
-                </div>
-                <div className="todo-stat-row">
-                    <span><b>{counts.all}</b> Total</span>
-                    <span><b>{counts.progress}</b> Running</span>
-                    <span><b>{counts.overdue}</b> Overdue</span>
+                <strong className="todo-left-collapsed-label">{visibleTodosLength}</strong>
+                <div className="todo-filter-row">
+                    <input
+                        value={search}
+                        placeholder="Search task"
+                        onChange={(event) => onSearchChange(event.target.value)}
+                    />
+                    <div className="todo-filter-menu todo-filter-menu--inline">
+                        <button
+                            type="button"
+                            className={`todo-filter-trigger ${filterOpen ? "active" : ""}`}
+                            onClick={onToggleFilter}
+                            aria-expanded={filterOpen}
+                            aria-label="Mở bộ lọc todo"
+                        >
+                            <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="1.8"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                            >
+                                <path d="M4 5h16l-6.4 7.3v4.9l-3.2 1.8v-6.7L4 5Z" />
+                            </svg>
+                            <span>Filters</span>
+                        </button>
+                        {filterActive && (
+                            <button
+                                type="button"
+                                className="todo-filter-clear-btn"
+                                onClick={onClearAdvancedFilters}
+                                aria-label="Xóa bộ lọc"
+                                title="Xóa bộ lọc"
+                            >
+                                ×
+                            </button>
+                        )}
+                    </div>
+                    {filterOpen && (
+                        <div className="todo-filter-drawer todo-filter-drawer--wide">
+                            <div className="todo-filter-group">
+                                <span>Status</span>
+                                <div>
+                                    <button
+                                        type="button"
+                                        className={`todo-filter-option ${statusFilter === "All" ? "active" : ""}`}
+                                        onClick={() => onSetStatusFilter("All")}
+                                    >
+                                        <span>All status</span>
+                                        <small>{counts.all}</small>
+                                    </button>
+                                    {STATUSES.map((status) => (
+                                        <button
+                                            key={status}
+                                            type="button"
+                                            className={`todo-filter-option ${statusFilter === status ? "active" : ""}`}
+                                            onClick={() => onSetStatusFilter(status)}
+                                        >
+                                            <span>
+                                                <i className={`todo-status-dot todo-status-dot--${status}`} />
+                                                {STATUS_LABELS[status]}
+                                            </span>
+                                            <small>
+                                                {status === "Todo" && counts.todo}
+                                                {status === "InProgress" && counts.progress}
+                                                {status === "Done" && counts.done}
+                                            </small>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="todo-filter-group">
+                                <span>Priority</span>
+                                <div>
+                                    <button
+                                        type="button"
+                                        className={`todo-filter-option ${priorityFilter === "All" ? "active" : ""}`}
+                                        onClick={() => onSetPriorityFilter("All")}
+                                    >
+                                        <span>All priority</span>
+                                    </button>
+                                    {PRIORITIES.map((priority) => (
+                                        <button
+                                            key={priority}
+                                            type="button"
+                                            className={`todo-filter-option ${priorityFilter === priority ? "active" : ""}`}
+                                            onClick={() => onSetPriorityFilter(priority)}
+                                        >
+                                            <span className={getPriorityTone(priority)}>{priority}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="todo-filter-group">
+                                <span>Due state</span>
+                                <div>
+                                    {(Object.keys(OVERDUE_FILTER_LABELS) as TodoOverdueFilter[]).map((filter) => (
+                                        <button
+                                            key={filter}
+                                            type="button"
+                                            className={`todo-filter-option ${overdueFilter === filter ? "active" : ""}`}
+                                            onClick={() => onSetOverdueFilter(filter)}
+                                        >
+                                            <span>{OVERDUE_FILTER_LABELS[filter]}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
                 <div className="todo-panel-actions">
                     {allowCollapse && (
@@ -185,123 +293,6 @@ export default function TodoLeftPanel({
 
             <div className="todo-left-stage">
                 <div className="todo-list-layer">
-                    <div className="todo-filter-row">
-                        <input
-                            value={search}
-                            placeholder="Search task"
-                            onChange={(event) => onSearchChange(event.target.value)}
-                        />
-                        <div className="todo-filter-menu todo-filter-menu--inline">
-                            <button
-                                type="button"
-                                className={`todo-filter-trigger ${filterOpen ? "active" : ""}`}
-                                onClick={onToggleFilter}
-                                aria-expanded={filterOpen}
-                                aria-label="Mở bộ lọc todo"
-                            >
-                                <svg
-                                    width="16"
-                                    height="16"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="1.8"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    aria-hidden="true"
-                                >
-                                    <path d="M4 5h16l-6.4 7.3v4.9l-3.2 1.8v-6.7L4 5Z" />
-                                </svg>
-                                <span>Filters</span>
-                            </button>
-                            {filterActive && (
-                                <button
-                                    type="button"
-                                    className="todo-filter-clear-btn"
-                                    onClick={onClearAdvancedFilters}
-                                    aria-label="Xóa bộ lọc"
-                                    title="Xóa bộ lọc"
-                                >
-                                    ×
-                                </button>
-                            )}
-                        </div>
-                        {filterOpen && (
-                            <div className="todo-filter-drawer todo-filter-drawer--wide">
-                                <div className="todo-filter-group">
-                                    <span>Status</span>
-                                    <div>
-                                        <button
-                                            type="button"
-                                            className={`todo-filter-option ${statusFilter === "All" ? "active" : ""}`}
-                                            onClick={() => onSetStatusFilter("All")}
-                                        >
-                                            <span>All status</span>
-                                            <small>{counts.all}</small>
-                                        </button>
-                                        {STATUSES.map((status) => (
-                                            <button
-                                                key={status}
-                                                type="button"
-                                                className={`todo-filter-option ${statusFilter === status ? "active" : ""}`}
-                                                onClick={() => onSetStatusFilter(status)}
-                                            >
-                                                <span>
-                                                    <i className={`todo-status-dot todo-status-dot--${status}`} />
-                                                    {STATUS_LABELS[status]}
-                                                </span>
-                                                <small>
-                                                    {status === "Todo" && counts.todo}
-                                                    {status === "InProgress" && counts.progress}
-                                                    {status === "Done" && counts.done}
-                                                </small>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="todo-filter-group">
-                                    <span>Priority</span>
-                                    <div>
-                                        <button
-                                            type="button"
-                                            className={`todo-filter-option ${priorityFilter === "All" ? "active" : ""}`}
-                                            onClick={() => onSetPriorityFilter("All")}
-                                        >
-                                            <span>All priority</span>
-                                        </button>
-                                        {PRIORITIES.map((priority) => (
-                                            <button
-                                                key={priority}
-                                                type="button"
-                                                className={`todo-filter-option ${priorityFilter === priority ? "active" : ""}`}
-                                                onClick={() => onSetPriorityFilter(priority)}
-                                            >
-                                                <span className={getPriorityTone(priority)}>{priority}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="todo-filter-group">
-                                    <span>Due state</span>
-                                    <div>
-                                        {(Object.keys(OVERDUE_FILTER_LABELS) as TodoOverdueFilter[]).map((filter) => (
-                                            <button
-                                                key={filter}
-                                                type="button"
-                                                className={`todo-filter-option ${overdueFilter === filter ? "active" : ""}`}
-                                                onClick={() => onSetOverdueFilter(filter)}
-                                            >
-                                                <span>{OVERDUE_FILTER_LABELS[filter]}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
                     <div className="todo-category-list">
                         {loading && <div className="empty-state">Đang tải todo...</div>}
 
@@ -322,6 +313,13 @@ export default function TodoLeftPanel({
 
                         {!loading && visibleTodosLength > 0 && (
                             <div className="todo-task-list">
+                                <div className="todo-task-table-head" aria-hidden="true">
+                                    <span>Task Name</span>
+                                    <span>Description</span>
+                                    <span>Duedate</span>
+                                    <span>Labels</span>
+                                    <span />
+                                </div>
                                 {paginatedTodos.map((todo) => {
                                     const nextStatusAction = getNextStatusAction(todo.status);
 
@@ -332,46 +330,26 @@ export default function TodoLeftPanel({
                                             onClick={() => onSelectTodo(todo.id)}
                                         >
                                             <div className="todo-card-body">
-                                                <div className="todo-card-topline">
+                                                <div className="todo-card-name">
+                                                    <h3>{todo.title}</h3>
+                                                </div>
+                                                <div className="todo-card-description">
+                                                    <p>{todo.description || "Không có mô tả"}</p>
+                                                </div>
+                                                <div className="todo-card-due">
+                                                    <span>{formatShortDate(todo.dueDate)}</span>
+                                                </div>
+                                                <div className="todo-card-labels">
                                                     <span className={getPriorityTone(todo.priority)}>
                                                         {todo.priority}
                                                     </span>
-                                                </div>
-                                                <h3>{todo.title}</h3>
-                                                <p>{todo.description || "Không có mô tả"}</p>
-                                                <div className="todo-card-meta">
-                                                    <span className={`todo-status-dot todo-status-dot--${todo.status}`} />
-                                                    <span>{STATUS_LABELS[todo.status]}</span>
-                                                    <span>{todo.categoryName || "others"}</span>
-                                                    <span>{formatShortDate(todo.dueDate)}</span>
+                                                    <span className="todo-category-label">
+                                                        {todo.categoryName || "others"}
+                                                    </span>
                                                 </div>
                                             </div>
 
                                             <div className="todo-card-actions">
-                                                <button
-                                                    type="button"
-                                                    className="todo-card-side-btn"
-                                                    title="Sửa task"
-                                                    aria-label={`Sửa task ${todo.title}`}
-                                                    onClick={(event) => {
-                                                        event.stopPropagation();
-                                                        onEditTodo(todo);
-                                                    }}
-                                                >
-                                                    <Pencil size={13} strokeWidth={2.3} />
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    className="todo-card-side-btn todo-card-side-btn--danger"
-                                                    title="Xóa task"
-                                                    aria-label={`Xóa task ${todo.title}`}
-                                                    onClick={(event) => {
-                                                        event.stopPropagation();
-                                                        onDeleteTodo(todo);
-                                                    }}
-                                                >
-                                                    <Trash2 size={13} strokeWidth={2.3} />
-                                                </button>
                                                 <button
                                                     type="button"
                                                     className="todo-card-side-btn todo-card-side-btn--status"
@@ -390,6 +368,32 @@ export default function TodoLeftPanel({
                                                         className="todo-status-action-icon"
                                                     />
                                                 </button>
+                                                <div className="todo-card-edit-stack">
+                                                    <button
+                                                        type="button"
+                                                        className="todo-card-side-btn"
+                                                        title="Sửa task"
+                                                        aria-label={`Sửa task ${todo.title}`}
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            onEditTodo(todo);
+                                                        }}
+                                                    >
+                                                        <Pencil size={13} strokeWidth={2.3} />
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        className="todo-card-side-btn todo-card-side-btn--danger"
+                                                        title="Xóa task"
+                                                        aria-label={`Xóa task ${todo.title}`}
+                                                        onClick={(event) => {
+                                                            event.stopPropagation();
+                                                            onDeleteTodo(todo);
+                                                        }}
+                                                    >
+                                                        <Trash2 size={13} strokeWidth={2.3} />
+                                                    </button>
+                                                </div>
                                             </div>
                                         </article>
                                     );

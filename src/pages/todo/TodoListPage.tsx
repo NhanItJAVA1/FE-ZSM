@@ -318,8 +318,13 @@ export default function TodoListPage() {
             <main className="todo-list-page">
                 <aside className="todo-simple-category-panel" aria-label="Todo categories">
                     <div className="todo-panel-heading todo-simple-category-heading">
-                        <div>
+                        <div className="todo-simple-category-title">
                             <p className="eyebrow">Category</p>
+                            <div className="todo-stat-row todo-simple-category-stats">
+                                <span><b>{counts.all}</b> Total</span>
+                                <span><b>{counts.progress}</b> Running</span>
+                                <span><b>{counts.overdue}</b> Overdue</span>
+                            </div>
                         </div>
 
                         <form className="todo-simple-category-form" onSubmit={submitCategory}>
