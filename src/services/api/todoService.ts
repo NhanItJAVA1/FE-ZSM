@@ -1,23 +1,27 @@
 import api from "./axios.js";
 import type {
-    CreateTodoPayload,
-    CreateTodosPayload,
     PagedResult,
-    TodoActivityDto,
+    SaveTodoRowPayload,
+    SaveTodosPayload,
     TodoDto,
     TodoQuery,
     TodoStatus,
-    UpdateTodoPayload,
 } from "../../features/todo/types.js";
 
-function cleanTodoPayload<T extends CreateTodoPayload>(payload: T) {
+function cleanTodoBatchPayload(payload: SaveTodoRowPayload): SaveTodoRowPayload {
     return {
-        title: payload.title.trim(),
+        id: payload.id,
+        title: payload.isDeleted ? payload.title : payload.title.trim(),
         description: payload.description?.trim() || null,
-        priority: payload.priority ?? "Medium",
+        priority: payload.priority,
         dueDate: payload.dueDate || null,
         categoryId: payload.categoryId || null,
+        isDeleted: payload.isDeleted,
     };
+}
+
+async function requestSaveBatch(payloads: SaveTodosPayload): Promise<void> {
+    await api.put("/todos/batch", payloads.map(cleanTodoBatchPayload));
 }
 
 export const todoService = {
@@ -29,14 +33,6 @@ export const todoService = {
         return response.data;
     },
 
-    async create(payloads: CreateTodosPayload): Promise<void> {
-        await api.post("/todos", payloads.map(cleanTodoPayload));
-    },
-
-    async update(id: number, payload: UpdateTodoPayload): Promise<void> {
-        await api.put(`/todos/${id}`, cleanTodoPayload(payload));
-    },
-
     async updateStatus(id: number, status: TodoStatus): Promise<void> {
         await api.patch(`/todos/${id}/status`, { status });
     },
@@ -45,11 +41,7 @@ export const todoService = {
         await api.delete(`/todos/${id}`);
     },
 
-    async getActivities(id: number): Promise<TodoActivityDto[]> {
-        const response = await api.get<TodoActivityDto[]>(
-            `/todos/${id}/activities`
-        );
-
-        return response.data;
+    async saveBatch(payloads: SaveTodosPayload): Promise<void> {
+        await requestSaveBatch(payloads);
     },
 };

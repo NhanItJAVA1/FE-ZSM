@@ -1,5 +1,5 @@
 import type {
-    CreateTodoPayload,
+    SaveTodoRowPayload,
     TodoCategoryDto,
     TodoDto,
     TodoPriority,
@@ -15,9 +15,6 @@ export const STATUS_LABELS: Record<TodoStatus, string> = {
 export const PRIORITIES: TodoPriority[] = ["Low", "Medium", "High"];
 export const STATUSES: TodoStatus[] = ["Todo", "InProgress", "Done"];
 export const LEFT_TASK_PAGE_SIZE = 6;
-export const ACTIVITY_PAGE_SIZE = 5;
-
-const DAY_MS = 86_400_000;
 
 export type CategoryFilter = "all" | "uncategorized" | `category-${number}`;
 export type TodoOverdueFilter = "All" | "Overdue" | "NotOverdue";
@@ -97,26 +94,14 @@ function fromInputDateTime(value: string) {
 export function formatShortDate(value: string | null) {
     if (!value) return "No due date";
 
-    return formatTimelineTick(parseBackendDate(value));
+    return formatDateTick(parseBackendDate(value));
 }
 
-export function formatTimelineTick(date: Date) {
+function formatDateTick(date: Date) {
     return new Intl.DateTimeFormat("vi-VN", {
         day: "2-digit",
         month: "short",
     }).format(date);
-}
-
-export function formatFullDate(value: string | null) {
-    if (!value) return "Chưa có hạn";
-
-    return new Intl.DateTimeFormat("vi-VN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-    }).format(parseBackendDate(value));
 }
 
 export function getPriorityTone(priority: TodoPriority) {
@@ -125,76 +110,15 @@ export function getPriorityTone(priority: TodoPriority) {
     return "todo-priority";
 }
 
-export function getNextStatusAction(status: TodoStatus): {
-    label: string;
-    nextStatus: TodoStatus;
-} {
-    if (status === "Todo") {
-        return { label: "Start", nextStatus: "InProgress" };
-    }
-
-    if (status === "InProgress") {
-        return { label: "Done", nextStatus: "Done" };
-    }
-
-    return { label: "Reopen", nextStatus: "InProgress" };
-}
-
-export function toPayload(form: TodoFormState): CreateTodoPayload {
+export function toPayload(
+    form: TodoFormState
+): Omit<SaveTodoRowPayload, "id" | "isDeleted"> {
     return {
         title: form.title,
         description: form.description,
         priority: form.priority,
         dueDate: fromInputDateTime(form.dueDate),
         categoryId: form.categoryId ? Number(form.categoryId) : null,
-    };
-}
-
-export function buildTimelineDates(todos: TodoDto[]) {
-    const dates = todos.flatMap((todo) => [
-        parseBackendDate(todo.createdAt).getTime(),
-        todo.dueDate ? parseBackendDate(todo.dueDate).getTime() : NaN,
-    ]).filter((value) => !Number.isNaN(value));
-
-    const now = Date.now();
-    const min = dates.length ? Math.min(...dates) : now;
-    const max = dates.length ? Math.max(...dates) : now + 3 * DAY_MS;
-    const start = new Date(min);
-    start.setHours(0, 0, 0, 0);
-    start.setDate(start.getDate() - 1);
-
-    const end = new Date(max);
-    end.setHours(0, 0, 0, 0);
-    end.setDate(end.getDate() + 2);
-
-    if (end.getTime() - start.getTime() < 3 * DAY_MS) {
-        end.setTime(start.getTime() + 3 * DAY_MS);
-    }
-
-    const ticks: Date[] = [];
-    const cursor = new Date(start);
-    while (cursor < end) {
-        ticks.push(new Date(cursor));
-        cursor.setDate(cursor.getDate() + 1);
-    }
-
-    return { start, end, ticks };
-}
-
-export function getTimelineStyle(todo: TodoDto, start: Date, end: Date) {
-    const startMs = start.getTime();
-    const range = Math.max(end.getTime() - startMs, 1);
-    const taskStart = parseBackendDate(todo.createdAt).getTime();
-    const taskEnd = todo.dueDate
-        ? parseBackendDate(todo.dueDate).getTime()
-        : taskStart + 12 * 60 * 60 * 1000;
-    const left = Math.max(0, ((taskStart - startMs) / range) * 100);
-    const right = Math.min(100, ((Math.max(taskEnd, taskStart + 3_600_000) - startMs) / range) * 100);
-    const width = Math.max(8, right - left);
-
-    return {
-        left: `${left}%`,
-        width: `${Math.min(width, 100 - left)}%`,
     };
 }
 

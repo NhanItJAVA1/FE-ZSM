@@ -16,15 +16,3 @@ export function useTodosQuery(query?: TodoQuery) {
         placeholderData: keepPreviousData,
     });
 }
-
-export function useTodoActivitiesQuery(todoId: number | null) {
-    const userId = useAppSelector((state) => state.auth.user?.id);
-
-    return useQuery({
-        queryKey: userId && todoId
-            ? QUERY_KEYS.todoActivities(userId, todoId)
-            : ["todos", "activities", "idle"],
-        queryFn: () => todoService.getActivities(todoId!),
-        enabled: userId !== undefined && todoId !== null,
-    });
-}

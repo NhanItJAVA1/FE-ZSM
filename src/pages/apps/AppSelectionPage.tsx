@@ -13,7 +13,7 @@ export default function AppSelectionPage() {
                     <p className="eyebrow">Workspace switcher</p>
                     <h1 id="workspace-title">Chọn không gian làm việc</h1>
                     <p>
-                        Xin chào {displayName}. Vào ZSM như trước hoặc mở Todo để quản lý task theo danh sách và timeline.
+                        Xin chào {displayName}. Vào ZSM như trước hoặc mở Todo để quản lý task theo danh sách.
                     </p>
                 </div>
 
@@ -25,10 +25,10 @@ export default function AppSelectionPage() {
                         <span className="app-choice-action">Vào ZSM</span>
                     </Link>
 
-                    <Link to={ROUTES.todo} className="app-choice app-choice--todo">
+                    <Link to={ROUTES.todoList} className="app-choice app-choice--todo">
                         <span className="app-choice-kicker">02</span>
                         <strong>Todo</strong>
-                        <small>Task, category, deadline và timeline tiến độ.</small>
+                        <small>Task, category và deadline trong một bảng chỉnh sửa nhanh.</small>
                         <span className="app-choice-action">Mở Todo</span>
                     </Link>
                 </div>

@@ -9,7 +9,6 @@ import HomePage from "../pages/home/HomePage.js";
 import NotFoundPage from "../pages/notfound/NotFoundPage.js";
 import SubmitRecordPage from "../pages/submit/SubmitRecordPage.js";
 import MyRecordsPage from "../pages/records/MyRecordsPage.js";
-import TodoPage from "../pages/todo/TodoPage.js";
 import TodoListPage from "../pages/todo/TodoListPage.js";
 
 export default function AppRoutes() {
@@ -28,7 +27,6 @@ export default function AppRoutes() {
                 <Route element={<ProtectedRoute />}>
                     <Route path={ROUTES.apps} element={<AppSelectionPage />} />
                     <Route path={ROUTES.home} element={<HomePage />} />
-                    <Route path={ROUTES.todo} element={<TodoPage />} />
                     <Route path={ROUTES.todoList} element={<TodoListPage />} />
                     <Route path={ROUTES.submit} element={<SubmitRecordPage />} />
                     <Route path={ROUTES.myRecords} element={<MyRecordsPage />} />

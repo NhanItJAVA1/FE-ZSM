@@ -4,9 +4,8 @@ import { todoCategoryService } from "../services/api/todoCategoryService.js";
 import { todoService } from "../services/api/todoService.js";
 import { useAppSelector } from "../stores/hook.js";
 import type {
-    CreateTodosPayload,
+    SaveTodosPayload,
     TodoStatus,
-    UpdateTodoPayload,
 } from "../features/todo/types.js";
 
 export function useTodoMutations() {
@@ -22,37 +21,19 @@ export function useTodoMutations() {
         });
     }
 
-    const createTodo = useMutation({
-        mutationFn: (payloads: CreateTodosPayload) => todoService.create(payloads),
-        onSuccess: invalidateTodos,
-    });
-
-    const updateTodo = useMutation({
-        mutationFn: ({
-            id,
-            payload,
-        }: {
-            id: number;
-            payload: UpdateTodoPayload;
-        }) => todoService.update(id, payload),
-        onSuccess: invalidateTodos,
-    });
-
     const updateStatus = useMutation({
         mutationFn: ({ id, status }: { id: number; status: TodoStatus }) =>
             todoService.updateStatus(id, status),
-        onSuccess: (_data, variables) => {
-            invalidateTodos();
-            if (userId) {
-                void queryClient.invalidateQueries({
-                    queryKey: QUERY_KEYS.todoActivities(userId, variables.id),
-                });
-            }
-        },
+        onSuccess: invalidateTodos,
     });
 
     const deleteTodo = useMutation({
         mutationFn: (id: number) => todoService.delete(id),
+        onSuccess: invalidateTodos,
+    });
+
+    const saveTodos = useMutation({
+        mutationFn: (payloads: SaveTodosPayload) => todoService.saveBatch(payloads),
         onSuccess: invalidateTodos,
     });
 
@@ -79,10 +60,9 @@ export function useTodoMutations() {
     });
 
     return {
-        createTodo,
-        updateTodo,
         updateStatus,
         deleteTodo,
+        saveTodos,
         createCategory,
         updateCategory,
         deleteCategory,

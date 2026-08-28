@@ -74,7 +74,7 @@ export default function TodoDialog({
                         <div className="todo-dialog-copy">
                             {/* <p className="eyebrow">Delete task</p> */}
                             <p>
-                                Task "{dialog.todo.title}" sẽ bị xóa khỏi danh sách và timeline.
+                                Task "{dialog.todo.title}" sẽ bị xóa khỏi danh sách.
                             </p>
                         </div>
                         <div className="todo-dialog-actions">
@@ -100,7 +100,7 @@ export default function TodoDialog({
                         </div>
                         <div className="todo-dialog-copy">
                             <p>
-                                {dialog.todos.length} task đã chọn sẽ bị xóa khỏi danh sách và timeline.
+                                {dialog.todos.length} task đã chọn sẽ bị xóa khỏi danh sách.
                             </p>
                         </div>
                         <div className="todo-dialog-actions">

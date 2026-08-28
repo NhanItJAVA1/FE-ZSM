@@ -1,13 +1,18 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import TodoDialog from "../../features/todo/components/TodoDialog.js";
-import TodoLeftPanel from "../../features/todo/components/TodoLeftPanel.js";
-import type { TodoDto, TodoPriority, TodoQuery, TodoStatus } from "../../features/todo/types.js";
+import TodoPanel from "../../features/todo/components/TodoPanel.js";
+import type {
+    SaveTodosPayload,
+    TodoDto,
+    TodoPriority,
+    TodoQuery,
+    TodoStatus,
+} from "../../features/todo/types.js";
 import {
     LEFT_TASK_PAGE_SIZE,
     countTodos,
     createTodoInlineDraft,
-    emptyForm,
     getCategoryFilterId,
     getCategoryIdFromFilter,
     toInputDateTime,
@@ -25,7 +30,6 @@ import AppLayout from "../../layouts/AppLayout.js";
 
 export default function TodoListPage() {
     const leftPanelRef = useRef<HTMLElement | null>(null);
-    const editorDoorRef = useRef<HTMLFormElement | null>(null);
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState<TodoStatus | "All">("All");
     const [priorityFilter, setPriorityFilter] = useState<TodoPriority | "All">("All");
@@ -35,9 +39,7 @@ export default function TodoListPage() {
     const [selectedTodoId, setSelectedTodoId] = useState<number | null>(null);
     const [bulkDeleteMode, setBulkDeleteMode] = useState(false);
     const [selectedDeleteIds, setSelectedDeleteIds] = useState<number[]>([]);
-    const [editingTodoId, setEditingTodoId] = useState<number | null>(null);
-    const [isEditorOpen, setIsEditorOpen] = useState(false);
-    const [form, setForm] = useState<TodoFormState>(emptyForm);
+    const [editedTodoRows, setEditedTodoRows] = useState<Record<number, TodoFormState>>({});
     const [inlineDrafts, setInlineDrafts] = useState<TodoInlineDraft[]>([]);
     const [formError, setFormError] = useState<string | null>(null);
     const [categoryName, setCategoryName] = useState("");
@@ -128,11 +130,11 @@ export default function TodoListPage() {
     }, [visibleTodos]);
 
     function resetForm() {
-        setEditingTodoId(null);
-        setForm(emptyForm);
+        setEditedTodoRows({});
+        setSelectedDeleteIds([]);
+        setBulkDeleteMode(false);
         setInlineDrafts([]);
         setFormError(null);
-        setIsEditorOpen(false);
     }
 
     function clearAdvancedFilters() {
@@ -160,7 +162,6 @@ export default function TodoListPage() {
         ]);
         setFormError(null);
         setFilterOpen(false);
-        setIsEditorOpen(true);
     }
 
     function updateInlineDraft(id: string, patch: Partial<TodoFormState>) {
@@ -170,15 +171,39 @@ export default function TodoListPage() {
             )
         );
         setFormError(null);
-        setIsEditorOpen(true);
+    }
+
+    function updateTodoRow(todo: TodoDto, patch: Partial<TodoFormState>) {
+        setEditedTodoRows((current) => {
+            const draft = current[todo.id] ?? {
+                title: todo.title,
+                description: todo.description ?? "",
+                priority: todo.priority,
+                dueDate: toInputDateTime(todo.dueDate),
+                categoryId: todo.categoryId ? String(todo.categoryId) : "",
+            };
+
+            const nextDraft = { ...draft, ...patch };
+            const unchanged =
+                nextDraft.title === todo.title &&
+                nextDraft.description === (todo.description ?? "") &&
+                nextDraft.priority === todo.priority &&
+                nextDraft.dueDate === toInputDateTime(todo.dueDate) &&
+                nextDraft.categoryId === (todo.categoryId ? String(todo.categoryId) : "");
+
+            if (!unchanged) {
+                return { ...current, [todo.id]: nextDraft };
+            }
+
+            const { [todo.id]: _removed, ...rest } = current;
+            return rest;
+        });
+        setFormError(null);
     }
 
     function removeInlineDraft(id: string) {
         setInlineDrafts((current) => current.filter((draft) => draft.id !== id));
         setFormError(null);
-        if (inlineDrafts.length <= 1 && editingTodoId === null) {
-            setIsEditorOpen(false);
-        }
     }
 
     function selectTodo(todoId: number) {
@@ -204,25 +229,15 @@ export default function TodoListPage() {
         );
     }
 
-    function editTodo(todo: TodoDto) {
-        selectTodo(todo.id);
-        setEditingTodoId(todo.id);
-        setForm({
-            title: todo.title,
-            description: todo.description ?? "",
-            priority: todo.priority,
-            dueDate: toInputDateTime(todo.dueDate),
-            categoryId: todo.categoryId ? String(todo.categoryId) : "",
-        });
-        setFormError(null);
-        setIsEditorOpen(true);
-    }
-
     async function saveInlineTodo() {
         setFormError(null);
 
-        if (editingTodoId && !form.title.trim()) {
-            setFormError("Tiêu đề task là bắt buộc.");
+        const invalidEditedTodo = Object.entries(editedTodoRows).find(
+            ([_id, row]) => !row.title.trim()
+        );
+
+        if (invalidEditedTodo) {
+            setFormError("Todo đã sửa cần có tiêu đề task.");
             return;
         }
 
@@ -235,19 +250,31 @@ export default function TodoListPage() {
             return;
         }
 
-        if (!editingTodoId && inlineDrafts.length === 0) return;
+        const changedRows = Object.entries(editedTodoRows);
+
+        if (
+            inlineDrafts.length === 0 &&
+            changedRows.length === 0
+        ) {
+            return;
+        }
 
         try {
-            if (editingTodoId) {
-                await mutations.updateTodo.mutateAsync({
-                    id: editingTodoId,
-                    payload: toPayload(form),
-                });
-            }
+            const payloads: SaveTodosPayload = [
+                ...inlineDrafts.map((draft) => ({
+                    ...toPayload(draft),
+                    id: null,
+                    isDeleted: false,
+                })),
+                ...changedRows.map(([id, row]) => ({
+                    ...toPayload(row),
+                    id: Number(id),
+                    isDeleted: false,
+                })),
+            ];
 
-            if (inlineDrafts.length > 0) {
-                await mutations.createTodo.mutateAsync(inlineDrafts.map(toPayload));
-            }
+            await mutations.saveTodos.mutateAsync(payloads);
+            await Promise.all([todosQuery.refetch(), allTodosQuery.refetch()]);
 
             resetForm();
         } catch (error) {
@@ -255,12 +282,7 @@ export default function TodoListPage() {
         }
     }
 
-    async function submitTodo(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        await saveInlineTodo();
-    }
-
-    async function submitCategory(event: React.FormEvent<HTMLFormElement>) {
+    async function submitCategory(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         const name = categoryName.trim();
         if (!name) return;
@@ -292,22 +314,35 @@ export default function TodoListPage() {
 
     async function confirmDeleteTodo(todo: TodoDto) {
         await mutations.deleteTodo.mutateAsync(todo.id);
+        await Promise.all([todosQuery.refetch(), allTodosQuery.refetch()]);
+
+        setEditedTodoRows((current) => {
+            const { [todo.id]: _removed, ...rest } = current;
+            return rest;
+        });
+        setSelectedDeleteIds((current) => current.filter((id) => id !== todo.id));
+
         if (selectedTodoId === todo.id) setSelectedTodoId(null);
-        if (editingTodoId === todo.id) resetForm();
         setTodoDialog(null);
     }
 
     async function confirmDeleteTodos(todos: TodoDto[]) {
-        for (const todo of todos) {
-            await mutations.deleteTodo.mutateAsync(todo.id);
-        }
+        await Promise.all(
+            todos.map((todo) => mutations.deleteTodo.mutateAsync(todo.id))
+        );
+        await Promise.all([todosQuery.refetch(), allTodosQuery.refetch()]);
+
+        const ids = todos.map((todo) => todo.id);
+        setEditedTodoRows((current) => {
+            const next = { ...current };
+            ids.forEach((id) => {
+                delete next[id];
+            });
+            return next;
+        });
 
         if (todos.some((todo) => todo.id === selectedTodoId)) {
             setSelectedTodoId(null);
-        }
-
-        if (editingTodoId && todos.some((todo) => todo.id === editingTodoId)) {
-            resetForm();
         }
 
         setSelectedDeleteIds([]);
@@ -331,7 +366,7 @@ export default function TodoListPage() {
         setTodoDialog(null);
     }
 
-    async function confirmRenameCategory(event: React.FormEvent<HTMLFormElement>) {
+    async function confirmRenameCategory(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
 
         if (todoDialog?.type !== "renameCategory") return;
@@ -441,17 +476,12 @@ export default function TodoListPage() {
                 </aside>
 
                 <div className="todo-list-page-panel">
-                    <TodoLeftPanel
+                    <TodoPanel
                         categories={categories}
                         counts={counts}
-                        editingTodoId={editingTodoId}
-                        editorDoorRef={editorDoorRef}
-                        form={form}
+                        editedTodoRows={editedTodoRows}
                         formError={formError}
                         inlineDrafts={inlineDrafts}
-                        isEditorOpen={isEditorOpen}
-                        isBulkCreateOpen={false}
-                        isLeftCollapsed={false}
                         leftPanelRef={leftPanelRef}
                         loading={loading}
                         paginatedTodos={visibleTodos}
@@ -471,7 +501,6 @@ export default function TodoListPage() {
                         onClearAdvancedFilters={clearAdvancedFilters}
                         onDeleteTodo={deleteTodo}
                         onDeleteSelectedTodos={deleteSelectedTodos}
-                        onEditTodo={editTodo}
                         onOpenNewTodoEditor={openNewTodoEditor}
                         onResetForm={resetForm}
                         onSearchChange={setSearch}
@@ -482,19 +511,14 @@ export default function TodoListPage() {
                         }
                         onToggleBulkDeleteMode={toggleBulkDeleteMode}
                         onToggleDeleteSelection={toggleDeleteSelection}
-                        onSetForm={setForm}
                         onSetInlineDraft={updateInlineDraft}
-                        onSetIsLeftCollapsed={() => undefined}
+                        onSetTodoRow={updateTodoRow}
                         onSetOverdueFilter={setOverdueFilter}
                         onSetPriorityFilter={setPriorityFilter}
                         onSetStatusFilter={setStatusFilter}
                         onSetTaskPage={setTaskPage}
-                        onSubmitTodo={submitTodo}
-                        onSaveInlineTodo={() => void saveInlineTodo()}
-                        onUpdateStatus={(id, status) => mutations.updateStatus.mutate({ id, status })}
-                        savingTodo={mutations.createTodo.isPending || mutations.updateTodo.isPending}
-                        allowCollapse={false}
-                        inlineMode
+                        onSaveTodo={() => void saveInlineTodo()}
+                        savingTodo={mutations.saveTodos.isPending}
                     />
                 </div>
             </main>

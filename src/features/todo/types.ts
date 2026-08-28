@@ -1,10 +1,5 @@
 export type TodoStatus = "Todo" | "InProgress" | "Done";
 export type TodoPriority = "Low" | "Medium" | "High";
-export type TodoActivityType =
-    | "Created"
-    | "Updated"
-    | "StatusChanged"
-    | "CategoryChanged";
 
 export interface TodoDto {
     id: number;
@@ -27,13 +22,6 @@ export interface TodoCategoryDto {
     name: string;
 }
 
-export interface TodoActivityDto {
-    id: number;
-    type: TodoActivityType;
-    description: string;
-    createdAt: string;
-}
-
 export interface PagedResult<T> {
     items: T[];
     page: number;
@@ -54,14 +42,14 @@ export interface TodoQuery {
     categoryId?: number;
 }
 
-export interface CreateTodoPayload {
+export interface SaveTodoRowPayload {
+    id: number | null;
     title: string;
-    description?: string | null;
-    priority?: TodoPriority;
-    dueDate?: string | null;
-    categoryId?: number | null;
+    description: string | null;
+    priority: TodoPriority | null;
+    dueDate: string | null;
+    categoryId: number | null;
+    isDeleted: boolean;
 }
 
-export type CreateTodosPayload = CreateTodoPayload[];
-
-export type UpdateTodoPayload = CreateTodoPayload;
+export type SaveTodosPayload = SaveTodoRowPayload[];

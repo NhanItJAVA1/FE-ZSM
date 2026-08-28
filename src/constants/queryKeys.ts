@@ -6,7 +6,5 @@ export const QUERY_KEYS = {
     pendingRecords: ["records", "pending"] as const,
     myRecords: (userId: number) => ["records", "user", userId] as const,
     todos: (userId: number) => ["todos", "user", userId] as const,
-    todoActivities: (userId: number, todoId: number) =>
-        ["todos", "user", userId, todoId, "activities"] as const,
     todoCategories: (userId: number) => ["todo-categories", "user", userId] as const,
 };
