@@ -27,11 +27,6 @@ export function useTodoMutations() {
         onSuccess: invalidateTodos,
     });
 
-    const deleteTodo = useMutation({
-        mutationFn: (id: number) => todoService.delete(id),
-        onSuccess: invalidateTodos,
-    });
-
     const saveTodos = useMutation({
         mutationFn: (payloads: SaveTodosPayload) => todoService.saveBatch(payloads),
         onSuccess: invalidateTodos,
@@ -61,7 +56,6 @@ export function useTodoMutations() {
 
     return {
         updateStatus,
-        deleteTodo,
         saveTodos,
         createCategory,
         updateCategory,

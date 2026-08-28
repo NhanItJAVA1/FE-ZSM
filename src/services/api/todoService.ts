@@ -37,10 +37,6 @@ export const todoService = {
         await api.patch(`/todos/${id}/status`, { status });
     },
 
-    async delete(id: number): Promise<void> {
-        await api.delete(`/todos/${id}`);
-    },
-
     async saveBatch(payloads: SaveTodosPayload): Promise<void> {
         await requestSaveBatch(payloads);
     },

@@ -312,8 +312,20 @@ export default function TodoListPage() {
         setTodoDialog({ type: "renameCategory", category });
     }
 
+    function toDeletedPayload(todo: TodoDto): SaveTodosPayload[number] {
+        return {
+            id: todo.id,
+            title: "",
+            description: null,
+            priority: null,
+            dueDate: null,
+            categoryId: null,
+            isDeleted: true,
+        };
+    }
+
     async function confirmDeleteTodo(todo: TodoDto) {
-        await mutations.deleteTodo.mutateAsync(todo.id);
+        await mutations.saveTodos.mutateAsync([toDeletedPayload(todo)]);
         await Promise.all([todosQuery.refetch(), allTodosQuery.refetch()]);
 
         setEditedTodoRows((current) => {
@@ -327,9 +339,9 @@ export default function TodoListPage() {
     }
 
     async function confirmDeleteTodos(todos: TodoDto[]) {
-        await Promise.all(
-            todos.map((todo) => mutations.deleteTodo.mutateAsync(todo.id))
-        );
+        const payloads: SaveTodosPayload = todos.map(toDeletedPayload);
+
+        await mutations.saveTodos.mutateAsync(payloads);
         await Promise.all([todosQuery.refetch(), allTodosQuery.refetch()]);
 
         const ids = todos.map((todo) => todo.id);
@@ -525,7 +537,7 @@ export default function TodoListPage() {
 
             <TodoDialog
                 deleteCategoryPending={mutations.deleteCategory.isPending}
-                deleteTodoPending={mutations.deleteTodo.isPending}
+                deleteTodoPending={mutations.saveTodos.isPending}
                 dialog={todoDialog}
                 renameCategoryName={renameCategoryName}
                 updateCategoryPending={mutations.updateCategory.isPending}
