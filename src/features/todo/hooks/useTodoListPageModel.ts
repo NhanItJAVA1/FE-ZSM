@@ -78,11 +78,6 @@ export function useTodoListPageModel() {
         todoFilters.actions.closeFilter();
     }
 
-    function selectTodo(todoId: number) {
-        todoSelection.actions.selectRow(todoId);
-        todoFilters.actions.closeFilter();
-    }
-
     return {
         categoryPanelProps: {
             allTodos,
@@ -137,7 +132,6 @@ export function useTodoListPageModel() {
                 onAddDraft: openNewTodoEditor,
                 onResetForm: resetTodoPanel,
                 onSearchChange: todoFilters.actions.setSearch,
-                onSelectRow: selectTodo,
                 onRemoveDraft: todoEditing.actions.removeInlineDraft,
                 onToggleFilter: todoFilters.actions.toggleFilter,
                 onClearDeleteSelection: todoSelection.actions.clearDeleteSelection,

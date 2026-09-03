@@ -1,4 +1,3 @@
-import type { SyntheticEvent } from "react";
 import { Check, Trash2 } from "lucide-react";
 import type { TodoDto, TodoPriority } from "../types.js";
 import {
@@ -129,7 +128,6 @@ interface TodoRowProps {
     editedRows: Record<number, TodoFormState>;
     selection: TodoPanelSelection;
     todo: TodoDto;
-    onSelectRow: TodoPanelActions["onSelectRow"];
     onUpdateRow: TodoPanelActions["onUpdateRow"];
     onToggleSelection: TodoPanelActions["onToggleSelection"];
 }
@@ -139,7 +137,6 @@ export function TodoRow({
     editedRows,
     selection,
     todo,
-    onSelectRow,
     onUpdateRow,
     onToggleSelection,
 }: TodoRowProps) {
@@ -154,14 +151,9 @@ export function TodoRow({
         categoryId: todo.categoryId ? String(todo.categoryId) : "",
     };
 
-    function stopRowClick(event: SyntheticEvent) {
-        event.stopPropagation();
-    }
-
     return (
         <article
             className={`todo-card ${rowDraft ? "todo-card--editing" : ""}`}
-            onClick={() => onSelectRow(todo.id)}
         >
             <div className="todo-card-body">
                 <div className="todo-card-name">
@@ -182,7 +174,6 @@ export function TodoRow({
                         value={rowValues.title}
                         placeholder="Task name"
                         rows={2}
-                        onClick={stopRowClick}
                         onChange={(event) =>
                             onUpdateRow(todo, {
                                 title: event.target.value,
@@ -196,7 +187,6 @@ export function TodoRow({
                         value={rowValues.description}
                         placeholder="Description"
                         rows={2}
-                        onClick={stopRowClick}
                         onChange={(event) =>
                             onUpdateRow(todo, {
                                 description: event.target.value,
@@ -210,7 +200,6 @@ export function TodoRow({
                         type="datetime-local"
                         value={rowValues.dueDate}
                         placeholder={formatShortDate(todo.dueDate)}
-                        onClick={stopRowClick}
                         onChange={(event) =>
                             onUpdateRow(todo, {
                                 dueDate: event.target.value,
@@ -222,7 +211,6 @@ export function TodoRow({
                     <select
                         className="todo-inline-field todo-inline-field--label"
                         value={rowValues.priority}
-                        onClick={stopRowClick}
                         onChange={(event) =>
                             onUpdateRow(todo, {
                                 priority: event.target.value as TodoPriority,
@@ -238,7 +226,6 @@ export function TodoRow({
                     <select
                         className="todo-inline-field todo-inline-field--label"
                         value={rowValues.categoryId}
-                        onClick={stopRowClick}
                         onChange={(event) =>
                             onUpdateRow(todo, {
                                 categoryId: event.target.value,

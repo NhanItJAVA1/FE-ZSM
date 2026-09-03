@@ -25,7 +25,6 @@ export interface TodoPanelFilters {
 }
 
 export interface TodoPanelSelection {
-    activeId: number | null;
     selectedIds: number[];
 }
 
@@ -48,7 +47,6 @@ export interface TodoPanelActions {
     onAddDraft: () => void;
     onResetForm: () => void;
     onSearchChange: (value: string) => void;
-    onSelectRow: (id: number) => void;
     onRemoveDraft: (id: string) => void;
     onUpdateDraft: (id: string, patch: Partial<TodoFormState>) => void;
     onUpdateRow: (todo: TodoDto, patch: Partial<TodoFormState>) => void;

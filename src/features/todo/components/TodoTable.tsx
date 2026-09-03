@@ -100,7 +100,6 @@ export default function TodoTable({
                                     editedRows={editedRows}
                                     selection={selection}
                                     todo={todo}
-                                    onSelectRow={actions.onSelectRow}
                                     onUpdateRow={actions.onUpdateRow}
                                     onToggleSelection={actions.onToggleSelection}
                                 />

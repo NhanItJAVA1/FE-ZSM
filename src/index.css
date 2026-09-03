@@ -2663,7 +2663,7 @@ button:disabled {
   color: inherit;
   text-align: left;
   border-radius: 0;
-  cursor: pointer;
+  cursor: default;
   transition:
     border-color 420ms cubic-bezier(0.32, 0.72, 0, 1),
     background 420ms cubic-bezier(0.32, 0.72, 0, 1),
