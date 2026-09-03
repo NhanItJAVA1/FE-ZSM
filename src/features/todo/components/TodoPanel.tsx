@@ -22,7 +22,7 @@ export default function TodoPanel({
                 counts={data.counts}
                 editing={editing}
                 filters={filters}
-                selection={selection}
+                selectedCount={selection.selectedIds.length}
             />
             <TodoTable
                 actions={actions}
@@ -32,10 +32,10 @@ export default function TodoPanel({
                     filterActive: filters.filterActive,
                     search: filters.search,
                 }}
-                selection={selection}
+                selectedIds={selection.selectedIds}
             />
             <TodoPagination
-                actions={{ onSetPage: actions.onSetPage }}
+                onSetPage={actions.onSetPage}
                 pagination={pagination}
             />
         </section>

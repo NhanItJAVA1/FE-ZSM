@@ -20,15 +20,7 @@ export function useTodoSelection(visibleTodos: TodoDto[]) {
         );
     }, [visibleTodos]);
 
-    function resetSelection() {
-        setSelectedIds([]);
-    }
-
-    function resetDeleteSelection() {
-        setSelectedIds([]);
-    }
-
-    function clearDeleteSelection() {
+    function clearSelection() {
         setSelectedIds([]);
     }
 
@@ -44,20 +36,16 @@ export function useTodoSelection(visibleTodos: TodoDto[]) {
         );
     }
 
-    function removeDeletedTodos() {
-        setSelectedIds([]);
-    }
-
     return {
         selectedRows,
         selection: {
             selectedIds,
         },
         actions: {
-            clearDeleteSelection,
-            removeDeletedTodos,
-            resetDeleteSelection,
-            resetSelection,
+            clearDeleteSelection: clearSelection,
+            removeDeletedTodos: clearSelection,
+            resetDeleteSelection: clearSelection,
+            resetSelection: clearSelection,
             selectPage,
             toggleSelection,
         },

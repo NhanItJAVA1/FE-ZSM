@@ -1,11 +1,10 @@
-import { Check, Trash2, X } from "lucide-react";
+import { Check, Filter, Trash2, X } from "lucide-react";
 import TodoFilterDrawer from "./TodoFilterDrawer.js";
 import type {
     TodoPanelActions,
     TodoPanelData,
     TodoPanelEditing,
     TodoPanelFilters,
-    TodoPanelSelection,
 } from "./todoPanelTypes.js";
 
 interface TodoPanelToolbarProps {
@@ -13,7 +12,7 @@ interface TodoPanelToolbarProps {
     counts: TodoPanelData["counts"];
     editing: TodoPanelEditing;
     filters: TodoPanelFilters;
-    selection: TodoPanelSelection;
+    selectedCount: number;
 }
 
 export default function TodoPanelToolbar({
@@ -21,7 +20,7 @@ export default function TodoPanelToolbar({
     counts,
     editing,
     filters,
-    selection,
+    selectedCount,
 }: TodoPanelToolbarProps) {
     const {
         onClearAdvancedFilters,
@@ -36,10 +35,9 @@ export default function TodoPanelToolbar({
         onToggleFilter,
     } = actions;
     const { editedRows, drafts, saving } = editing;
-    const { selectedIds } = selection;
     const { filterActive, filterOpen, search } = filters;
     const hasChanges = drafts.length > 0 || Object.keys(editedRows).length > 0;
-    const canDeleteSelected = selectedIds.length > 0;
+    const canDeleteSelected = selectedCount > 0;
 
     return (
         <div className="todo-panel-heading">
@@ -57,19 +55,7 @@ export default function TodoPanelToolbar({
                         aria-expanded={filterOpen}
                         aria-label="Mở bộ lọc todo"
                     >
-                        <svg
-                            width="15"
-                            height="15"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="1.8"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            aria-hidden="true"
-                        >
-                            <path d="M4 5h16l-6.4 7.3v4.9l-3.2 1.8v-6.7L4 5Z" />
-                        </svg>
+                        <Filter size={15} strokeWidth={1.8} />
                     </button>
                     {filterActive && (
                         <button

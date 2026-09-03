@@ -1,12 +1,12 @@
 import type { TodoPanelActions, TodoPanelPagination } from "./todoPanelTypes.js";
 
 interface TodoPaginationProps {
-    actions: Pick<TodoPanelActions, "onSetPage">;
+    onSetPage: TodoPanelActions["onSetPage"];
     pagination: TodoPanelPagination;
 }
 
 export default function TodoPagination({
-    actions,
+    onSetPage,
     pagination,
 }: TodoPaginationProps) {
     const { page, totalPages } = pagination;
@@ -20,7 +20,7 @@ export default function TodoPagination({
                 className="ghost-btn"
                 disabled={page === 1}
                 onClick={() =>
-                    actions.onSetPage((prev) =>
+                    onSetPage((prev) =>
                         Math.max(1, prev - 1)
                     )
                 }
@@ -35,7 +35,7 @@ export default function TodoPagination({
                 className="ghost-btn"
                 disabled={page === totalPages}
                 onClick={() =>
-                    actions.onSetPage((prev) =>
+                    onSetPage((prev) =>
                         Math.min(totalPages, prev + 1)
                     )
                 }

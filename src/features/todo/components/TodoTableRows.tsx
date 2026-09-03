@@ -8,7 +8,7 @@ import {
     type TodoFormState,
     type TodoInlineDraft,
 } from "../todoPageUtils.js";
-import type { TodoPanelActions, TodoPanelData, TodoPanelSelection } from "./todoPanelTypes.js";
+import type { TodoPanelActions, TodoPanelData } from "./todoPanelTypes.js";
 
 interface TodoDraftRowProps {
     categories: TodoPanelData["categories"];
@@ -126,7 +126,7 @@ export function TodoDraftRow({
 interface TodoRowProps {
     categories: TodoPanelData["categories"];
     editedRows: Record<number, TodoFormState>;
-    selection: TodoPanelSelection;
+    isDeleteSelected: boolean;
     todo: TodoDto;
     onUpdateRow: TodoPanelActions["onUpdateRow"];
     onToggleSelection: TodoPanelActions["onToggleSelection"];
@@ -135,13 +135,11 @@ interface TodoRowProps {
 export function TodoRow({
     categories,
     editedRows,
-    selection,
+    isDeleteSelected,
     todo,
     onUpdateRow,
     onToggleSelection,
 }: TodoRowProps) {
-    const { selectedIds } = selection;
-    const isDeleteSelected = selectedIds.includes(todo.id);
     const rowDraft = editedRows[todo.id];
     const rowValues = rowDraft ?? {
         title: todo.title,
@@ -162,10 +160,7 @@ export function TodoRow({
                         className={`todo-delete-checkbox ${isDeleteSelected ? "active" : ""}`}
                         title={isDeleteSelected ? "Bỏ chọn task" : "Chọn task để xóa"}
                         aria-label={isDeleteSelected ? `Bỏ chọn task ${todo.title}` : `Chọn task ${todo.title} để xóa`}
-                        onClick={(event) => {
-                            event.stopPropagation();
-                            onToggleSelection(todo.id);
-                        }}
+                        onClick={() => onToggleSelection(todo.id)}
                     >
                         {isDeleteSelected && <Check size={13} strokeWidth={2.6} />}
                     </button>

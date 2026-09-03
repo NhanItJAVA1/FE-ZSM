@@ -5,7 +5,6 @@ import type {
     TodoPanelData,
     TodoPanelEditing,
     TodoPanelFilters,
-    TodoPanelSelection,
 } from "./todoPanelTypes.js";
 
 interface TodoTableProps {
@@ -13,7 +12,7 @@ interface TodoTableProps {
     data: TodoPanelData;
     editing: TodoPanelEditing;
     filters: Pick<TodoPanelFilters, "filterActive" | "search">;
-    selection: TodoPanelSelection;
+    selectedIds: number[];
 }
 
 export default function TodoTable({
@@ -21,7 +20,7 @@ export default function TodoTable({
     data,
     editing,
     filters,
-    selection,
+    selectedIds,
 }: TodoTableProps) {
     const {
         categories,
@@ -32,6 +31,7 @@ export default function TodoTable({
     const { editedRows, formError, drafts } = editing;
     const showDrafts = drafts.length > 0;
     const showTaskTable = totalRows > 0 || showDrafts;
+    const hasSelectedRows = selectedIds.length > 0;
 
     return (
         <div className="todo-left-stage">
@@ -60,16 +60,16 @@ export default function TodoTable({
                                 <span className="todo-task-name-head">
                                     <button
                                         type="button"
-                                        className={`todo-delete-checkbox todo-delete-checkbox--head ${selection.selectedIds.length > 0 ? "active" : ""}`}
-                                        title={selection.selectedIds.length > 0 ? "Bỏ chọn tất cả" : "Chọn tất cả task trên trang"}
-                                        aria-label={selection.selectedIds.length > 0 ? "Bỏ chọn tất cả task trên trang" : "Chọn tất cả task trên trang"}
+                                        className={`todo-delete-checkbox todo-delete-checkbox--head ${hasSelectedRows ? "active" : ""}`}
+                                        title={hasSelectedRows ? "Bỏ chọn tất cả" : "Chọn tất cả task trên trang"}
+                                        aria-label={hasSelectedRows ? "Bỏ chọn tất cả task trên trang" : "Chọn tất cả task trên trang"}
                                         onClick={
-                                            selection.selectedIds.length > 0
+                                            hasSelectedRows
                                                 ? actions.onClearDeleteSelection
                                                 : actions.onSelectPage
                                         }
                                     >
-                                        {selection.selectedIds.length > 0 && (
+                                        {hasSelectedRows && (
                                             <X size={13} strokeWidth={2.5} />
                                         )}
                                     </button>
@@ -98,7 +98,7 @@ export default function TodoTable({
                                     key={todo.id}
                                     categories={categories}
                                     editedRows={editedRows}
-                                    selection={selection}
+                                    isDeleteSelected={selectedIds.includes(todo.id)}
                                     todo={todo}
                                     onUpdateRow={actions.onUpdateRow}
                                     onToggleSelection={actions.onToggleSelection}
