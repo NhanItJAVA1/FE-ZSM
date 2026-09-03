@@ -4,6 +4,6 @@ export type {
     PendingRecord,
     RecordFilters,
     VideoUploadUrlResponse,
-} from "../features/records/types.js";
+} from "../features/zsm/records/types.js";
 
-export { DEFAULT_RECORD_FILTERS } from "../features/records/types.js";
+export { DEFAULT_RECORD_FILTERS } from "../features/zsm/records/types.js";

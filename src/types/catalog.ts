@@ -1,1 +1,1 @@
-export type { MapDto, VehicleDto, GameModeDto } from "../features/catalog/types.js";
+export type { MapDto, VehicleDto, GameModeDto } from "../features/zsm/catalog/types.js";

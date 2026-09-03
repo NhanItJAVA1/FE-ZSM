@@ -1,6 +1,6 @@
-import type { PickerItem } from "../components/ui/ImagePickerModal.js";
+import type { PickerItem } from "../features/zsm/components/ImagePickerModal.js";
 import { parseVehicleRank } from "../constants/catalog.js";
-import type { GameModeDto, MapDto, VehicleDto } from "../features/catalog/types.js";
+import type { GameModeDto, MapDto, VehicleDto } from "../features/zsm/catalog/types.js";
 
 function compareByName<T extends { name: string }>(left: T, right: T): number {
     return left.name.localeCompare(right.name, "vi");

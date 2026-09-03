@@ -1,5 +1,5 @@
 import api from "./axios.js";
-import type { GameModeDto } from "../../features/catalog/types.js";
+import type { GameModeDto } from "../../features/zsm/catalog/types.js";
 
 export const gameModeService = {
     async getAll(): Promise<GameModeDto[]> {

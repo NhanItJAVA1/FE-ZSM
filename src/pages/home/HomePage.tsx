@@ -1,18 +1,18 @@
 import { useMemo, useState } from "react";
 import AppLayout from "../../layouts/AppLayout.js";
-import MapPickerModal from "../../features/catalog/components/MapPickerModal.js";
-import VehiclePickerModal from "../../features/catalog/components/VehiclePickerModal.js";
+import MapPickerModal from "../../features/zsm/catalog/components/MapPickerModal.js";
+import VehiclePickerModal from "../../features/zsm/catalog/components/VehiclePickerModal.js";
 import {
     useGameModesQuery,
     useMapsQuery,
     useVehiclesQuery,
-} from "../../hooks/useCatalogQueries.js";
-import HomeHero from "../../features/records/components/HomeHero.js";
-import RecordFilterBar from "../../features/records/components/RecordFilterBar.js";
-import RecordInfoPanel from "../../features/records/components/RecordInfoPanel.js";
-import RecordViewer from "../../features/records/components/RecordViewer.js";
-import { useRecordFilters } from "../../hooks/useRecordFilters.js";
-import { useRecordsQuery } from "../../hooks/useRecordsQuery.js";
+} from "../../features/zsm/hooks/useCatalogQueries.js";
+import HomeHero from "../../features/zsm/records/components/HomeHero.js";
+import RecordFilterBar from "../../features/zsm/records/components/RecordFilterBar.js";
+import RecordInfoPanel from "../../features/zsm/records/components/RecordInfoPanel.js";
+import RecordViewer from "../../features/zsm/records/components/RecordViewer.js";
+import { useRecordFilters } from "../../features/zsm/hooks/useRecordFilters.js";
+import { useRecordsQuery } from "../../features/zsm/hooks/useRecordsQuery.js";
 import { parseVehicleRank } from "../../constants/catalog.js";
 
 export default function HomePage() {

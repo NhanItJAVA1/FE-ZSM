@@ -1,13 +1,13 @@
 import { useState } from "react";
 import AppLayout from "../../layouts/AppLayout.js";
 import PageHeading from "../../layouts/PageHeading.js";
-import AdminPendingList from "../../features/admin/components/AdminPendingList.js";
-import AddMapForm from "../../features/admin/components/AddMapForm.js";
-import AddVehicleForm from "../../features/admin/components/AddVehicleForm.js";
+import AdminPendingList from "../../features/zsm/admin/components/AdminPendingList.js";
+import AddMapForm from "../../features/zsm/admin/components/AddMapForm.js";
+import AddVehicleForm from "../../features/zsm/admin/components/AddVehicleForm.js";
 import AdminTabs, {
     type AdminTab,
-} from "../../features/admin/components/AdminTabs.js";
-import { useModeration } from "../../hooks/useModeration.js";
+} from "../../features/zsm/admin/components/AdminTabs.js";
+import { useModeration } from "../../features/zsm/hooks/useModeration.js";
 
 const TAB_COPY: Record<
     AdminTab,

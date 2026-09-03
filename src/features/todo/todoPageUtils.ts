@@ -122,6 +122,18 @@ export function toPayload(
     };
 }
 
+export function toDeletedPayload(todo: TodoDto): SaveTodoRowPayload {
+    return {
+        id: todo.id,
+        title: "",
+        description: null,
+        priority: null,
+        dueDate: null,
+        categoryId: null,
+        isDeleted: true,
+    };
+}
+
 export function getCategoryFilterId(categoryId: number): CategoryFilter {
     return `category-${categoryId}`;
 }

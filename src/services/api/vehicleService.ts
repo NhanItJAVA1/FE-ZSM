@@ -3,7 +3,7 @@ import type {
     CreateVehiclePayload,
     UpdateVehiclePayload,
     VehicleDto,
-} from "../../features/catalog/types.js";
+} from "../../features/zsm/catalog/types.js";
 
 export const vehicleService = {
     async getAll(): Promise<VehicleDto[]> {

@@ -3,7 +3,7 @@ import type {
     CreateMapPayload,
     MapDto,
     UpdateMapPayload,
-} from "../../features/catalog/types.js";
+} from "../../features/zsm/catalog/types.js";
 
 export const mapService = {
     async getAll(): Promise<MapDto[]> {

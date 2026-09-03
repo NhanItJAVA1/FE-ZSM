@@ -3,7 +3,7 @@ import type {
     CreateRecordPayload,
     RecordDto,
     VideoUploadUrlResponse,
-} from "../../features/records/types.js";
+} from "../../features/zsm/records/types.js";
 import { uploadFileToPresignedUrl } from "./uploadService.js";
 
 function normalizeRecordList(data: unknown): RecordDto[] {

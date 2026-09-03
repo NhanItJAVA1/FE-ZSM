@@ -1,4 +1,4 @@
-import type { PendingRecord } from "../../features/records/types.js";
+import type { PendingRecord } from "../../features/zsm/records/types.js";
 
 const STORAGE_KEY = "zsm_pending_records";
 

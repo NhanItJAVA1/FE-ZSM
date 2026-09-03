@@ -1,7 +1,7 @@
 import AppLayout from "../../layouts/AppLayout.js";
 import PageHeading from "../../layouts/PageHeading.js";
-import { useMapsQuery, useVehiclesQuery } from "../../hooks/useCatalogQueries.js";
-import SubmitRecordForm from "../../features/records/components/SubmitRecordForm.js";
+import SubmitRecordForm from "../../features/zsm/records/components/SubmitRecordForm.js";
+import { useMapsQuery, useVehiclesQuery } from "../../features/zsm/hooks/useCatalogQueries.js";
 import { useAppSelector } from "../../stores/hook.js";
 
 export default function SubmitRecordPage() {
