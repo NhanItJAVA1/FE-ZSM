@@ -2504,6 +2504,11 @@ button:disabled {
   border-radius: 22px;
 }
 
+.todo-left-panel--inline .todo-left-stage {
+  overflow: visible;
+  border-radius: 0;
+}
+
 .todo-list-layer {
   height: 100%;
   display: grid;
@@ -2536,7 +2541,7 @@ button:disabled {
   max-height: min(74svh, 760px);
   overflow: hidden auto;
   border: 1px solid color-mix(in srgb, var(--border) 52%, transparent);
-  border-radius: 10px;
+  border-radius: 0;
   background: rgba(255, 255, 255, 0.26);
 }
 
