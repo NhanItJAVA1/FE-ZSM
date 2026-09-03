@@ -9,7 +9,7 @@ import {
 
 export function useTodoFilters(pageSize: number) {
     const [search, setSearch] = useState("");
-    const debouncedSearch = useDebouncedValue(search, 350);
+    const debouncedSearch = useDebouncedValue(search, 500);
     const [statusFilter, setStatusFilter] = useState<TodoStatus | "All">("All");
     const [priorityFilter, setPriorityFilter] = useState<TodoPriority | "All">("All");
     const [overdueFilter, setOverdueFilter] = useState<TodoOverdueFilter>("All");

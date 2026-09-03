@@ -25,9 +25,13 @@ async function requestSaveBatch(payloads: SaveTodosPayload): Promise<void> {
 }
 
 export const todoService = {
-    async getAll(query?: TodoQuery): Promise<PagedResult<TodoDto>> {
+    async getAll(
+        query?: TodoQuery,
+        signal?: AbortSignal
+    ): Promise<PagedResult<TodoDto>> {
         const response = await api.get<PagedResult<TodoDto>>("/todos", {
             params: query,
+            ...(signal ? { signal } : {}),
         });
 
         return response.data;

@@ -11,7 +11,7 @@ export function useTodosQuery(query?: TodoQuery) {
         queryKey: userId
             ? [...QUERY_KEYS.todos(userId), query]
             : ["todos", "anonymous", query],
-        queryFn: () => todoService.getAll(query),
+        queryFn: ({ signal }) => todoService.getAll(query, signal),
         enabled: userId !== undefined,
         placeholderData: keepPreviousData,
     });
