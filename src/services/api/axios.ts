@@ -8,6 +8,7 @@ const baseURL = import.meta.env.VITE_API_URL || "/api";
 
 const api = axios.create({
     baseURL,
+    withCredentials: true,
     headers: {
         "Content-Type": "application/json",
     },
@@ -30,17 +31,12 @@ function isAuthRequest(url?: string) {
     return (
         url?.includes("/Users/login") ||
         url?.includes("/Users/register") ||
-        url?.includes("/Users/refresh")
+        url?.includes("/Users/refresh") ||
+        url?.includes("/Users/logout")
     );
 }
 
 async function refreshAccessToken(): Promise<string> {
-    const refreshToken = tokenStorage.getRefreshToken();
-
-    if (!refreshToken) {
-        throw new Error("Refresh token not found");
-    }
-
     const { data } = await axios.post<{
         accessToken: string;
         user?: {
@@ -52,9 +48,13 @@ async function refreshAccessToken(): Promise<string> {
             Role?: string;
             role?: string;
         };
-    }>(`${baseURL}/Users/refresh-token`, { refreshToken });
+    }>(
+        `${baseURL}/Users/refresh-token`,
+        undefined,
+        { withCredentials: true }
+    );
 
-    tokenStorage.set(data.accessToken, refreshToken);
+    tokenStorage.set(data.accessToken);
 
     if (data.user) {
         userStorage.set({

@@ -40,11 +40,7 @@ export const authService = {
 
         const user = normalizeLoginUser(response.data.user);
 
-        // LƯU CẢ ACCESS TOKEN + REFRESH TOKEN
-        tokenStorage.set(
-            response.data.accessToken,
-            response.data.refreshToken
-        );
+        tokenStorage.set(response.data.accessToken);
 
         return {
             ...response.data,
@@ -71,7 +67,11 @@ export const authService = {
         });
     },
 
-    logout() {
-        tokenStorage.clear();
+    async logout() {
+        try {
+            await api.post("/Users/logout");
+        } finally {
+            tokenStorage.clear();
+        }
     },
 };

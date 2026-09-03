@@ -3,6 +3,7 @@ import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import NavIcon, { type NavIconName } from "../components/ui/NavIcon.js";
 import { ROUTES } from "../constants/routes.js";
 import { useIsAdmin } from "../hooks/useIsAdmin.js";
+import { authService } from "../services/api/authService.js";
 import { useAppDispatch, useAppSelector } from "../stores/hook.js";
 import { logout } from "../stores/slices/authSlice.js";
 
@@ -45,10 +46,14 @@ export default function SiteHeader() {
     const isTodoWorkspace = location.pathname === ROUTES.todoList;
     const isAppSelection = location.pathname === ROUTES.apps;
 
-    function handleLogout() {
-        dispatch(logout());
-        queryClient.clear();
-        navigate(ROUTES.login);
+    async function handleLogout() {
+        try {
+            await authService.logout();
+        } finally {
+            dispatch(logout());
+            queryClient.clear();
+            navigate(ROUTES.login);
+        }
     }
 
     const visibleNavItems = NAV_ITEMS.filter((item) => {
