@@ -96,7 +96,7 @@ dl {
 .site-header-rail {
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
-  border-radius: 0 0 42px 0;
+  border-radius: 0 0 36px 0;
   background: color-mix(in srgb, var(--surface) 86%, transparent);
   box-shadow: 0 14px 34px -28px rgba(18, 24, 38, 0.46);
   backdrop-filter: blur(10px);
@@ -248,7 +248,7 @@ body:has(.todo-list-page) .header-chip--user {
   flex: 0 1 auto;
   gap: 0;
   align-items: stretch;
-  min-height: 42px;
+  min-height: 38px;
 }
 
 .site-nav a {
@@ -264,9 +264,9 @@ body:has(.todo-list-page) .header-chip--user {
 }
 
 .site-nav-icon-btn {
-  width: 52px;
-  height: 42px;
-  min-height: 42px;
+  width: 46px;
+  height: 38px;
+  min-height: 38px;
   padding: 0;
   border: none;
   border-right: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
@@ -306,9 +306,9 @@ body:has(.todo-list-page) .header-chip--user {
 }
 
 .site-nav-icon-btn--logout {
-  width: 64px;
+  width: 58px;
   border-right: 0;
-  border-radius: 0 0 42px 0;
+  border-radius: 0 0 36px 0;
   color: color-mix(in srgb, var(--accent) 76%, var(--muted));
 }
 
@@ -324,8 +324,8 @@ body:has(.todo-list-page) .header-chip--user {
 }
 
 .site-nav-icon {
-  width: 18px;
-  height: 18px;
+  width: 17px;
+  height: 17px;
 }
 
 .sr-only {
