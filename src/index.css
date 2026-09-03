@@ -2472,7 +2472,7 @@ button:disabled {
 
 .todo-filter-row {
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
+  align-items: center;
 }
 
 .todo-left-stage {
@@ -2816,8 +2816,7 @@ button:disabled {
   white-space: nowrap;
 }
 
-.todo-card:hover,
-.todo-card.active {
+.todo-card:hover {
   border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
   background: rgba(255, 255, 255, 0.68);
   box-shadow: inset 3px 0 0 color-mix(in srgb, var(--accent) 64%, transparent);
@@ -2897,13 +2896,13 @@ button:disabled {
 }
 
 .todo-filter-trigger {
-  min-height: 36px;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
   display: inline-grid;
-  grid-auto-flow: column;
-  grid-auto-columns: max-content;
-  align-items: center;
-  gap: 8px;
-  padding: 0 12px;
+  place-items: center;
+  padding: 0;
   border-color: color-mix(in srgb, var(--border) 44%, transparent);
   background: rgba(255, 255, 255, 0.42);
   color: var(--muted);

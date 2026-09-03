@@ -143,7 +143,7 @@ export function TodoRow({
     onUpdateRow,
     onToggleSelection,
 }: TodoRowProps) {
-    const { activeId, selectedIds } = selection;
+    const { selectedIds } = selection;
     const isDeleteSelected = selectedIds.includes(todo.id);
     const rowDraft = editedRows[todo.id];
     const rowValues = rowDraft ?? {
@@ -160,7 +160,7 @@ export function TodoRow({
 
     return (
         <article
-            className={`todo-card ${activeId === todo.id ? "active" : ""} ${rowDraft ? "todo-card--editing" : ""}`}
+            className={`todo-card ${rowDraft ? "todo-card--editing" : ""}`}
             onClick={() => onSelectRow(todo.id)}
         >
             <div className="todo-card-body">

@@ -58,8 +58,8 @@ export default function TodoPanelToolbar({
                         aria-label="Mở bộ lọc todo"
                     >
                         <svg
-                            width="16"
-                            height="16"
+                            width="15"
+                            height="15"
                             viewBox="0 0 24 24"
                             fill="none"
                             stroke="currentColor"
@@ -70,7 +70,6 @@ export default function TodoPanelToolbar({
                         >
                             <path d="M4 5h16l-6.4 7.3v4.9l-3.2 1.8v-6.7L4 5Z" />
                         </svg>
-                        <span>Filters</span>
                     </button>
                     {filterActive && (
                         <button
