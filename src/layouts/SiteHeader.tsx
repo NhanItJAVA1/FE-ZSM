@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import NavIcon, { type NavIconName } from "../components/ui/NavIcon.js";
 import { ROUTES } from "../constants/routes.js";
 import { useIsAdmin } from "../hooks/useIsAdmin.js";
@@ -21,20 +21,6 @@ const NAV_ITEMS: Array<{
     { to: ROUTES.myRecords, label: "Kỷ lục của tôi", icon: "records" },
     { to: ROUTES.admin, label: "Kiểm duyệt", icon: "admin", adminOnly: true },
 ];
-
-function getUserInitials(displayName: string, username: string): string {
-    const source = displayName.trim() || username.trim();
-    const parts = source.split(/\s+/).filter(Boolean);
-
-    const firstChar = parts[0]?.[0] ?? "";
-    const secondChar = parts[1]?.[0] ?? "";
-
-    if (firstChar && secondChar) {
-        return `${firstChar}${secondChar}`.toUpperCase();
-    }
-
-    return source.slice(0, 2).toUpperCase();
-}
 
 export default function SiteHeader() {
     const dispatch = useAppDispatch();
@@ -75,17 +61,9 @@ export default function SiteHeader() {
 
     return (
         <header className="site-header">
-            <div className="site-header-left">
-                <Link
-                    to={ROUTES.apps}
-                    className="header-chip header-chip--brand brand brand--compact"
-                    title="Chọn app"
-                >
-                    <span className="brand-mark">ZSM</span>
-                </Link>
-
+            <div className="site-header-left site-header-rail">
                 <nav
-                    className="header-chip header-chip--nav site-nav site-nav--icons"
+                    className="site-nav site-nav--icons"
                     aria-label="Điều hướng chính"
                 >
                     {visibleNavItems.map((item) => (
@@ -103,42 +81,15 @@ export default function SiteHeader() {
                 </nav>
 
                 {user && (
-                    <div className="header-chip header-chip--user site-user site-user--compact">
-                        {user.avatarUrl ? (
-                            <img
-                                src={user.avatarUrl}
-                                alt=""
-                                className="site-user-avatar"
-                                loading="lazy"
-                            />
-                        ) : (
-                            <span
-                                className="site-user-avatar site-user-avatar--fallback"
-                                title={user.displayName || user.username}
-                            >
-                                {getUserInitials(
-                                    user.displayName,
-                                    user.username
-                                )}
-                            </span>
-                        )}
-                        <div className="site-header-animation site-header-animation--before-logout">
-                            <img
-                                src="/animations/Pixel fire asset pack v1.2/Pixel Fire Asset Pack Colored/fire asset purple/Group 7 - 1/Group 7 - 1.gif"
-                                alt=""
-                                className="site-user-fire"
-                            />
-                        </div>
-                        <button
-                            type="button"
-                            className="site-nav-icon-btn"
-                            onClick={handleLogout}
-                            title="Đăng xuất"
-                        >
-                            <NavIcon name="logout" className="site-nav-icon" />
-                            <span className="sr-only">Đăng xuất</span>
-                        </button>
-                    </div>
+                    <button
+                        type="button"
+                        className="site-nav-icon-btn site-nav-icon-btn--logout"
+                        onClick={handleLogout}
+                        title="Đăng xuất"
+                    >
+                        <NavIcon name="logout" className="site-nav-icon" />
+                        <span className="sr-only">Đăng xuất</span>
+                    </button>
                 )}
             </div>
 

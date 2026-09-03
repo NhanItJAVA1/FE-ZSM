@@ -61,17 +61,21 @@ dl {
 .app-shell {
   width: min(1440px, 100%);
   margin: 0 auto;
-  padding: 24px;
+  padding: 70px 24px 24px;
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
 
 .site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
+  justify-content: flex-start;
+  width: auto;
   padding: 0;
   border: none;
   background: transparent;
@@ -85,8 +89,17 @@ dl {
 .site-header-left {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 0;
+  flex-wrap: nowrap;
+}
+
+.site-header-rail {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  border-radius: 0 0 42px 0;
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  box-shadow: 0 14px 34px -28px rgba(18, 24, 38, 0.46);
+  backdrop-filter: blur(10px);
 }
 
 .site-header-animation {
@@ -233,9 +246,9 @@ body:has(.todo-list-page) .header-chip--user {
 
 .site-nav--icons {
   flex: 0 1 auto;
-  gap: 6px;
-  align-items: flex-end;
-  min-height: 40px;
+  gap: 0;
+  align-items: stretch;
+  min-height: 42px;
 }
 
 .site-nav a {
@@ -251,12 +264,13 @@ body:has(.todo-list-page) .header-chip--user {
 }
 
 .site-nav-icon-btn {
-  width: 36px;
-  height: 36px;
-  min-height: 36px;
+  width: 52px;
+  height: 42px;
+  min-height: 42px;
   padding: 0;
   border: none;
-  border-radius: 999px;
+  border-right: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  border-radius: 0;
   display: inline-grid;
   place-items: center;
   color: var(--muted);
@@ -273,7 +287,7 @@ body:has(.todo-list-page) .header-chip--user {
 .site-nav-icon-btn:hover {
   filter: none;
   color: var(--text-h);
-  background: transparent;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .site-nav-icon-btn:active {
@@ -282,13 +296,20 @@ body:has(.todo-list-page) .header-chip--user {
 
 .site-nav-icon-btn.active {
   color: var(--accent);
-  background: transparent;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   box-shadow: none;
-  transform: translateY(-4px);
+  transform: none;
 }
 
 .site-nav-icon-btn.active:active {
-  transform: translateY(-4px) scale(0.96);
+  transform: scale(0.96);
+}
+
+.site-nav-icon-btn--logout {
+  width: 64px;
+  border-right: 0;
+  border-radius: 0 0 42px 0;
+  color: color-mix(in srgb, var(--accent) 76%, var(--muted));
 }
 
 .site-nav-icon-btn--ghost {
@@ -325,7 +346,7 @@ body:has(.todo-list-page) .header-chip--user {
 }
 
 .site-nav--icons a:hover {
-  background: transparent;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .site-nav a:focus-visible {
@@ -340,7 +361,7 @@ body:has(.todo-list-page) .header-chip--user {
 }
 
 .site-nav--icons a.active {
-  background: transparent;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   font-weight: 600;
 }
 
@@ -2517,7 +2538,6 @@ button:disabled {
   border: 1px solid color-mix(in srgb, var(--border) 52%, transparent);
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.26);
-  scrollbar-gutter: stable;
 }
 
 .todo-task-table-head {
@@ -3275,11 +3295,13 @@ button:disabled {
 
 @media (max-width: 720px) {
   .app-shell {
-    padding: 12px;
+    padding: 64px 12px 12px;
   }
 
   .site-header {
-    width: 100%;
+    top: 0;
+    left: 0;
+    width: auto;
   }
 
   .site-header-left {
