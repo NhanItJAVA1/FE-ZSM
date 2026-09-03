@@ -1,5 +1,5 @@
-import type { FormEvent } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
+import { Plus, X, Pencil, Trash2 } from "lucide-react";
 import type { TodoCategoryDto, TodoDto } from "../types.js";
 import { getCategoryFilterId, type CategoryFilter, type TodoCounts } from "../todoPageUtils.js";
 
@@ -30,6 +30,23 @@ export default function TodoCategoryPanel({
     onSelectCategory,
     onSubmitCategory,
 }: TodoCategoryPanelProps) {
+    const [categoryFormOpen, setCategoryFormOpen] = useState(false);
+    const inputRef = useRef<HTMLInputElement | null>(null);
+
+    useEffect(() => {
+        if (categoryFormOpen) {
+            inputRef.current?.focus();
+        }
+    }, [categoryFormOpen]);
+
+    function submitCategory(event: FormEvent<HTMLFormElement>) {
+        const hasName = categoryName.trim().length > 0;
+        onSubmitCategory(event);
+        if (hasName) {
+            setCategoryFormOpen(false);
+        }
+    }
+
     return (
         <aside className="todo-simple-category-panel" aria-label="Todo categories">
             <div className="todo-panel-heading todo-simple-category-heading">
@@ -42,22 +59,47 @@ export default function TodoCategoryPanel({
                     </div>
                 </div>
 
-                <form className="todo-simple-category-form" onSubmit={onSubmitCategory}>
-                    <input
-                        value={categoryName}
-                        placeholder="Enter for new category"
-                        aria-label="Enter for new category"
-                        onChange={(event) => onCategoryNameChange(event.target.value)}
-                    />
+                <div className="todo-simple-category-create">
                     <button
-                        type="submit"
+                        type="button"
+                        className={`todo-simple-category-create-trigger ${categoryFormOpen ? "active" : ""}`}
                         disabled={createCategoryPending}
                         aria-label="Thêm category"
                         title="Thêm category"
+                        onClick={() => setCategoryFormOpen((prev) => !prev)}
                     >
-                        +
+                        {categoryFormOpen ? (
+                            <X size={16} strokeWidth={2.4} />
+                        ) : (
+                            <Plus size={17} strokeWidth={2.4} />
+                        )}
                     </button>
-                </form>
+
+                    {categoryFormOpen && (
+                        <form className="todo-simple-category-form" onSubmit={submitCategory}>
+                            <input
+                                ref={inputRef}
+                                value={categoryName}
+                                placeholder="New category"
+                                aria-label="New category"
+                                onChange={(event) => onCategoryNameChange(event.target.value)}
+                                onKeyDown={(event) => {
+                                    if (event.key === "Escape") {
+                                        setCategoryFormOpen(false);
+                                    }
+                                }}
+                            />
+                            <button
+                                type="submit"
+                                disabled={createCategoryPending || !categoryName.trim()}
+                                aria-label="Lưu category"
+                                title="Lưu category"
+                            >
+                                <Plus size={15} strokeWidth={2.5} />
+                            </button>
+                        </form>
+                    )}
+                </div>
             </div>
 
             <div className="todo-simple-category-list">

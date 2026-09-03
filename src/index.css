@@ -149,6 +149,24 @@ dl {
   min-height: 32px;
 }
 
+body:has(.todo-list-page) {
+  background:
+    linear-gradient(135deg, rgba(244, 246, 250, 0.38), rgba(244, 246, 250, 0.14)),
+    url("/images/jan-kahanek-g3O5ZtRk2E4-unsplash.jpg") center / cover fixed;
+}
+
+body:has(.todo-list-page) .header-chip {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  box-shadow: none;
+}
+
+body:has(.todo-list-page) .header-chip--nav,
+body:has(.todo-list-page) .header-chip--user {
+  background: rgba(255, 255, 255, 0.1);
+}
+
 .site-header--compact {
   width: 100%;
   max-width: 100%;
@@ -1896,21 +1914,19 @@ button:disabled {
 .todo-list-page {
   --todo-control: #303848;
   --todo-control-hover: color-mix(in srgb, var(--accent) 32%, #303848);
-  min-height: calc(100svh - 118px);
-  display: grid;
-  grid-template-columns: minmax(200px, 250px) minmax(0, 980px);
-  justify-content: center;
-  align-items: start;
-  gap: 1px;
-  padding: 18px;
-  border: 1px solid color-mix(in srgb, var(--border) 72%, var(--surface));
-  border-radius: 34px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.28), rgba(244, 246, 250, 0.5)),
-    url("/images/image.png") center / cover;
-  box-shadow:
-    0 26px 70px -48px rgba(38, 44, 56, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  --todo-category-width: 250px;
+  --todo-page-gap: 18px;
+  --todo-page-edge: 24px;
+  --todo-page-top: 20px;
+  width: 100vw;
+  min-height: calc(100svh - var(--todo-page-top));
+  display: block;
+  margin-inline: calc(50% - 50vw);
+  padding: 0 calc(var(--todo-page-edge) + var(--todo-category-width) + var(--todo-page-gap)) var(--todo-page-edge) var(--todo-page-edge);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .todo-list-page-panel {
@@ -1918,14 +1934,21 @@ button:disabled {
 }
 
 .todo-simple-category-panel {
+  position: fixed;
+  top: var(--todo-page-top);
+  right: var(--todo-page-edge);
+  z-index: 90;
+  width: var(--todo-category-width);
+  max-height: calc(100svh - var(--todo-page-top) - var(--todo-page-edge));
   min-width: 0;
   display: grid;
   align-content: start;
   gap: 14px;
   padding: 18px;
+  overflow: visible;
   border: 1px solid color-mix(in srgb, var(--border) 48%, transparent);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.14);
   backdrop-filter: blur(16px);
   box-shadow: 0 24px 64px -50px rgba(38, 44, 56, 0.28);
 }
@@ -1969,63 +1992,14 @@ button:disabled {
   line-height: 1;
 }
 
-.todo-simple-category-form {
+.todo-simple-category-create {
   position: absolute;
   top: 0;
   right: 0;
-  z-index: 4;
-  display: grid;
-  width: 42px;
-  height: 42px;
-  overflow: hidden;
-  border: 1px solid var(--todo-control);
-  border-radius: 999px;
-  background: var(--todo-control);
-  transition:
-    width 520ms cubic-bezier(0.32, 0.72, 0, 1),
-    background 520ms cubic-bezier(0.32, 0.72, 0, 1),
-    border-color 520ms cubic-bezier(0.32, 0.72, 0, 1),
-    box-shadow 520ms cubic-bezier(0.32, 0.72, 0, 1);
+  z-index: 80;
 }
 
-.todo-simple-category-form:hover,
-.todo-simple-category-form:focus-within {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.5);
-  border-color: color-mix(in srgb, var(--border) 46%, transparent);
-  backdrop-filter: blur(12px);
-  box-shadow: 0 18px 44px -36px rgba(38, 44, 56, 0.34);
-}
-
-.todo-simple-category-form input {
-  height: 40px;
-  min-height: 40px;
-  width: 100%;
-  min-width: 0;
-  padding: 0 52px 0 14px;
-  border-color: transparent;
-  background: transparent;
-  opacity: 0;
-  transform: translateX(12px);
-  transition:
-    opacity 360ms cubic-bezier(0.32, 0.72, 0, 1),
-    transform 360ms cubic-bezier(0.32, 0.72, 0, 1);
-}
-
-.todo-simple-category-form:hover input,
-.todo-simple-category-form:focus-within input {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.todo-simple-category-form input:focus {
-  box-shadow: none;
-}
-
-.todo-simple-category-form button {
-  position: absolute;
-  top: 0;
-  right: 0;
+.todo-simple-category-create-trigger {
   width: 42px;
   min-width: 42px;
   height: 42px;
@@ -2037,10 +2011,91 @@ button:disabled {
   border: 0;
   background: var(--todo-control);
   color: var(--text-on-dark);
-  font-size: 26px;
+  cursor: pointer;
+  transition:
+    background 520ms cubic-bezier(0.32, 0.72, 0, 1),
+    color 520ms cubic-bezier(0.32, 0.72, 0, 1),
+    box-shadow 520ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.todo-simple-category-create-trigger:hover,
+.todo-simple-category-create-trigger.active {
+  filter: none;
+  background: var(--accent);
+  box-shadow: 0 16px 34px -24px rgba(38, 44, 56, 0.48);
+}
+
+.todo-simple-category-create-trigger:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+
+.todo-simple-category-form {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  z-index: 81;
+  width: min(232px, calc(100vw - 48px));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 38px;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, var(--border) 56%, transparent);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 22px 54px -34px rgba(38, 44, 56, 0.52);
+}
+
+.todo-simple-category-form::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  right: 14px;
+  width: 10px;
+  height: 10px;
+  rotate: 45deg;
+  border-left: 1px solid color-mix(in srgb, var(--border) 56%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--border) 56%, transparent);
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.todo-simple-category-form:focus-within {
+  border-color: color-mix(in srgb, var(--border) 46%, transparent);
+  box-shadow: 0 18px 44px -36px rgba(38, 44, 56, 0.34);
+}
+
+.todo-simple-category-form input {
+  height: 36px;
+  min-height: 36px;
+  width: 100%;
+  min-width: 0;
+  padding: 0 10px;
+  border-color: color-mix(in srgb, var(--border) 44%, transparent);
+  background: rgba(244, 246, 250, 0.58);
+}
+
+.todo-simple-category-form input:focus {
+  box-shadow: none;
+}
+
+.todo-simple-category-form button {
+  position: relative;
+  z-index: 1;
+  width: 38px;
+  min-width: 38px;
+  height: 36px;
+  min-height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border-radius: 9px;
+  border: 0;
+  background: var(--todo-control);
+  color: var(--text-on-dark);
   line-height: 1;
   cursor: pointer;
-  transform: translateY(-1px);
 }
 
 .todo-simple-category-form button:disabled {
@@ -2095,7 +2150,6 @@ button:disabled {
   border-color: color-mix(in srgb, var(--accent) 34%, var(--border));
   background: rgba(255, 255, 255, 0.62);
   color: var(--accent);
-  transform: translateY(-1px);
 }
 
 .todo-simple-category-row:hover .todo-simple-category-item--main,
@@ -2204,8 +2258,8 @@ button:disabled {
   flex-direction: column;
   gap: 14px;
   padding: 18px;
-  min-height: auto;
-  max-height: calc(100svh - 154px);
+  min-height: calc(100svh - var(--todo-page-top) - var(--todo-page-edge));
+  max-height: calc(100svh - var(--todo-page-top) - var(--todo-page-edge));
   overflow: visible;
   transition:
     padding 320ms cubic-bezier(0.32, 0.72, 0, 1),
@@ -2471,7 +2525,7 @@ button:disabled {
   top: 0;
   z-index: 3;
   display: grid;
-  grid-template-columns: minmax(150px, 0.82fr) minmax(220px, 1.7fr) 150px 120px;
+  grid-template-columns: minmax(120px, 0.62fr) minmax(220px, 1.65fr) 190px 120px;
   gap: 8px;
   align-items: center;
   min-height: 34px;
@@ -2485,11 +2539,11 @@ button:disabled {
 }
 
 .todo-left-panel--inline .todo-task-table-head {
-  grid-template-columns: minmax(150px, 0.82fr) minmax(220px, 1.7fr) 150px 120px;
+  grid-template-columns: minmax(120px, 0.62fr) minmax(220px, 1.65fr) 190px 120px;
   gap: 0;
 }
 
-.todo-left-panel--inline .todo-task-table-head > span {
+.todo-left-panel--inline .todo-task-table-head>span {
   padding-inline: 7px;
 }
 
@@ -2592,7 +2646,7 @@ button:disabled {
 
 .todo-card {
   display: grid;
-  grid-template-columns: minmax(150px, 0.82fr) minmax(220px, 1.7fr) 150px 120px;
+  grid-template-columns: minmax(120px, 0.62fr) minmax(220px, 1.65fr) 190px 120px;
   align-items: stretch;
   gap: 8px;
   min-height: 66px;
@@ -2611,7 +2665,7 @@ button:disabled {
 }
 
 .todo-left-panel--inline .todo-card {
-  grid-template-columns: minmax(150px, 0.82fr) minmax(220px, 1.7fr) 150px 120px;
+  grid-template-columns: minmax(120px, 0.62fr) minmax(220px, 1.65fr) 190px 120px;
   gap: 0;
   padding: 0 9px;
 }
@@ -3176,12 +3230,31 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
-  .app-select-hero,
-  .todo-list-page {
+  .app-select-hero {
     grid-template-columns: 1fr;
   }
 
+  .todo-list-page {
+    width: 100%;
+    min-height: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-inline: 0;
+    padding: 0;
+  }
+
+  .todo-simple-category-panel {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    width: 100%;
+    max-height: none;
+  }
+
   .todo-left-panel {
+    min-height: auto;
     max-height: none;
   }
 

@@ -2,13 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue.js";
 import type { TodoPriority, TodoQuery, TodoStatus } from "../types.js";
 import {
-    LEFT_TASK_PAGE_SIZE,
     getCategoryIdFromFilter,
     type CategoryFilter,
     type TodoOverdueFilter,
 } from "../todoPageUtils.js";
 
-export function useTodoFilters() {
+export function useTodoFilters(pageSize: number) {
     const [search, setSearch] = useState("");
     const debouncedSearch = useDebouncedValue(search, 350);
     const [statusFilter, setStatusFilter] = useState<TodoStatus | "All">("All");
@@ -22,7 +21,7 @@ export function useTodoFilters() {
     const todoQuery = useMemo<TodoQuery>(() => {
         const query: TodoQuery = {
             page,
-            pageSize: LEFT_TASK_PAGE_SIZE,
+            pageSize,
             sortBy: "createdat",
             isDescending: true,
         };
@@ -35,7 +34,7 @@ export function useTodoFilters() {
         if (selectedCategoryId !== null) query.categoryId = selectedCategoryId;
 
         return query;
-    }, [debouncedSearch, overdueFilter, priorityFilter, selectedCategoryId, statusFilter, page]);
+    }, [debouncedSearch, overdueFilter, priorityFilter, selectedCategoryId, statusFilter, page, pageSize]);
 
     const advancedFiltersActive =
         statusFilter !== "All" ||
@@ -44,7 +43,7 @@ export function useTodoFilters() {
 
     useEffect(() => {
         setPage(1);
-    }, [debouncedSearch, statusFilter, priorityFilter, overdueFilter, selectedCategoryFilter]);
+    }, [debouncedSearch, statusFilter, priorityFilter, overdueFilter, selectedCategoryFilter, pageSize]);
 
     function clearAdvancedFilters() {
         setStatusFilter("All");

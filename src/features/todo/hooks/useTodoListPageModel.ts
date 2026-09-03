@@ -6,12 +6,14 @@ import { useTodoMutations } from "../../../hooks/useTodoMutations.js";
 import { useTodosQuery } from "../../../hooks/useTodosQuery.js";
 import { useTodoDialogActions } from "./useTodoDialogActions.js";
 import { useTodoFilters } from "./useTodoFilters.js";
+import { useTodoPageSize } from "./useTodoPageSize.js";
 import { useTodoSelection } from "./useTodoSelection.js";
 import { useTodoTableEditing } from "./useTodoTableEditing.js";
 
 export function useTodoListPageModel() {
     const leftPanelRef = useRef<HTMLElement | null>(null);
-    const todoFilters = useTodoFilters();
+    const pageSize = useTodoPageSize(leftPanelRef);
+    const todoFilters = useTodoFilters(pageSize);
     const allTodosQuery = useTodosQuery({
         page: 1,
         pageSize: 100,

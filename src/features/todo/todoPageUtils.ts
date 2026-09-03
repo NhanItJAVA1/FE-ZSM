@@ -14,7 +14,11 @@ export const STATUS_LABELS: Record<TodoStatus, string> = {
 
 export const PRIORITIES: TodoPriority[] = ["Low", "Medium", "High"];
 export const STATUSES: TodoStatus[] = ["Todo", "InProgress", "Done"];
-export const LEFT_TASK_PAGE_SIZE = 6;
+export const TODO_PAGE_SIZE_DEFAULT = 6;
+export const TODO_PAGE_SIZE_MIN = 4;
+export const TODO_PAGE_SIZE_MAX = 10;
+export const TODO_ROW_ESTIMATED_HEIGHT = 66;
+export const TODO_PANEL_STATIC_HEIGHT = 128;
 
 export type CategoryFilter = "all" | "uncategorized" | `category-${number}`;
 export type TodoOverdueFilter = "All" | "Overdue" | "NotOverdue";
