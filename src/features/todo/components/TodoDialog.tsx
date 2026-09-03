@@ -99,28 +99,32 @@ export default function TodoDialog({
                             <p className="eyebrow">Delete category</p>
                             {/* <h2 id="todo-dialog-title">Xóa category "{dialog.category.name}"?</h2> */}
                             <p>
-                                Bạn có thể giữ lại các task và bỏ category, hoặc xóa luôn các task trong category này.
+                                {dialog.taskCount > 0
+                                    ? "Bạn có thể giữ lại các task và bỏ category, hoặc xóa luôn các task trong category này."
+                                    : "Category này chưa có task nào. Bạn có thể xóa category ngay."}
                             </p>
                         </div>
                         <div className="todo-dialog-actions todo-dialog-actions--stacked">
                             <button type="button" className="ghost-btn" onClick={onCancel}>
                                 Hủy
                             </button>
-                            <button
-                                type="button"
-                                className="ghost-btn"
-                                disabled={deleteCategoryPending}
-                                onClick={() => onConfirmDeleteCategory(dialog.category, false)}
-                            >
-                                Giữ task
-                            </button>
+                            {dialog.taskCount > 0 && (
+                                <button
+                                    type="button"
+                                    className="ghost-btn"
+                                    disabled={deleteCategoryPending}
+                                    onClick={() => onConfirmDeleteCategory(dialog.category, false)}
+                                >
+                                    Giữ task
+                                </button>
+                            )}
                             <button
                                 type="button"
                                 className="todo-danger-btn"
                                 disabled={deleteCategoryPending}
                                 onClick={() => onConfirmDeleteCategory(dialog.category, true)}
                             >
-                                Xóa cả task
+                                {dialog.taskCount > 0 ? "Xóa cả task" : "Xóa category"}
                             </button>
                         </div>
                     </>

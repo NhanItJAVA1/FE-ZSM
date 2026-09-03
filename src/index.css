@@ -2541,7 +2541,7 @@ button:disabled {
   max-height: min(74svh, 760px);
   overflow: hidden auto;
   border: 1px solid color-mix(in srgb, var(--border) 52%, transparent);
-  border-radius: 0;
+  border-radius: 2px;
   background: rgba(255, 255, 255, 0.26);
 }
 

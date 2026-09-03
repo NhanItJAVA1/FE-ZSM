@@ -51,8 +51,8 @@ export function useTodoDialogActions({
         setTodoDialog({ type: "deleteSelected", todos: selectedRows });
     }
 
-    function openDeleteCategoryDialog(category: TodoCategoryDto) {
-        setTodoDialog({ type: "deleteCategory", category });
+    function openDeleteCategoryDialog(category: TodoCategoryDto, taskCount: number) {
+        setTodoDialog({ type: "deleteCategory", category, taskCount });
     }
 
     function openRenameCategoryDialog(category: TodoCategoryDto) {

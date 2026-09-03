@@ -11,7 +11,7 @@ interface TodoCategoryPanelProps {
     createCategoryPending: boolean;
     selectedCategoryFilter: CategoryFilter;
     onCategoryNameChange: (value: string) => void;
-    onDeleteCategory: (category: TodoCategoryDto) => void;
+    onDeleteCategory: (category: TodoCategoryDto, taskCount: number) => void;
     onRenameCategory: (category: TodoCategoryDto) => void;
     onSelectCategory: (filter: CategoryFilter) => void;
     onSubmitCategory: (event: FormEvent<HTMLFormElement>) => void;
@@ -144,7 +144,7 @@ export default function TodoCategoryPanel({
                                     type="button"
                                     aria-label={`Xóa category ${category.name}`}
                                     title="Xóa category"
-                                    onClick={() => onDeleteCategory(category)}
+                                    onClick={() => onDeleteCategory(category, taskCount)}
                                 >
                                     <Trash2 size={13} strokeWidth={2.3} />
                                 </button>
