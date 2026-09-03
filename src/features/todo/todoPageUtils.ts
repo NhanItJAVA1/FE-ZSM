@@ -38,8 +38,7 @@ export interface TodoInlineDraft extends TodoFormState {
 }
 
 export type TodoDialogState =
-    | { type: "deleteTodo"; todo: TodoDto }
-    | { type: "deleteTodos"; todos: TodoDto[] }
+    | { type: "deleteSelected"; todos: TodoDto[] }
     | { type: "deleteCategory"; category: TodoCategoryDto }
     | { type: "renameCategory"; category: TodoCategoryDto }
     | null;

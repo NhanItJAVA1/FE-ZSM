@@ -35,7 +35,7 @@ export default function TodoPanel({
                 selection={selection}
             />
             <TodoPagination
-                actions={{ onSetTaskPage: actions.onSetTaskPage }}
+                actions={{ onSetPage: actions.onSetPage }}
                 pagination={pagination}
             />
         </section>

@@ -14,14 +14,14 @@ export function useTodoFilters() {
     const [statusFilter, setStatusFilter] = useState<TodoStatus | "All">("All");
     const [priorityFilter, setPriorityFilter] = useState<TodoPriority | "All">("All");
     const [overdueFilter, setOverdueFilter] = useState<TodoOverdueFilter>("All");
-    const [taskPage, setTaskPage] = useState(1);
+    const [page, setPage] = useState(1);
     const [filterOpen, setFilterOpen] = useState(false);
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<CategoryFilter>("all");
     const selectedCategoryId = getCategoryIdFromFilter(selectedCategoryFilter);
 
     const todoQuery = useMemo<TodoQuery>(() => {
         const query: TodoQuery = {
-            page: taskPage,
+            page,
             pageSize: LEFT_TASK_PAGE_SIZE,
             sortBy: "createdat",
             isDescending: true,
@@ -35,7 +35,7 @@ export function useTodoFilters() {
         if (selectedCategoryId !== null) query.categoryId = selectedCategoryId;
 
         return query;
-    }, [debouncedSearch, overdueFilter, priorityFilter, selectedCategoryId, statusFilter, taskPage]);
+    }, [debouncedSearch, overdueFilter, priorityFilter, selectedCategoryId, statusFilter, page]);
 
     const advancedFiltersActive =
         statusFilter !== "All" ||
@@ -43,7 +43,7 @@ export function useTodoFilters() {
         overdueFilter !== "All";
 
     useEffect(() => {
-        setTaskPage(1);
+        setPage(1);
     }, [debouncedSearch, statusFilter, priorityFilter, overdueFilter, selectedCategoryFilter]);
 
     function clearAdvancedFilters() {
@@ -59,7 +59,7 @@ export function useTodoFilters() {
     }
 
     function toggleFilter() {
-        setFilterOpen((current) => !current);
+        setFilterOpen((prev) => !prev);
     }
 
     function closeFilter() {
@@ -83,7 +83,7 @@ export function useTodoFilters() {
             statusFilter,
         },
         pagination: {
-            taskPage,
+            page,
         },
         selectedCategoryFilter,
         selectedCategoryId,
@@ -96,7 +96,7 @@ export function useTodoFilters() {
             setOverdueFilter,
             setPriorityFilter,
             setStatusFilter,
-            setTaskPage,
+            setPage,
             setSearch,
             toggleFilter,
         },

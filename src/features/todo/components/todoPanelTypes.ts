@@ -11,8 +11,8 @@ export interface TodoPanelData {
     categories: TodoCategoryDto[];
     counts: TodoCounts;
     loading: boolean;
-    paginatedTodos: TodoDto[];
-    visibleTodosLength: number;
+    rows: TodoDto[];
+    totalRows: number;
 }
 
 export interface TodoPanelFilters {
@@ -25,43 +25,42 @@ export interface TodoPanelFilters {
 }
 
 export interface TodoPanelSelection {
-    selectedTodoId: number | null;
-    bulkDeleteMode: boolean;
-    selectedDeleteIds: number[];
+    activeId: number | null;
+    selectedIds: number[];
 }
 
 export interface TodoPanelEditing {
-    editedTodoRows: Record<number, TodoFormState>;
+    editedRows: Record<number, TodoFormState>;
     formError: string | null;
-    inlineDrafts: TodoInlineDraft[];
-    savingTodo: boolean;
+    drafts: TodoInlineDraft[];
+    saving: boolean;
 }
 
 export interface TodoPanelPagination {
-    taskPage: number;
-    totalTaskPages: number;
+    page: number;
+    totalPages: number;
 }
 
 export interface TodoPanelActions {
     onClearAdvancedFilters: () => void;
     onClearFilters: () => void;
-    onDeleteTodo: (todo: TodoDto) => void;
-    onDeleteSelectedTodos: () => void;
-    onOpenNewTodoEditor: () => void;
+    onDeleteSelected: () => void;
+    onAddDraft: () => void;
     onResetForm: () => void;
     onSearchChange: (value: string) => void;
-    onSelectTodo: (todoId: number) => void;
-    onRemoveInlineDraft: (id: string) => void;
-    onSetInlineDraft: (id: string, patch: Partial<TodoFormState>) => void;
-    onSetTodoRow: (todo: TodoDto, patch: Partial<TodoFormState>) => void;
+    onSelectRow: (id: number) => void;
+    onRemoveDraft: (id: string) => void;
+    onUpdateDraft: (id: string, patch: Partial<TodoFormState>) => void;
+    onUpdateRow: (todo: TodoDto, patch: Partial<TodoFormState>) => void;
     onSetOverdueFilter: (filter: TodoOverdueFilter) => void;
     onSetPriorityFilter: (priority: TodoPriority | "All") => void;
     onSetStatusFilter: (status: TodoStatus | "All") => void;
-    onSetTaskPage: (updater: (current: number) => number) => void;
-    onToggleBulkDeleteMode: () => void;
+    onSetPage: (updater: (prev: number) => number) => void;
+    onClearDeleteSelection: () => void;
+    onSelectPage: () => void;
     onToggleFilter: () => void;
-    onToggleDeleteSelection: (todoId: number) => void;
-    onSaveTodo: () => void;
+    onToggleSelection: (id: number) => void;
+    onSave: () => void;
 }
 
 export interface TodoPanelProps {

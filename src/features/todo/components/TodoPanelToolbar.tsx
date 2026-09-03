@@ -25,21 +25,21 @@ export default function TodoPanelToolbar({
 }: TodoPanelToolbarProps) {
     const {
         onClearAdvancedFilters,
-        onDeleteSelectedTodos,
-        onOpenNewTodoEditor,
+        onDeleteSelected,
+        onAddDraft,
         onResetForm,
-        onSaveTodo,
+        onSave,
         onSearchChange,
         onSetOverdueFilter,
         onSetPriorityFilter,
         onSetStatusFilter,
         onToggleFilter,
     } = actions;
-    const { editedTodoRows, inlineDrafts, savingTodo } = editing;
-    const { bulkDeleteMode, selectedDeleteIds } = selection;
+    const { editedRows, drafts, saving } = editing;
+    const { selectedIds } = selection;
     const { filterActive, filterOpen, search } = filters;
-    const hasChanges = inlineDrafts.length > 0 || Object.keys(editedTodoRows).length > 0;
-    const canDeleteSelected = bulkDeleteMode && selectedDeleteIds.length > 0;
+    const hasChanges = drafts.length > 0 || Object.keys(editedRows).length > 0;
+    const canDeleteSelected = selectedIds.length > 0;
 
     return (
         <div className="todo-panel-heading">
@@ -101,10 +101,10 @@ export default function TodoPanelToolbar({
                 <button
                     type="button"
                     className={`todo-header-action-btn todo-header-action-btn--save ${hasChanges ? "active" : ""}`}
-                    onClick={onSaveTodo}
+                    onClick={onSave}
                     title="Lưu thay đổi"
                     aria-label="Lưu thay đổi"
-                    disabled={!hasChanges || savingTodo}
+                    disabled={!hasChanges || saving}
                 >
                     <Check size={15} strokeWidth={2.4} />
                 </button>
@@ -114,14 +114,14 @@ export default function TodoPanelToolbar({
                     onClick={onResetForm}
                     title="Hủy thay đổi"
                     aria-label="Hủy thay đổi"
-                    disabled={!hasChanges || savingTodo}
+                    disabled={!hasChanges || saving}
                 >
                     <X size={15} strokeWidth={2.4} />
                 </button>
                 <button
                     type="button"
                     className={`todo-header-action-btn todo-header-action-btn--danger ${canDeleteSelected ? "active" : ""}`}
-                    onClick={onDeleteSelectedTodos}
+                    onClick={onDeleteSelected}
                     title={canDeleteSelected ? "Xóa task đã chọn" : "Chọn task trong bảng để xóa"}
                     aria-label={canDeleteSelected ? "Xóa task đã chọn" : "Chọn task trong bảng để xóa"}
                     disabled={!canDeleteSelected}
@@ -134,7 +134,7 @@ export default function TodoPanelToolbar({
                 <button
                     type="button"
                     className="todo-door-trigger"
-                    onClick={onOpenNewTodoEditor}
+                    onClick={onAddDraft}
                     title="Tạo task mới"
                 >
                     <span>+</span>

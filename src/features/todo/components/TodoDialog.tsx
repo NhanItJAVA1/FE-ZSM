@@ -4,14 +4,13 @@ import type { TodoDialogState } from "../todoPageUtils.js";
 
 interface TodoDialogProps {
     deleteCategoryPending: boolean;
-    deleteTodoPending: boolean;
+    deletePending: boolean;
     dialog: TodoDialogState;
     renameCategoryName: string;
     updateCategoryPending: boolean;
     onCancel: () => void;
     onConfirmDeleteCategory: (category: TodoCategoryDto, deleteTodos: boolean) => void;
-    onConfirmDeleteTodo: (todo: TodoDto) => void;
-    onConfirmDeleteTodos?: (todos: TodoDto[]) => void;
+    onConfirmDeleteSelected?: (todos: TodoDto[]) => void;
     onConfirmRenameCategory: (event: FormEvent<HTMLFormElement>) => void;
     onRenameCategoryNameChange: (value: string) => void;
 }
@@ -40,14 +39,13 @@ function TrashIcon() {
 
 export default function TodoDialog({
     deleteCategoryPending,
-    deleteTodoPending,
+    deletePending,
     dialog,
     renameCategoryName,
     updateCategoryPending,
     onCancel,
     onConfirmDeleteCategory,
-    onConfirmDeleteTodo,
-    onConfirmDeleteTodos,
+    onConfirmDeleteSelected,
     onConfirmRenameCategory,
     onRenameCategoryNameChange,
 }: TodoDialogProps) {
@@ -66,34 +64,7 @@ export default function TodoDialog({
                 aria-labelledby="todo-dialog-title"
                 onClick={(event) => event.stopPropagation()}
             >
-                {dialog.type === "deleteTodo" && (
-                    <>
-                        <div className="todo-dialog-mark todo-dialog-mark--danger">
-                            <TrashIcon />
-                        </div>
-                        <div className="todo-dialog-copy">
-                            {/* <p className="eyebrow">Delete task</p> */}
-                            <p>
-                                Task "{dialog.todo.title}" sẽ bị xóa khỏi danh sách.
-                            </p>
-                        </div>
-                        <div className="todo-dialog-actions">
-                            <button type="button" className="ghost-btn" onClick={onCancel}>
-                                Hủy
-                            </button>
-                            <button
-                                type="button"
-                                className="todo-danger-btn"
-                                disabled={deleteTodoPending}
-                                onClick={() => onConfirmDeleteTodo(dialog.todo)}
-                            >
-                                Xóa task
-                            </button>
-                        </div>
-                    </>
-                )}
-
-                {dialog.type === "deleteTodos" && (
+                {dialog.type === "deleteSelected" && (
                     <>
                         <div className="todo-dialog-mark todo-dialog-mark--danger">
                             <TrashIcon />
@@ -110,8 +81,8 @@ export default function TodoDialog({
                             <button
                                 type="button"
                                 className="todo-danger-btn"
-                                disabled={deleteTodoPending}
-                                onClick={() => onConfirmDeleteTodos?.(dialog.todos)}
+                                disabled={deletePending}
+                                onClick={() => onConfirmDeleteSelected?.(dialog.todos)}
                             >
                                 Xóa task
                             </button>

@@ -27,7 +27,7 @@ export function useTodoListPageModel() {
     const categories = categoriesQuery.data ?? [];
     const loading = todosQuery.isLoading || allTodosQuery.isLoading || categoriesQuery.isLoading;
     const counts = useMemo(() => countTodos(allTodos), [allTodos]);
-    const totalTaskPages = Math.max(1, todosQuery.data?.totalPages ?? 1);
+    const totalPages = Math.max(1, todosQuery.data?.totalPages ?? 1);
     const visibleTodos = useMemo(
         () => getVisibleTodos(todos, todoFilters.selectedCategoryFilter),
         [todoFilters.selectedCategoryFilter, todos]
@@ -46,23 +46,21 @@ export function useTodoListPageModel() {
         createCategory: mutations.createCategory.mutateAsync,
         deleteCategory: mutations.deleteCategory.mutateAsync,
         refetchTodos,
-        removeDeletedTodo: todoSelection.actions.removeDeletedTodo,
         removeDeletedTodos: todoSelection.actions.removeDeletedTodos,
-        removeEditedTodo: todoEditing.actions.removeEditedTodo,
         removeEditedTodos: todoEditing.actions.removeEditedTodos,
         resetEditing: todoEditing.actions.resetEditing,
         resetSelection: todoSelection.actions.resetSelection,
         saveTodos: mutations.saveTodos.mutateAsync,
         selectCategory: todoFilters.actions.selectCategory,
         selectedCategoryFilter: todoFilters.selectedCategoryFilter,
-        selectedDeleteTodos: todoSelection.selectedDeleteTodos,
+        selectedRows: todoSelection.selectedRows,
         updateCategory: mutations.updateCategory.mutateAsync,
     });
-    const { setTaskPage } = todoFilters.actions;
+    const { setPage } = todoFilters.actions;
 
     useEffect(() => {
-        setTaskPage((current) => Math.min(current, totalTaskPages));
-    }, [setTaskPage, totalTaskPages]);
+        setPage((prev) => Math.min(prev, totalPages));
+    }, [setPage, totalPages]);
 
     async function refetchTodos() {
         await Promise.all([todosQuery.refetch(), allTodosQuery.refetch()]);
@@ -79,7 +77,7 @@ export function useTodoListPageModel() {
     }
 
     function selectTodo(todoId: number) {
-        todoSelection.actions.selectTodo(todoId);
+        todoSelection.actions.selectRow(todoId);
         todoFilters.actions.closeFilter();
     }
 
@@ -99,14 +97,13 @@ export function useTodoListPageModel() {
         },
         dialogProps: {
             deleteCategoryPending: mutations.deleteCategory.isPending,
-            deleteTodoPending: mutations.saveTodos.isPending,
+            deletePending: mutations.saveTodos.isPending,
             dialog: todoDialogActions.todoDialog,
             renameCategoryName: todoDialogActions.renameCategoryName,
             updateCategoryPending: mutations.updateCategory.isPending,
             onCancel: todoDialogActions.actions.closeDialog,
             onConfirmDeleteCategory: todoDialogActions.actions.confirmDeleteCategory,
-            onConfirmDeleteTodo: todoDialogActions.actions.confirmDeleteTodo,
-            onConfirmDeleteTodos: todoDialogActions.actions.confirmDeleteTodos,
+            onConfirmDeleteSelected: todoDialogActions.actions.confirmDeleteSelected,
             onConfirmRenameCategory: todoDialogActions.actions.confirmRenameCategory,
             onRenameCategoryNameChange: todoDialogActions.actions.setRenameCategoryName,
         },
@@ -116,39 +113,41 @@ export function useTodoListPageModel() {
                 categories,
                 counts,
                 loading,
-                paginatedTodos: visibleTodos,
-                visibleTodosLength: visibleTodoCount,
+                rows: visibleTodos,
+                totalRows: visibleTodoCount,
             },
             editing: {
-                ...todoEditing.editing,
-                savingTodo: mutations.saveTodos.isPending,
+                editedRows: todoEditing.editing.editedRows,
+                formError: todoEditing.editing.formError,
+                drafts: todoEditing.editing.drafts,
+                saving: mutations.saveTodos.isPending,
             },
             filters: todoFilters.filters,
             selection: todoSelection.selection,
             pagination: {
-                taskPage: todoFilters.pagination.taskPage,
-                totalTaskPages,
+                page: todoFilters.pagination.page,
+                totalPages,
             },
             actions: {
                 onClearFilters: todoFilters.actions.clearTodoFilters,
                 onClearAdvancedFilters: todoFilters.actions.clearAdvancedFilters,
-                onDeleteTodo: todoDialogActions.actions.openDeleteTodoDialog,
-                onDeleteSelectedTodos: todoDialogActions.actions.openDeleteSelectedTodosDialog,
-                onOpenNewTodoEditor: openNewTodoEditor,
+                onDeleteSelected: todoDialogActions.actions.openDeleteSelectedDialog,
+                onAddDraft: openNewTodoEditor,
                 onResetForm: resetTodoPanel,
                 onSearchChange: todoFilters.actions.setSearch,
-                onSelectTodo: selectTodo,
-                onRemoveInlineDraft: todoEditing.actions.removeInlineDraft,
+                onSelectRow: selectTodo,
+                onRemoveDraft: todoEditing.actions.removeInlineDraft,
                 onToggleFilter: todoFilters.actions.toggleFilter,
-                onToggleBulkDeleteMode: todoSelection.actions.toggleBulkDeleteMode,
-                onToggleDeleteSelection: todoSelection.actions.toggleDeleteSelection,
-                onSetInlineDraft: todoEditing.actions.updateInlineDraft,
-                onSetTodoRow: todoEditing.actions.updateTodoRow,
+                onClearDeleteSelection: todoSelection.actions.clearDeleteSelection,
+                onSelectPage: todoSelection.actions.selectPage,
+                onToggleSelection: todoSelection.actions.toggleSelection,
+                onUpdateDraft: todoEditing.actions.updateInlineDraft,
+                onUpdateRow: todoEditing.actions.updateTodoRow,
                 onSetOverdueFilter: todoFilters.actions.setOverdueFilter,
                 onSetPriorityFilter: todoFilters.actions.setPriorityFilter,
                 onSetStatusFilter: todoFilters.actions.setStatusFilter,
-                onSetTaskPage: todoFilters.actions.setTaskPage,
-                onSaveTodo: () => void todoEditing.actions.saveInlineTodo(),
+                onSetPage: todoFilters.actions.setPage,
+                onSave: () => void todoEditing.actions.saveInlineTodo(),
             },
         },
     };

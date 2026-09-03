@@ -20,13 +20,13 @@ export function useTodoTableEditing({
     saveTodos,
     selectedCategoryFilter,
 }: UseTodoTableEditingOptions) {
-    const [editedTodoRows, setEditedTodoRows] = useState<Record<number, TodoFormState>>({});
-    const [inlineDrafts, setInlineDrafts] = useState<TodoInlineDraft[]>([]);
+    const [editedRows, setEditedRows] = useState<Record<number, TodoFormState>>({});
+    const [drafts, setDrafts] = useState<TodoInlineDraft[]>([]);
     const [formError, setFormError] = useState<string | null>(null);
 
     function resetEditing() {
-        setEditedTodoRows({});
-        setInlineDrafts([]);
+        setEditedRows({});
+        setDrafts([]);
         setFormError(null);
     }
 
@@ -37,16 +37,16 @@ export function useTodoTableEditing({
     }
 
     function openNewTodoEditor() {
-        setInlineDrafts((current) => [
-            ...current,
+        setDrafts((prev) => [
+            ...prev,
             createTodoInlineDraft(getDraftCategoryId()),
         ]);
         setFormError(null);
     }
 
     function updateInlineDraft(id: string, patch: Partial<TodoFormState>) {
-        setInlineDrafts((current) =>
-            current.map((draft) =>
+        setDrafts((prev) =>
+            prev.map((draft) =>
                 draft.id === id ? { ...draft, ...patch } : draft
             )
         );
@@ -54,8 +54,8 @@ export function useTodoTableEditing({
     }
 
     function updateTodoRow(todo: TodoDto, patch: Partial<TodoFormState>) {
-        setEditedTodoRows((current) => {
-            const draft = current[todo.id] ?? {
+        setEditedRows((prev) => {
+            const draft = prev[todo.id] ?? {
                 title: todo.title,
                 description: todo.description ?? "",
                 priority: todo.priority,
@@ -72,30 +72,23 @@ export function useTodoTableEditing({
                 nextDraft.categoryId === (todo.categoryId ? String(todo.categoryId) : "");
 
             if (!unchanged) {
-                return { ...current, [todo.id]: nextDraft };
+                return { ...prev, [todo.id]: nextDraft };
             }
 
-            const { [todo.id]: _removed, ...rest } = current;
+            const { [todo.id]: _removed, ...rest } = prev;
             return rest;
         });
         setFormError(null);
     }
 
     function removeInlineDraft(id: string) {
-        setInlineDrafts((current) => current.filter((draft) => draft.id !== id));
+        setDrafts((prev) => prev.filter((draft) => draft.id !== id));
         setFormError(null);
     }
 
-    function removeEditedTodo(todoId: number) {
-        setEditedTodoRows((current) => {
-            const { [todoId]: _removed, ...rest } = current;
-            return rest;
-        });
-    }
-
     function removeEditedTodos(todoIds: number[]) {
-        setEditedTodoRows((current) => {
-            const next = { ...current };
+        setEditedRows((prev) => {
+            const next = { ...prev };
             todoIds.forEach((id) => {
                 delete next[id];
             });
@@ -106,7 +99,7 @@ export function useTodoTableEditing({
     async function saveInlineTodo() {
         setFormError(null);
 
-        const invalidEditedTodo = Object.entries(editedTodoRows).find(
+        const invalidEditedTodo = Object.entries(editedRows).find(
             ([_id, row]) => !row.title.trim()
         );
 
@@ -115,7 +108,7 @@ export function useTodoTableEditing({
             return;
         }
 
-        const invalidDraftIndex = inlineDrafts.findIndex(
+        const invalidDraftIndex = drafts.findIndex(
             (draft) => !draft.title.trim()
         );
 
@@ -124,15 +117,15 @@ export function useTodoTableEditing({
             return;
         }
 
-        const changedRows = Object.entries(editedTodoRows);
+        const changedRows = Object.entries(editedRows);
 
-        if (inlineDrafts.length === 0 && changedRows.length === 0) {
+        if (drafts.length === 0 && changedRows.length === 0) {
             return;
         }
 
         try {
             const payloads: SaveTodosPayload = [
-                ...inlineDrafts.map((draft) => ({
+                ...drafts.map((draft) => ({
                     ...toPayload(draft),
                     id: null,
                     isDeleted: false,
@@ -154,13 +147,12 @@ export function useTodoTableEditing({
 
     return {
         editing: {
-            editedTodoRows,
+            editedRows,
             formError,
-            inlineDrafts,
+            drafts,
         },
         actions: {
             openNewTodoEditor,
-            removeEditedTodo,
             removeEditedTodos,
             removeInlineDraft,
             resetEditing,

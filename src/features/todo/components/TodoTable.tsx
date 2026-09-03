@@ -1,4 +1,4 @@
-import { Check } from "lucide-react";
+import { X } from "lucide-react";
 import { TodoDraftRow, TodoRow } from "./TodoTableRows.js";
 import type {
     TodoPanelActions,
@@ -26,12 +26,12 @@ export default function TodoTable({
     const {
         categories,
         loading,
-        paginatedTodos,
-        visibleTodosLength,
+        rows,
+        totalRows,
     } = data;
-    const { editedTodoRows, formError, inlineDrafts } = editing;
-    const showDrafts = inlineDrafts.length > 0;
-    const showTaskTable = visibleTodosLength > 0 || showDrafts;
+    const { editedRows, formError, drafts } = editing;
+    const showDrafts = drafts.length > 0;
+    const showTaskTable = totalRows > 0 || showDrafts;
 
     return (
         <div className="todo-left-stage">
@@ -39,7 +39,7 @@ export default function TodoTable({
                 <div className="todo-category-list">
                     {loading && <div className="empty-state">Đang tải todo...</div>}
 
-                    {!loading && visibleTodosLength === 0 && !showDrafts && (
+                    {!loading && totalRows === 0 && !showDrafts && (
                         <div className="empty-state empty-state--composed">
                             <p className="empty-state-desc">Hãy tạo task đầu tiên!</p>
                             {(filters.search || filters.filterActive) && (
@@ -57,47 +57,52 @@ export default function TodoTable({
                     {!loading && showTaskTable && (
                         <div className="todo-task-list">
                             <div className="todo-task-table-head">
-                                <span>Task Name</span>
+                                <span className="todo-task-name-head">
+                                    <button
+                                        type="button"
+                                        className={`todo-delete-checkbox todo-delete-checkbox--head ${selection.selectedIds.length > 0 ? "active" : ""}`}
+                                        title={selection.selectedIds.length > 0 ? "Bỏ chọn tất cả" : "Chọn tất cả task trên trang"}
+                                        aria-label={selection.selectedIds.length > 0 ? "Bỏ chọn tất cả task trên trang" : "Chọn tất cả task trên trang"}
+                                        onClick={
+                                            selection.selectedIds.length > 0
+                                                ? actions.onClearDeleteSelection
+                                                : actions.onSelectPage
+                                        }
+                                    >
+                                        {selection.selectedIds.length > 0 && (
+                                            <X size={13} strokeWidth={2.5} />
+                                        )}
+                                    </button>
+                                    <span>Task Name</span>
+                                </span>
                                 <span>Description</span>
                                 <span>Duedate</span>
                                 <span>Labels</span>
-                                <span className="todo-task-delete-head">
-                                    <button
-                                        type="button"
-                                        className={`todo-bulk-select-trigger ${selection.bulkDeleteMode ? "active" : ""}`}
-                                        title={selection.bulkDeleteMode ? "Tắt chọn nhiều" : "Chọn nhiều để xóa"}
-                                        aria-label={selection.bulkDeleteMode ? "Tắt chọn nhiều" : "Chọn nhiều để xóa"}
-                                        onClick={actions.onToggleBulkDeleteMode}
-                                    >
-                                        <Check size={13} strokeWidth={2.5} />
-                                    </button>
-                                </span>
                             </div>
                             {formError && (
                                 <p className="todo-inline-error">{formError}</p>
                             )}
-                            {inlineDrafts.map((draft, index) => (
+                            {drafts.map((draft, index) => (
                                 <TodoDraftRow
                                     key={draft.id}
                                     categories={categories}
                                     draft={draft}
                                     index={index}
-                                    totalDrafts={inlineDrafts.length}
-                                    onRemoveInlineDraft={actions.onRemoveInlineDraft}
-                                    onSetInlineDraft={actions.onSetInlineDraft}
+                                    totalDrafts={drafts.length}
+                                    onRemoveDraft={actions.onRemoveDraft}
+                                    onUpdateDraft={actions.onUpdateDraft}
                                 />
                             ))}
-                            {paginatedTodos.map((todo) => (
+                            {rows.map((todo) => (
                                 <TodoRow
                                     key={todo.id}
                                     categories={categories}
-                                    editedTodoRows={editedTodoRows}
+                                    editedRows={editedRows}
                                     selection={selection}
                                     todo={todo}
-                                    onDeleteTodo={actions.onDeleteTodo}
-                                    onSelectTodo={actions.onSelectTodo}
-                                    onSetTodoRow={actions.onSetTodoRow}
-                                    onToggleDeleteSelection={actions.onToggleDeleteSelection}
+                                    onSelectRow={actions.onSelectRow}
+                                    onUpdateRow={actions.onUpdateRow}
+                                    onToggleSelection={actions.onToggleSelection}
                                 />
                             ))}
                         </div>

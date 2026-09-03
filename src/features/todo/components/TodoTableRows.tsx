@@ -1,5 +1,5 @@
 import type { SyntheticEvent } from "react";
-import { Trash2 } from "lucide-react";
+import { Check, Trash2 } from "lucide-react";
 import type { TodoDto, TodoPriority } from "../types.js";
 import {
     PRIORITIES,
@@ -16,8 +16,8 @@ interface TodoDraftRowProps {
     draft: TodoInlineDraft;
     index: number;
     totalDrafts: number;
-    onRemoveInlineDraft: TodoPanelActions["onRemoveInlineDraft"];
-    onSetInlineDraft: TodoPanelActions["onSetInlineDraft"];
+    onRemoveDraft: TodoPanelActions["onRemoveDraft"];
+    onUpdateDraft: TodoPanelActions["onUpdateDraft"];
 }
 
 export function TodoDraftRow({
@@ -25,11 +25,11 @@ export function TodoDraftRow({
     draft,
     index,
     totalDrafts,
-    onRemoveInlineDraft,
-    onSetInlineDraft,
+    onRemoveDraft,
+    onUpdateDraft,
 }: TodoDraftRowProps) {
     function updateDraftTodo(patch: Partial<TodoFormState>) {
-        onSetInlineDraft(draft.id, patch);
+        onUpdateDraft(draft.id, patch);
     }
 
     return (
@@ -39,6 +39,15 @@ export function TodoDraftRow({
         >
             <div className="todo-card-body">
                 <div className="todo-card-name">
+                    <button
+                        type="button"
+                        className="todo-delete-checkbox todo-delete-checkbox--draft"
+                        title="Hủy"
+                        aria-label="Hủy tạo task"
+                        onClick={() => onRemoveDraft(draft.id)}
+                    >
+                        <Trash2 size={13} strokeWidth={2.3} />
+                    </button>
                     <textarea
                         className="todo-inline-field todo-inline-field--strong"
                         value={draft.title}
@@ -111,44 +120,32 @@ export function TodoDraftRow({
                     </select>
                 </div>
             </div>
-            <div className="todo-card-actions">
-                <button
-                    type="button"
-                    className="todo-card-side-btn todo-card-side-btn--danger todo-card-side-btn--single"
-                    title="Hủy"
-                    aria-label="Hủy tạo task"
-                    onClick={() => onRemoveInlineDraft(draft.id)}
-                >
-                    <Trash2 size={13} strokeWidth={2.3} />
-                </button>
-            </div>
         </article>
     );
 }
 
 interface TodoRowProps {
     categories: TodoPanelData["categories"];
-    editedTodoRows: Record<number, TodoFormState>;
+    editedRows: Record<number, TodoFormState>;
     selection: TodoPanelSelection;
     todo: TodoDto;
-    onDeleteTodo: TodoPanelActions["onDeleteTodo"];
-    onSelectTodo: TodoPanelActions["onSelectTodo"];
-    onSetTodoRow: TodoPanelActions["onSetTodoRow"];
-    onToggleDeleteSelection: TodoPanelActions["onToggleDeleteSelection"];
+    onSelectRow: TodoPanelActions["onSelectRow"];
+    onUpdateRow: TodoPanelActions["onUpdateRow"];
+    onToggleSelection: TodoPanelActions["onToggleSelection"];
 }
 
 export function TodoRow({
     categories,
-    editedTodoRows,
+    editedRows,
     selection,
     todo,
-    onDeleteTodo,
-    onSelectTodo,
-    onSetTodoRow,
-    onToggleDeleteSelection,
+    onSelectRow,
+    onUpdateRow,
+    onToggleSelection,
 }: TodoRowProps) {
-    const { bulkDeleteMode, selectedDeleteIds, selectedTodoId } = selection;
-    const rowDraft = editedTodoRows[todo.id];
+    const { activeId, selectedIds } = selection;
+    const isDeleteSelected = selectedIds.includes(todo.id);
+    const rowDraft = editedRows[todo.id];
     const rowValues = rowDraft ?? {
         title: todo.title,
         description: todo.description ?? "",
@@ -163,11 +160,23 @@ export function TodoRow({
 
     return (
         <article
-            className={`todo-card ${selectedTodoId === todo.id ? "active" : ""} ${rowDraft ? "todo-card--editing" : ""}`}
-            onClick={() => onSelectTodo(todo.id)}
+            className={`todo-card ${activeId === todo.id ? "active" : ""} ${rowDraft ? "todo-card--editing" : ""}`}
+            onClick={() => onSelectRow(todo.id)}
         >
             <div className="todo-card-body">
                 <div className="todo-card-name">
+                    <button
+                        type="button"
+                        className={`todo-delete-checkbox ${isDeleteSelected ? "active" : ""}`}
+                        title={isDeleteSelected ? "Bỏ chọn task" : "Chọn task để xóa"}
+                        aria-label={isDeleteSelected ? `Bỏ chọn task ${todo.title}` : `Chọn task ${todo.title} để xóa`}
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            onToggleSelection(todo.id);
+                        }}
+                    >
+                        {isDeleteSelected && <Check size={13} strokeWidth={2.6} />}
+                    </button>
                     <textarea
                         className="todo-inline-field todo-inline-field--strong"
                         value={rowValues.title}
@@ -175,7 +184,7 @@ export function TodoRow({
                         rows={2}
                         onClick={stopRowClick}
                         onChange={(event) =>
-                            onSetTodoRow(todo, {
+                            onUpdateRow(todo, {
                                 title: event.target.value,
                             })
                         }
@@ -189,7 +198,7 @@ export function TodoRow({
                         rows={2}
                         onClick={stopRowClick}
                         onChange={(event) =>
-                            onSetTodoRow(todo, {
+                            onUpdateRow(todo, {
                                 description: event.target.value,
                             })
                         }
@@ -203,7 +212,7 @@ export function TodoRow({
                         placeholder={formatShortDate(todo.dueDate)}
                         onClick={stopRowClick}
                         onChange={(event) =>
-                            onSetTodoRow(todo, {
+                            onUpdateRow(todo, {
                                 dueDate: event.target.value,
                             })
                         }
@@ -215,7 +224,7 @@ export function TodoRow({
                         value={rowValues.priority}
                         onClick={stopRowClick}
                         onChange={(event) =>
-                            onSetTodoRow(todo, {
+                            onUpdateRow(todo, {
                                 priority: event.target.value as TodoPriority,
                             })
                         }
@@ -231,7 +240,7 @@ export function TodoRow({
                         value={rowValues.categoryId}
                         onClick={stopRowClick}
                         onChange={(event) =>
-                            onSetTodoRow(todo, {
+                            onUpdateRow(todo, {
                                 categoryId: event.target.value,
                             })
                         }
@@ -243,33 +252,6 @@ export function TodoRow({
                             </option>
                         ))}
                     </select>
-                </div>
-            </div>
-
-            <div className="todo-card-actions">
-                <div className="todo-card-edit-stack">
-                    <button
-                        type="button"
-                        className="todo-card-side-btn todo-card-side-btn--danger todo-card-side-btn--single"
-                        title={bulkDeleteMode ? "Chọn task để xóa" : "Xóa task"}
-                        aria-label={bulkDeleteMode ? `Chọn task ${todo.title} để xóa` : `Xóa task ${todo.title}`}
-                        onClick={(event) => {
-                            event.stopPropagation();
-                            if (bulkDeleteMode) {
-                                onToggleDeleteSelection(todo.id);
-                                return;
-                            }
-                            onDeleteTodo(todo);
-                        }}
-                    >
-                        {bulkDeleteMode ? (
-                            <span
-                                className={`todo-delete-select-dot ${selectedDeleteIds.includes(todo.id) ? "active" : ""}`}
-                            />
-                        ) : (
-                            <Trash2 size={13} strokeWidth={2.3} />
-                        )}
-                    </button>
                 </div>
             </div>
         </article>

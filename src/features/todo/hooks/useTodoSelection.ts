@@ -2,100 +2,93 @@ import { useEffect, useMemo, useState } from "react";
 import type { TodoDto } from "../types.js";
 
 export function useTodoSelection(visibleTodos: TodoDto[]) {
-    const [selectedTodoId, setSelectedTodoId] = useState<number | null>(null);
-    const [bulkDeleteMode, setBulkDeleteMode] = useState(false);
-    const [selectedDeleteIds, setSelectedDeleteIds] = useState<number[]>([]);
+    const [activeId, setActiveId] = useState<number | null>(null);
+    const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-    const selectedTodo = useMemo(
-        () => visibleTodos.find((todo) => todo.id === selectedTodoId) ?? null,
-        [selectedTodoId, visibleTodos]
+    const activeRow = useMemo(
+        () => visibleTodos.find((todo) => todo.id === activeId) ?? null,
+        [activeId, visibleTodos]
     );
-    const selectedDeleteTodos = useMemo(
-        () => visibleTodos.filter((todo) => selectedDeleteIds.includes(todo.id)),
-        [selectedDeleteIds, visibleTodos]
+    const selectedRows = useMemo(
+        () => visibleTodos.filter((todo) => selectedIds.includes(todo.id)),
+        [selectedIds, visibleTodos]
     );
 
     useEffect(() => {
         if (visibleTodos.length === 0) {
-            setSelectedTodoId(null);
-            setSelectedDeleteIds([]);
+            setActiveId(null);
+            setSelectedIds([]);
             return;
         }
 
-        setSelectedTodoId((current) => {
-            if (current !== null && visibleTodos.some((todo) => todo.id === current)) {
-                return current;
+        setActiveId((prev) => {
+            if (prev !== null && visibleTodos.some((todo) => todo.id === prev)) {
+                return prev;
             }
 
             return visibleTodos[0]?.id ?? null;
         });
-        setSelectedDeleteIds((current) =>
-            current.filter((id) => visibleTodos.some((todo) => todo.id === id))
+        setSelectedIds((prev) =>
+            prev.filter((id) => visibleTodos.some((todo) => todo.id === id))
         );
     }, [visibleTodos]);
 
-    function clearSelectedTodo() {
-        setSelectedTodoId(null);
+    function clearActiveRow() {
+        setActiveId(null);
     }
 
     function resetSelection() {
-        setSelectedTodoId(null);
-        setSelectedDeleteIds([]);
-        setBulkDeleteMode(false);
+        setActiveId(null);
+        setSelectedIds([]);
     }
 
     function resetDeleteSelection() {
-        setSelectedDeleteIds([]);
-        setBulkDeleteMode(false);
+        setSelectedIds([]);
     }
 
-    function selectTodo(todoId: number) {
-        setSelectedTodoId(todoId);
+    function selectRow(id: number) {
+        setActiveId(id);
     }
 
-    function toggleBulkDeleteMode() {
-        setBulkDeleteMode((current) => !current);
-        setSelectedDeleteIds([]);
+    function clearDeleteSelection() {
+        setSelectedIds([]);
     }
 
-    function toggleDeleteSelection(todoId: number) {
-        setSelectedDeleteIds((current) =>
-            current.includes(todoId)
-                ? current.filter((id) => id !== todoId)
-                : [...current, todoId]
+    function selectPage() {
+        setSelectedIds(visibleTodos.map((todo) => todo.id));
+    }
+
+    function toggleSelection(id: number) {
+        setSelectedIds((prev) =>
+            prev.includes(id)
+                ? prev.filter((selectedId) => selectedId !== id)
+                : [...prev, id]
         );
     }
 
-    function removeDeletedTodo(todoId: number) {
-        setSelectedDeleteIds((current) => current.filter((id) => id !== todoId));
-        setSelectedTodoId((current) => (current === todoId ? null : current));
-    }
-
     function removeDeletedTodos(todoIds: number[]) {
-        setSelectedDeleteIds([]);
-        setBulkDeleteMode(false);
-        setSelectedTodoId((current) =>
-            current !== null && todoIds.includes(current) ? null : current
+        setSelectedIds([]);
+        setActiveId((prev) =>
+            prev !== null && todoIds.includes(prev) ? null : prev
         );
     }
 
     return {
-        selectedDeleteTodos,
-        selectedTodo,
+        selectedRows,
+        activeRow,
         selection: {
-            selectedTodoId: selectedTodo?.id ?? null,
-            bulkDeleteMode,
-            selectedDeleteIds,
+            activeId: activeRow?.id ?? null,
+            selectedIds,
         },
         actions: {
-            clearSelectedTodo,
-            removeDeletedTodo,
+            clearActiveRow,
+            clearDeleteSelection,
             removeDeletedTodos,
             resetDeleteSelection,
             resetSelection,
-            selectTodo,
-            toggleBulkDeleteMode,
-            toggleDeleteSelection,
+            selectPage,
+            selectRow,
+            toggleSelection,
         },
     };
 }

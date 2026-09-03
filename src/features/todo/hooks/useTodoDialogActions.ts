@@ -11,16 +11,14 @@ interface UseTodoDialogActionsOptions {
     createCategory: (name: string) => Promise<unknown>;
     deleteCategory: (payload: { id: number; deleteTodos: boolean }) => Promise<unknown>;
     refetchTodos: () => Promise<unknown>;
-    removeDeletedTodo: (todoId: number) => void;
     removeDeletedTodos: (todoIds: number[]) => void;
-    removeEditedTodo: (todoId: number) => void;
     removeEditedTodos: (todoIds: number[]) => void;
     resetEditing: () => void;
     resetSelection: () => void;
     saveTodos: (payloads: SaveTodosPayload) => Promise<unknown>;
     selectCategory: (filter: CategoryFilter) => void;
     selectedCategoryFilter: CategoryFilter;
-    selectedDeleteTodos: TodoDto[];
+    selectedRows: TodoDto[];
     updateCategory: (payload: { id: number; name: string }) => Promise<unknown>;
 }
 
@@ -28,16 +26,14 @@ export function useTodoDialogActions({
     createCategory,
     deleteCategory,
     refetchTodos,
-    removeDeletedTodo,
     removeDeletedTodos,
-    removeEditedTodo,
     removeEditedTodos,
     resetEditing,
     resetSelection,
     saveTodos,
     selectCategory,
     selectedCategoryFilter,
-    selectedDeleteTodos,
+    selectedRows,
     updateCategory,
 }: UseTodoDialogActionsOptions) {
     const [categoryName, setCategoryName] = useState("");
@@ -50,13 +46,9 @@ export function useTodoDialogActions({
         resetEditing();
     }
 
-    function openDeleteTodoDialog(todo: TodoDto) {
-        setTodoDialog({ type: "deleteTodo", todo });
-    }
-
-    function openDeleteSelectedTodosDialog() {
-        if (selectedDeleteTodos.length === 0) return;
-        setTodoDialog({ type: "deleteTodos", todos: selectedDeleteTodos });
+    function openDeleteSelectedDialog() {
+        if (selectedRows.length === 0) return;
+        setTodoDialog({ type: "deleteSelected", todos: selectedRows });
     }
 
     function openDeleteCategoryDialog(category: TodoCategoryDto) {
@@ -77,16 +69,7 @@ export function useTodoDialogActions({
         setCategoryName("");
     }
 
-    async function confirmDeleteTodo(todo: TodoDto) {
-        await saveTodos([toDeletedPayload(todo)]);
-        await refetchTodos();
-
-        removeEditedTodo(todo.id);
-        removeDeletedTodo(todo.id);
-        setTodoDialog(null);
-    }
-
-    async function confirmDeleteTodos(todos: TodoDto[]) {
+    async function confirmDeleteSelected(todos: TodoDto[]) {
         await saveTodos(todos.map(toDeletedPayload));
         await refetchTodos();
 
@@ -131,12 +114,10 @@ export function useTodoDialogActions({
         actions: {
             closeDialog: () => setTodoDialog(null),
             confirmDeleteCategory,
-            confirmDeleteTodo,
-            confirmDeleteTodos,
+            confirmDeleteSelected,
             confirmRenameCategory,
             openDeleteCategoryDialog,
-            openDeleteSelectedTodosDialog,
-            openDeleteTodoDialog,
+            openDeleteSelectedDialog,
             openRenameCategoryDialog,
             selectTodoCategory,
             setCategoryName,
