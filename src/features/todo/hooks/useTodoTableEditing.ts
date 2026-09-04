@@ -19,6 +19,7 @@ interface UseTodoTableEditingOptions {
 interface TodoEditingDraftStorage {
     drafts: TodoInlineDraft[];
     editedRows: Record<number, TodoFormState>;
+    editedRowVersions: Record<number, string>;
 }
 
 const TODO_EDITING_DRAFT_STORAGE_VERSION = 1;
@@ -41,6 +42,9 @@ export function useTodoTableEditing({
     const [editedRows, setEditedRows] = useState<Record<number, TodoFormState>>(
         () => restoredDraft.editedRows
     );
+    const [editedRowVersions, setEditedRowVersions] = useState<Record<number, string>>(
+        () => restoredDraft.editedRowVersions
+    );
     const [drafts, setDrafts] = useState<TodoInlineDraft[]>(
         () => restoredDraft.drafts
     );
@@ -57,6 +61,7 @@ export function useTodoTableEditing({
 
         setDrafts(nextDraft.drafts);
         setEditedRows(nextDraft.editedRows);
+        setEditedRowVersions(nextDraft.editedRowVersions);
         setFormError(null);
     }, [storageKey]);
 
@@ -64,11 +69,13 @@ export function useTodoTableEditing({
         persistEditingDraft(storageKey, {
             drafts: meaningfulDrafts,
             editedRows,
+            editedRowVersions,
         });
-    }, [editedRows, meaningfulDrafts, storageKey]);
+    }, [editedRows, editedRowVersions, meaningfulDrafts, storageKey]);
 
     function resetEditing() {
         setEditedRows({});
+        setEditedRowVersions({});
         setDrafts([]);
         setFormError(null);
     }
@@ -121,6 +128,30 @@ export function useTodoTableEditing({
             const { [todo.id]: _removed, ...rest } = prev;
             return rest;
         });
+        setEditedRowVersions((prev) => {
+            const wasEdited = editedRows[todo.id];
+            const nextDraft = {
+                title: wasEdited?.title ?? todo.title,
+                description: wasEdited?.description ?? todo.description ?? "",
+                priority: wasEdited?.priority ?? todo.priority,
+                dueDate: wasEdited?.dueDate ?? toInputDateTime(todo.dueDate),
+                categoryId: wasEdited?.categoryId ?? (todo.categoryId ? String(todo.categoryId) : ""),
+                ...patch,
+            };
+            const unchanged =
+                nextDraft.title === todo.title &&
+                nextDraft.description === (todo.description ?? "") &&
+                nextDraft.priority === todo.priority &&
+                nextDraft.dueDate === toInputDateTime(todo.dueDate) &&
+                nextDraft.categoryId === (todo.categoryId ? String(todo.categoryId) : "");
+
+            if (!unchanged) {
+                return { ...prev, [todo.id]: todo.rowVersion };
+            }
+
+            const { [todo.id]: _removed, ...rest } = prev;
+            return rest;
+        });
         setFormError(null);
     }
 
@@ -131,6 +162,13 @@ export function useTodoTableEditing({
 
     function removeEditedTodos(todoIds: number[]) {
         setEditedRows((prev) => {
+            const next = { ...prev };
+            todoIds.forEach((id) => {
+                delete next[id];
+            });
+            return next;
+        });
+        setEditedRowVersions((prev) => {
             const next = { ...prev };
             todoIds.forEach((id) => {
                 delete next[id];
@@ -172,11 +210,13 @@ export function useTodoTableEditing({
                     ...toPayload(draft),
                     id: null,
                     isDeleted: false,
+                    rowVersion: null,
                 })),
                 ...changedRows.map(([id, row]) => ({
                     ...toPayload(row),
                     id: Number(id),
                     isDeleted: false,
+                    rowVersion: editedRowVersions[Number(id)] ?? null,
                 })),
             ];
 
@@ -242,6 +282,7 @@ function getEmptyEditingDraft(): TodoEditingDraftStorage {
     return {
         drafts: [],
         editedRows: {},
+        editedRowVersions: {},
     };
 }
 
@@ -261,6 +302,7 @@ function loadEditingDraft(storageKey: string | null): TodoEditingDraftStorage {
             version?: number;
             drafts?: unknown;
             editedRows?: unknown;
+            editedRowVersions?: unknown;
         };
 
         if (parsed.version !== TODO_EDITING_DRAFT_STORAGE_VERSION) {
@@ -271,6 +313,7 @@ function loadEditingDraft(storageKey: string | null): TodoEditingDraftStorage {
             ? parsed.drafts.filter(isTodoInlineDraft)
             : [];
         const editedRows: Record<number, TodoFormState> = {};
+        const editedRowVersions: Record<number, string> = {};
 
         if (typeof parsed.editedRows === "object" && parsed.editedRows !== null) {
             Object.entries(parsed.editedRows).forEach(([id, value]) => {
@@ -280,9 +323,21 @@ function loadEditingDraft(storageKey: string | null): TodoEditingDraftStorage {
             });
         }
 
+        if (
+            typeof parsed.editedRowVersions === "object" &&
+            parsed.editedRowVersions !== null
+        ) {
+            Object.entries(parsed.editedRowVersions).forEach(([id, value]) => {
+                if (Number.isInteger(Number(id)) && typeof value === "string") {
+                    editedRowVersions[Number(id)] = value;
+                }
+            });
+        }
+
         return {
             drafts,
             editedRows,
+            editedRowVersions,
         };
     } catch {
         localStorage.removeItem(storageKey);
@@ -298,7 +353,11 @@ function persistEditingDraft(
         return;
     }
 
-    if (draft.drafts.length === 0 && Object.keys(draft.editedRows).length === 0) {
+    if (
+        draft.drafts.length === 0 &&
+        Object.keys(draft.editedRows).length === 0 &&
+        Object.keys(draft.editedRowVersions).length === 0
+    ) {
         localStorage.removeItem(storageKey);
         return;
     }

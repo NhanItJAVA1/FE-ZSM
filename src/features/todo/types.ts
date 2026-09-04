@@ -15,6 +15,7 @@ export interface TodoDto {
     isCompletedLate: boolean;
     categoryId: number | null;
     categoryName: string | null;
+    rowVersion: string;
 }
 
 export interface TodoCategoryDto {
@@ -50,6 +51,7 @@ export interface SaveTodoRowPayload {
     dueDate: string | null;
     categoryId: number | null;
     isDeleted: boolean;
+    rowVersion: string | null;
 }
 
 export type SaveTodosPayload = SaveTodoRowPayload[];

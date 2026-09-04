@@ -17,6 +17,7 @@ function cleanTodoBatchPayload(payload: SaveTodoRowPayload): SaveTodoRowPayload 
         dueDate: payload.dueDate || null,
         categoryId: payload.categoryId || null,
         isDeleted: payload.isDeleted,
+        rowVersion: payload.rowVersion,
     };
 }
 

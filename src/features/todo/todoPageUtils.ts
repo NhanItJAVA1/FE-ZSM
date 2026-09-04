@@ -116,7 +116,7 @@ export function getPriorityTone(priority: TodoPriority) {
 
 export function toPayload(
     form: TodoFormState
-): Omit<SaveTodoRowPayload, "id" | "isDeleted"> {
+): Omit<SaveTodoRowPayload, "id" | "isDeleted" | "rowVersion"> {
     return {
         title: form.title,
         description: form.description,
@@ -135,6 +135,7 @@ export function toDeletedPayload(todo: TodoDto): SaveTodoRowPayload {
         dueDate: null,
         categoryId: null,
         isDeleted: true,
+        rowVersion: todo.rowVersion,
     };
 }
 
