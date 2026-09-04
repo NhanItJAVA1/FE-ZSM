@@ -72,8 +72,27 @@ export function useTodoListPageModel() {
     }
 
     function resetTodoPanel() {
+        if (todoEditing.editing.hasUnsavedChanges) {
+            todoDialogActions.actions.openDiscardChangesDialog(() => {
+                todoEditing.actions.resetEditing();
+                todoSelection.actions.resetDeleteSelection();
+            });
+            return;
+        }
+
         todoEditing.actions.resetEditing();
         todoSelection.actions.resetDeleteSelection();
+    }
+
+    function selectTodoCategory(filter: CategoryFilter) {
+        if (todoEditing.editing.hasUnsavedChanges) {
+            todoDialogActions.actions.openDiscardChangesDialog(() => {
+                todoDialogActions.actions.selectTodoCategory(filter);
+            });
+            return;
+        }
+
+        todoDialogActions.actions.selectTodoCategory(filter);
     }
 
     function openNewTodoEditor() {
@@ -92,7 +111,7 @@ export function useTodoListPageModel() {
             onCategoryNameChange: todoDialogActions.actions.setCategoryName,
             onDeleteCategory: todoDialogActions.actions.openDeleteCategoryDialog,
             onRenameCategory: todoDialogActions.actions.openRenameCategoryDialog,
-            onSelectCategory: todoDialogActions.actions.selectTodoCategory,
+            onSelectCategory: selectTodoCategory,
             onSubmitCategory: todoDialogActions.actions.submitCategory,
         },
         dialogProps: {
@@ -106,6 +125,7 @@ export function useTodoListPageModel() {
             onConfirmDeleteSelected: todoDialogActions.actions.confirmDeleteSelected,
             onConfirmRenameCategory: todoDialogActions.actions.confirmRenameCategory,
             onRenameCategoryNameChange: todoDialogActions.actions.setRenameCategoryName,
+            onConfirmDiscardChanges: todoDialogActions.actions.confirmDiscardChanges,
         },
         panelProps: {
             leftPanelRef,
@@ -120,6 +140,7 @@ export function useTodoListPageModel() {
                 editedRows: todoEditing.editing.editedRows,
                 formError: todoEditing.editing.formError,
                 drafts: todoEditing.editing.drafts,
+                hasUnsavedChanges: todoEditing.editing.hasUnsavedChanges,
                 saving: mutations.saveTodos.isPending,
             },
             filters: todoFilters.filters,

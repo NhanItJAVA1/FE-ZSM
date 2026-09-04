@@ -1,4 +1,5 @@
 import type { FormEvent } from "react";
+import { AlertTriangle } from "lucide-react";
 import type { TodoCategoryDto, TodoDto } from "../types.js";
 import type { TodoDialogState } from "../todoPageUtils.js";
 
@@ -11,6 +12,7 @@ interface TodoDialogProps {
     onCancel: () => void;
     onConfirmDeleteCategory: (category: TodoCategoryDto, deleteTodos: boolean) => void;
     onConfirmDeleteSelected?: (todos: TodoDto[]) => void;
+    onConfirmDiscardChanges: () => void;
     onConfirmRenameCategory: (event: FormEvent<HTMLFormElement>) => void;
     onRenameCategoryNameChange: (value: string) => void;
 }
@@ -46,6 +48,7 @@ export default function TodoDialog({
     onCancel,
     onConfirmDeleteCategory,
     onConfirmDeleteSelected,
+    onConfirmDiscardChanges,
     onConfirmRenameCategory,
     onRenameCategoryNameChange,
 }: TodoDialogProps) {
@@ -177,6 +180,33 @@ export default function TodoDialog({
                             </button>
                         </div>
                     </form>
+                )}
+
+                {dialog.type === "discardChanges" && (
+                    <>
+                        <div className="todo-dialog-mark todo-dialog-mark--warning">
+                            <AlertTriangle size={20} strokeWidth={1.9} />
+                        </div>
+                        <div className="todo-dialog-copy">
+                            <p className="eyebrow">Unsaved draft</p>
+                            <h2 id="todo-dialog-title">Bỏ thay đổi chưa lưu?</h2>
+                            <p>
+                                Draft hiện tại sẽ bị xóa khỏi trình duyệt và không thể khôi phục.
+                            </p>
+                        </div>
+                        <div className="todo-dialog-actions">
+                            <button type="button" className="ghost-btn" onClick={onCancel}>
+                                Tiếp tục sửa
+                            </button>
+                            <button
+                                type="button"
+                                className="todo-danger-btn"
+                                onClick={onConfirmDiscardChanges}
+                            >
+                                Bỏ thay đổi
+                            </button>
+                        </div>
+                    </>
                 )}
             </section>
         </div>

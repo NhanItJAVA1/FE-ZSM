@@ -32,6 +32,7 @@ export interface TodoPanelEditing {
     editedRows: Record<number, TodoFormState>;
     formError: string | null;
     drafts: TodoInlineDraft[];
+    hasUnsavedChanges: boolean;
     saving: boolean;
 }
 

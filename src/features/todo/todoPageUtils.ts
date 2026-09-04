@@ -45,6 +45,7 @@ export type TodoDialogState =
     | { type: "deleteSelected"; todos: TodoDto[] }
     | { type: "deleteCategory"; category: TodoCategoryDto; taskCount: number }
     | { type: "renameCategory"; category: TodoCategoryDto }
+    | { type: "discardChanges"; onConfirm: () => void }
     | null;
 
 export interface TodoCounts {

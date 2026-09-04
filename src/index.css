@@ -3116,6 +3116,11 @@ button:disabled {
   color: #be123c;
 }
 
+.todo-dialog-mark--warning {
+  background: #fffbeb;
+  color: #b45309;
+}
+
 .todo-dialog-copy {
   display: grid;
   gap: 8px;

@@ -49,6 +49,8 @@ export function useTodoTableEditing({
         () => drafts.filter(hasDraftContent),
         [drafts]
     );
+    const hasUnsavedChanges =
+        meaningfulDrafts.length > 0 || Object.keys(editedRows).length > 0;
 
     useEffect(() => {
         const nextDraft = loadEditingDraft(storageKey);
@@ -191,6 +193,7 @@ export function useTodoTableEditing({
             editedRows,
             formError,
             drafts,
+            hasUnsavedChanges,
         },
         actions: {
             openNewTodoEditor,

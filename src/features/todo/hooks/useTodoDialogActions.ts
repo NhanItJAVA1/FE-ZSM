@@ -60,6 +60,10 @@ export function useTodoDialogActions({
         setTodoDialog({ type: "renameCategory", category });
     }
 
+    function openDiscardChangesDialog(onConfirm: () => void) {
+        setTodoDialog({ type: "discardChanges", onConfirm });
+    }
+
     async function submitCategory(event: FormEvent<HTMLFormElement>) {
         event.preventDefault();
         const name = categoryName.trim();
@@ -107,6 +111,13 @@ export function useTodoDialogActions({
         setRenameCategoryName("");
     }
 
+    function confirmDiscardChanges() {
+        if (todoDialog?.type !== "discardChanges") return;
+
+        todoDialog.onConfirm();
+        setTodoDialog(null);
+    }
+
     return {
         categoryName,
         renameCategoryName,
@@ -115,7 +126,9 @@ export function useTodoDialogActions({
             closeDialog: () => setTodoDialog(null),
             confirmDeleteCategory,
             confirmDeleteSelected,
+            confirmDiscardChanges,
             confirmRenameCategory,
+            openDiscardChangesDialog,
             openDeleteCategoryDialog,
             openDeleteSelectedDialog,
             openRenameCategoryDialog,
