@@ -34,10 +34,10 @@ export default function TodoPanelToolbar({
         onSetStatusFilter,
         onToggleFilter,
     } = actions;
-    const { editedRows, drafts, saving } = editing;
+    const { hasUnsavedChanges, saving } = editing;
     const { filterActive, filterOpen, search } = filters;
-    const hasChanges = drafts.length > 0 || Object.keys(editedRows).length > 0;
     const canDeleteSelected = selectedCount > 0;
+    const hasChanges = hasUnsavedChanges || canDeleteSelected;
 
     return (
         <div className="todo-panel-heading">

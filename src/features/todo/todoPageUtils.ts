@@ -129,11 +129,11 @@ export function toPayload(
 export function toDeletedPayload(todo: TodoDto): SaveTodoRowPayload {
     return {
         id: todo.id,
-        title: "",
-        description: null,
-        priority: null,
-        dueDate: null,
-        categoryId: null,
+        title: todo.title,
+        description: todo.description,
+        priority: todo.priority,
+        dueDate: todo.dueDate,
+        categoryId: todo.categoryId,
         isDeleted: true,
         rowVersion: todo.rowVersion,
     };

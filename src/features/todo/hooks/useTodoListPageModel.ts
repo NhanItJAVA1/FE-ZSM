@@ -100,6 +100,16 @@ export function useTodoListPageModel() {
         todoFilters.actions.closeFilter();
     }
 
+    async function saveTodoPanel() {
+        const saved = await todoEditing.actions.saveInlineTodo(
+            todoSelection.selectedRows
+        );
+
+        if (saved) {
+            todoSelection.actions.resetDeleteSelection();
+        }
+    }
+
     return {
         categoryPanelProps: {
             allTodos,
@@ -167,7 +177,7 @@ export function useTodoListPageModel() {
                 onSetPriorityFilter: todoFilters.actions.setPriorityFilter,
                 onSetStatusFilter: todoFilters.actions.setStatusFilter,
                 onSetPage: todoFilters.actions.setPage,
-                onSave: () => void todoEditing.actions.saveInlineTodo(),
+                onSave: () => void saveTodoPanel(),
             },
         },
     };

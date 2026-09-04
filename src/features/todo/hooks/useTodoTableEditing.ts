@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { SaveTodosPayload, TodoDto } from "../types.js";
 import {
     createTodoInlineDraft,
+    toDeletedPayload,
     toInputDateTime,
     toPayload,
     type CategoryFilter,
@@ -177,11 +178,12 @@ export function useTodoTableEditing({
         });
     }
 
-    async function saveInlineTodo() {
+    async function saveInlineTodo(deletedTodos: TodoDto[] = []) {
         setFormError(null);
+        const deletedTodoIds = new Set(deletedTodos.map((todo) => todo.id));
 
         const invalidEditedTodo = Object.entries(editedRows).find(
-            ([_id, row]) => !row.title.trim()
+            ([id, row]) => !deletedTodoIds.has(Number(id)) && !row.title.trim()
         );
 
         if (invalidEditedTodo) {
@@ -189,7 +191,7 @@ export function useTodoTableEditing({
             return;
         }
 
-        const invalidDraftIndex = drafts.findIndex(
+        const invalidDraftIndex = meaningfulDrafts.findIndex(
             (draft) => !draft.title.trim()
         );
 
@@ -198,15 +200,21 @@ export function useTodoTableEditing({
             return;
         }
 
-        const changedRows = Object.entries(editedRows);
+        const changedRows = Object.entries(editedRows).filter(
+            ([id]) => !deletedTodoIds.has(Number(id))
+        );
 
-        if (drafts.length === 0 && changedRows.length === 0) {
-            return;
+        if (
+            meaningfulDrafts.length === 0 &&
+            changedRows.length === 0 &&
+            deletedTodos.length === 0
+        ) {
+            return false;
         }
 
         try {
             const payloads: SaveTodosPayload = [
-                ...drafts.map((draft) => ({
+                ...meaningfulDrafts.map((draft) => ({
                     ...toPayload(draft),
                     id: null,
                     isDeleted: false,
@@ -218,13 +226,16 @@ export function useTodoTableEditing({
                     isDeleted: false,
                     rowVersion: editedRowVersions[Number(id)] ?? null,
                 })),
+                ...deletedTodos.map(toDeletedPayload),
             ];
 
             await saveTodos(payloads);
             await refetchTodos();
             resetEditing();
+            return true;
         } catch (error) {
             setFormError(error instanceof Error ? error.message : "Không thể lưu todo.");
+            return false;
         }
     }
 
