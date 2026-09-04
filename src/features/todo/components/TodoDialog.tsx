@@ -97,7 +97,6 @@ export default function TodoDialog({
                         </div>
                         <div className="todo-dialog-copy">
                             <p className="eyebrow">Delete category</p>
-                            {/* <h2 id="todo-dialog-title">Xóa category "{dialog.category.name}"?</h2> */}
                             <p>
                                 {dialog.taskCount > 0
                                     ? "Bạn có thể giữ lại các task và bỏ category, hoặc xóa luôn các task trong category này."
