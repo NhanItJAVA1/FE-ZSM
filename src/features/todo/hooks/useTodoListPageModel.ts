@@ -9,8 +9,10 @@ import { useTodoFilters } from "./useTodoFilters.js";
 import { useTodoPageSize } from "./useTodoPageSize.js";
 import { useTodoSelection } from "./useTodoSelection.js";
 import { useTodoTableEditing } from "./useTodoTableEditing.js";
+import { useAppSelector } from "../../../stores/hook.js";
 
 export function useTodoListPageModel() {
+    const userId = useAppSelector((state) => state.auth.user?.id);
     const leftPanelRef = useRef<HTMLElement | null>(null);
     const pageSize = useTodoPageSize(leftPanelRef);
     const todoFilters = useTodoFilters(pageSize);
@@ -43,6 +45,7 @@ export function useTodoListPageModel() {
         selectedCategoryFilter: todoFilters.selectedCategoryFilter,
         saveTodos: mutations.saveTodos.mutateAsync,
         refetchTodos,
+        userId,
     });
     const todoDialogActions = useTodoDialogActions({
         createCategory: mutations.createCategory.mutateAsync,

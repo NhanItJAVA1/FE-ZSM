@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { SaveTodosPayload, TodoDto } from "../types.js";
 import {
     createTodoInlineDraft,
@@ -13,16 +13,57 @@ interface UseTodoTableEditingOptions {
     refetchTodos: () => Promise<unknown>;
     saveTodos: (payloads: SaveTodosPayload) => Promise<unknown>;
     selectedCategoryFilter: CategoryFilter;
+    userId?: number;
 }
+
+interface TodoEditingDraftStorage {
+    drafts: TodoInlineDraft[];
+    editedRows: Record<number, TodoFormState>;
+}
+
+const TODO_EDITING_DRAFT_STORAGE_VERSION = 1;
+const TODO_EDITING_DRAFT_STORAGE_PREFIX = "todo:editing-draft";
 
 export function useTodoTableEditing({
     refetchTodos,
     saveTodos,
     selectedCategoryFilter,
+    userId,
 }: UseTodoTableEditingOptions) {
-    const [editedRows, setEditedRows] = useState<Record<number, TodoFormState>>({});
-    const [drafts, setDrafts] = useState<TodoInlineDraft[]>([]);
+    const storageKey = useMemo(
+        () => userId ? `${TODO_EDITING_DRAFT_STORAGE_PREFIX}:${userId}` : null,
+        [userId]
+    );
+    const restoredDraft = useMemo(
+        () => loadEditingDraft(storageKey),
+        [storageKey]
+    );
+    const [editedRows, setEditedRows] = useState<Record<number, TodoFormState>>(
+        () => restoredDraft.editedRows
+    );
+    const [drafts, setDrafts] = useState<TodoInlineDraft[]>(
+        () => restoredDraft.drafts
+    );
     const [formError, setFormError] = useState<string | null>(null);
+    const meaningfulDrafts = useMemo(
+        () => drafts.filter(hasDraftContent),
+        [drafts]
+    );
+
+    useEffect(() => {
+        const nextDraft = loadEditingDraft(storageKey);
+
+        setDrafts(nextDraft.drafts);
+        setEditedRows(nextDraft.editedRows);
+        setFormError(null);
+    }, [storageKey]);
+
+    useEffect(() => {
+        persistEditingDraft(storageKey, {
+            drafts: meaningfulDrafts,
+            editedRows,
+        });
+    }, [editedRows, meaningfulDrafts, storageKey]);
 
     function resetEditing() {
         setEditedRows({});
@@ -161,4 +202,109 @@ export function useTodoTableEditing({
             updateTodoRow,
         },
     };
+}
+
+function hasDraftContent(draft: TodoInlineDraft) {
+    return Boolean(
+        draft.title.trim() ||
+            draft.description.trim() ||
+            draft.dueDate
+    );
+}
+
+function isTodoFormState(value: unknown): value is TodoFormState {
+    if (typeof value !== "object" || value === null) {
+        return false;
+    }
+
+    const form = value as Partial<TodoFormState>;
+
+    return (
+        typeof form.title === "string" &&
+        typeof form.description === "string" &&
+        typeof form.priority === "string" &&
+        typeof form.dueDate === "string" &&
+        typeof form.categoryId === "string"
+    );
+}
+
+function isTodoInlineDraft(value: unknown): value is TodoInlineDraft {
+    return (
+        isTodoFormState(value) &&
+        typeof (value as Partial<TodoInlineDraft>).id === "string"
+    );
+}
+
+function getEmptyEditingDraft(): TodoEditingDraftStorage {
+    return {
+        drafts: [],
+        editedRows: {},
+    };
+}
+
+function loadEditingDraft(storageKey: string | null): TodoEditingDraftStorage {
+    if (!storageKey) {
+        return getEmptyEditingDraft();
+    }
+
+    const raw = localStorage.getItem(storageKey);
+
+    if (!raw) {
+        return getEmptyEditingDraft();
+    }
+
+    try {
+        const parsed = JSON.parse(raw) as {
+            version?: number;
+            drafts?: unknown;
+            editedRows?: unknown;
+        };
+
+        if (parsed.version !== TODO_EDITING_DRAFT_STORAGE_VERSION) {
+            return getEmptyEditingDraft();
+        }
+
+        const drafts = Array.isArray(parsed.drafts)
+            ? parsed.drafts.filter(isTodoInlineDraft)
+            : [];
+        const editedRows: Record<number, TodoFormState> = {};
+
+        if (typeof parsed.editedRows === "object" && parsed.editedRows !== null) {
+            Object.entries(parsed.editedRows).forEach(([id, value]) => {
+                if (Number.isInteger(Number(id)) && isTodoFormState(value)) {
+                    editedRows[Number(id)] = value;
+                }
+            });
+        }
+
+        return {
+            drafts,
+            editedRows,
+        };
+    } catch {
+        localStorage.removeItem(storageKey);
+        return getEmptyEditingDraft();
+    }
+}
+
+function persistEditingDraft(
+    storageKey: string | null,
+    draft: TodoEditingDraftStorage
+) {
+    if (!storageKey) {
+        return;
+    }
+
+    if (draft.drafts.length === 0 && Object.keys(draft.editedRows).length === 0) {
+        localStorage.removeItem(storageKey);
+        return;
+    }
+
+    localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+            version: TODO_EDITING_DRAFT_STORAGE_VERSION,
+            ...draft,
+        })
+    );
 }
