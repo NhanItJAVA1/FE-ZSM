@@ -1,5 +1,7 @@
+import axios from "axios";
 import api from "./axios.js";
 import { tokenStorage } from "../storage/token.js";
+import { userStorage } from "../storage/user.js";
 import { normalizeUserRole } from "../../constants/roles.js";
 
 import type {
@@ -15,6 +17,15 @@ type LoginResponseRaw = Omit<LoginResponse, "user"> & {
         Role?: User["role"];
     };
 };
+
+type RefreshSessionResponseRaw = {
+    accessToken?: string;
+    AccessToken?: string;
+    user?: LoginResponseRaw["user"];
+    User?: LoginResponseRaw["user"];
+};
+
+const baseURL = import.meta.env.VITE_API_URL || "/api";
 
 function normalizeLoginUser(
     user: LoginResponseRaw["user"]
@@ -48,6 +59,35 @@ export const authService = {
         };
     },
 
+    async refreshSession(): Promise<User> {
+        const response = await axios.post<RefreshSessionResponseRaw>(
+            `${baseURL}/Users/refresh-token`,
+            {},
+            { withCredentials: true }
+        );
+
+        const accessToken = response.data.accessToken ?? response.data.AccessToken;
+        const user = response.data.user ?? response.data.User;
+
+        if (!accessToken) {
+            throw new Error("Refresh token response did not include access token.");
+        }
+
+        tokenStorage.set(accessToken);
+
+        if (user) {
+            return normalizeLoginUser(user);
+        }
+
+        const storedUser = userStorage.get();
+
+        if (!storedUser) {
+            throw new Error("Refresh token response did not include user data.");
+        }
+
+        return storedUser;
+    },
+
     async register(data: RegisterRequest): Promise<void> {
 
         const displayName = data.displayName.trim();
@@ -72,6 +112,7 @@ export const authService = {
             await api.post("/Users/logout");
         } finally {
             tokenStorage.clear();
+            userStorage.remove();
         }
     },
 };

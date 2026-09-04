@@ -16,6 +16,7 @@ const api = axios.create({
 
 let isRefreshing = false;
 let refreshQueue: Array<(token: string | null) => void> = [];
+let hasRedirectedToLogin = false;
 
 function flushRefreshQueue(token: string | null) {
     refreshQueue.forEach((callback) => callback(token));
@@ -25,6 +26,15 @@ function flushRefreshQueue(token: string | null) {
 function clearSession() {
     tokenStorage.clear();
     userStorage.remove();
+}
+
+function redirectToLoginOnce() {
+    if (hasRedirectedToLogin || window.location.pathname === ROUTES.login) {
+        return;
+    }
+
+    hasRedirectedToLogin = true;
+    window.location.href = ROUTES.login;
 }
 
 function isAuthRequest(url?: string) {
@@ -50,7 +60,7 @@ async function refreshAccessToken(): Promise<string> {
         };
     }>(
         `${baseURL}/Users/refresh-token`,
-        undefined,
+        {},
         { withCredentials: true }
     );
 
@@ -153,14 +163,12 @@ api.interceptors.response.use(
                 const newToken = await refreshAccessToken();
                 flushRefreshQueue(newToken);
                 originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                hasRedirectedToLogin = false;
                 return api(originalRequest);
             } catch (refreshError) {
                 flushRefreshQueue(null);
                 clearSession();
-
-                if (window.location.pathname !== ROUTES.login) {
-                    window.location.href = ROUTES.login;
-                }
+                redirectToLoginOnce();
 
                 return Promise.reject(refreshError);
             } finally {

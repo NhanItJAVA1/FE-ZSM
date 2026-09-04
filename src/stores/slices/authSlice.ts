@@ -5,6 +5,7 @@ import { userStorage } from "../../services/storage/user.js";
 
 export interface AuthState {
     user: User | null;
+    status: "checking" | "authenticated" | "unauthenticated";
     isAuthenticated: boolean;
 }
 
@@ -13,6 +14,7 @@ const storedToken = tokenStorage.get();
 
 const initialState: AuthState = {
     user: storedUser,
+    status: storedUser && storedToken ? "authenticated" : "checking",
     isAuthenticated: Boolean(storedUser && storedToken),
 };
 
@@ -23,12 +25,22 @@ const authSlice = createSlice({
     reducers: {
         setAuth: (state, action: PayloadAction<User>) => {
             state.user = action.payload;
+            state.status = "authenticated";
             state.isAuthenticated = true;
             userStorage.set(action.payload);
         },
 
         logout: (state) => {
             state.user = null;
+            state.status = "unauthenticated";
+            state.isAuthenticated = false;
+            tokenStorage.remove();
+            userStorage.remove();
+        },
+
+        setUnauthenticated: (state) => {
+            state.user = null;
+            state.status = "unauthenticated";
             state.isAuthenticated = false;
             tokenStorage.remove();
             userStorage.remove();
@@ -36,6 +48,6 @@ const authSlice = createSlice({
     },
 });
 
-export const { setAuth, logout } = authSlice.actions;
+export const { setAuth, logout, setUnauthenticated } = authSlice.actions;
 
 export default authSlice.reducer;

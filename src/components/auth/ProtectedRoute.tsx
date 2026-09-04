@@ -8,9 +8,13 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ requireAdmin = false }: ProtectedRouteProps) {
-    const { isAuthenticated } = useAppSelector((state) => state.auth);
+    const { isAuthenticated, status } = useAppSelector((state) => state.auth);
     const location = useLocation();
     const adminCheck = useRequireAdmin();
+
+    if (status === "checking") {
+        return null;
+    }
 
     if (!isAuthenticated) {
         return <Navigate to={ROUTES.login} replace state={{ from: location.pathname }} />;

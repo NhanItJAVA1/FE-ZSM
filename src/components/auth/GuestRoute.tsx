@@ -7,7 +7,11 @@ interface GuestRouteProps {
 }
 
 export default function GuestRoute({ children }: GuestRouteProps) {
-    const { isAuthenticated } = useAppSelector((state) => state.auth);
+    const { isAuthenticated, status } = useAppSelector((state) => state.auth);
+
+    if (status === "checking") {
+        return null;
+    }
 
     if (isAuthenticated) {
         return <Navigate to={ROUTES.apps} replace />;
