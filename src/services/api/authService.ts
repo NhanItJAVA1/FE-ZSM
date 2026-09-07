@@ -98,6 +98,10 @@ export const authService = {
     },
 
     async refreshSession(): Promise<User> {
+        if (tokenStorage.wasLoggedOut()) {
+            throw new Error("User logged out explicitly.");
+        }
+
         const response = await axios.post<RefreshSessionResponseRaw>(
             `${baseURL}/auth/refresh-token`,
             {},
@@ -146,8 +150,13 @@ export const authService = {
     },
 
     async logout() {
-        tokenStorage.clear();
-        userStorage.remove();
+        try {
+            await api.post("/auth/logout", {});
+        } finally {
+            tokenStorage.clear();
+            tokenStorage.markLoggedOut();
+            userStorage.remove();
+        }
     },
 };
 

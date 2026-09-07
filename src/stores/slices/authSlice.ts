@@ -35,6 +35,7 @@ const authSlice = createSlice({
             state.status = "unauthenticated";
             state.isAuthenticated = false;
             tokenStorage.remove();
+            tokenStorage.markLoggedOut();
             userStorage.remove();
         },
 
