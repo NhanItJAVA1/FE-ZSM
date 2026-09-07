@@ -30,5 +30,25 @@ export function useLogin() {
         }
     }
 
-    return { login, error };
+    async function loginWithGoogle(idToken: string) {
+        setError(null);
+
+        if (!idToken) {
+            setError("Không nhận được credential từ Google.");
+            return;
+        }
+
+        try {
+            const response = await authService.loginWithGoogle({
+                provider: "Google",
+                token: idToken,
+            });
+            dispatch(setAuth(response.user));
+            navigate(ROUTES.apps, { replace: true });
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Đăng nhập Google thất bại");
+        }
+    }
+
+    return { login, loginWithGoogle, error };
 }

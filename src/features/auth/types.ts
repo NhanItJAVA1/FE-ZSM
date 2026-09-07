@@ -14,6 +14,11 @@ export interface LoginRequest {
     password: string;
 }
 
+export interface GoogleLoginRequest {
+    provider: "Google";
+    token: string;
+}
+
 export interface RegisterRequest {
     username: string;
     email: string;

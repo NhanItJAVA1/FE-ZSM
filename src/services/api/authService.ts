@@ -5,6 +5,7 @@ import { userStorage } from "../storage/user.js";
 import { normalizeUserRole } from "../../constants/roles.js";
 
 import type {
+    GoogleLoginRequest,
     LoginRequest,
     LoginResponse,
     RegisterRequest,
@@ -18,17 +19,31 @@ type LoginResponseRaw = Omit<LoginResponse, "user"> & {
     };
 };
 
+type UserResponseRaw = LoginResponseRaw["user"];
+
+type ExternalLoginResponseRaw = {
+    accessToken?: string;
+    AccessToken?: string;
+    user?: UserResponseRaw;
+    User?: UserResponseRaw;
+    userId?: number;
+    UserId?: number;
+    email?: string;
+    Email?: string;
+    message?: string;
+};
+
 type RefreshSessionResponseRaw = {
     accessToken?: string;
     AccessToken?: string;
-    user?: LoginResponseRaw["user"];
-    User?: LoginResponseRaw["user"];
+    user?: UserResponseRaw;
+    User?: UserResponseRaw;
 };
 
 const baseURL = import.meta.env.VITE_API_URL || "/api";
 
 function normalizeLoginUser(
-    user: LoginResponseRaw["user"]
+    user: UserResponseRaw
 ): User {
     return {
         id: user.id,
@@ -45,7 +60,7 @@ export const authService = {
     async login(data: LoginRequest): Promise<LoginResponse> {
 
         const response = await api.post<LoginResponseRaw>(
-            "/Users/login",
+            "/auth/login",
             data
         );
 
@@ -59,9 +74,32 @@ export const authService = {
         };
     },
 
+    async loginWithGoogle(data: GoogleLoginRequest): Promise<LoginResponse> {
+        const response = await api.post<ExternalLoginResponseRaw>(
+            "/auth/external-login",
+            data
+        );
+
+        const accessToken = response.data.accessToken ?? response.data.AccessToken;
+
+        if (!accessToken) {
+            throw new Error("Google login response did not include access token.");
+        }
+
+        tokenStorage.set(accessToken);
+
+        const user = await resolveAuthUser(response.data);
+
+        return {
+            message: response.data.message ?? "Đăng nhập Google thành công.",
+            accessToken,
+            user,
+        };
+    },
+
     async refreshSession(): Promise<User> {
         const response = await axios.post<RefreshSessionResponseRaw>(
-            `${baseURL}/Users/refresh-token`,
+            `${baseURL}/auth/refresh-token`,
             {},
             { withCredentials: true }
         );
@@ -98,7 +136,7 @@ export const authService = {
                 displayName
             )}&background=111827&color=fff`;
 
-        await api.post("/Users/register", {
+        await api.post("/auth/register", {
             username: data.username.trim(),
             email: data.email.trim(),
             password: data.password,
@@ -108,11 +146,25 @@ export const authService = {
     },
 
     async logout() {
-        try {
-            await api.post("/Users/logout");
-        } finally {
-            tokenStorage.clear();
-            userStorage.remove();
-        }
+        tokenStorage.clear();
+        userStorage.remove();
     },
 };
+
+async function resolveAuthUser(response: ExternalLoginResponseRaw): Promise<User> {
+    const inlineUser = response.user ?? response.User;
+
+    if (inlineUser) {
+        return normalizeLoginUser(inlineUser);
+    }
+
+    const userId = response.userId ?? response.UserId;
+
+    if (!userId) {
+        throw new Error("Google login response did not include user data.");
+    }
+
+    const userResponse = await api.get<UserResponseRaw>(`/Users/${userId}`);
+
+    return normalizeLoginUser(userResponse.data);
+}

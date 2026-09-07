@@ -1517,6 +1517,30 @@ button:disabled {
   gap: 14px;
 }
 
+.login-divider {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.login-divider span {
+  height: 1px;
+  background: var(--border);
+}
+
+.login-divider p {
+  margin: 0;
+}
+
+.google-login-wrap {
+  min-height: 40px;
+  display: grid;
+}
+
 /* Admin */
 .admin-list {
   display: grid;

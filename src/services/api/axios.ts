@@ -39,10 +39,11 @@ function redirectToLoginOnce() {
 
 function isAuthRequest(url?: string) {
     return (
-        url?.includes("/Users/login") ||
-        url?.includes("/Users/register") ||
-        url?.includes("/Users/refresh") ||
-        url?.includes("/Users/logout")
+        url?.includes("/auth/login") ||
+        url?.includes("/auth/register") ||
+        url?.includes("/auth/refresh-token") ||
+        url?.includes("/auth/external-login") ||
+        url?.includes("/auth/logout")
     );
 }
 
@@ -59,7 +60,7 @@ async function refreshAccessToken(): Promise<string> {
             role?: string;
         };
     }>(
-        `${baseURL}/Users/refresh-token`,
+        `${baseURL}/auth/refresh-token`,
         {},
         { withCredentials: true }
     );
