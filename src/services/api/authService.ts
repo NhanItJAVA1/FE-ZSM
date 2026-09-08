@@ -4,6 +4,7 @@ import { userStorage } from "../storage/user.js";
 import {
     fetchAuthUser,
     getAccessToken,
+    isUnrecoverableRefreshError,
     normalizeAuthUser,
     refreshAccessToken,
     type UserResponseRaw,
@@ -73,7 +74,15 @@ export const authService = {
             throw new Error("User logged out explicitly.");
         }
 
-        await refreshAccessToken();
+        try {
+            await refreshAccessToken();
+        } catch (error) {
+            if (isUnrecoverableRefreshError(error)) {
+                tokenStorage.markLoggedOut();
+            }
+
+            throw error;
+        }
 
         const storedUser = userStorage.get();
 

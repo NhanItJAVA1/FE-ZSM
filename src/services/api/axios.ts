@@ -1,6 +1,6 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { ROUTES } from "../../constants/routes.js";
-import { refreshAccessToken } from "./authSession.js";
+import { isUnrecoverableRefreshError, refreshAccessToken } from "./authSession.js";
 import { tokenStorage } from "../storage/token.js";
 import { userStorage } from "../storage/user.js";
 
@@ -135,6 +135,11 @@ api.interceptors.response.use(
             } catch (refreshError) {
                 flushRefreshQueue(null);
                 clearSession();
+
+                if (isUnrecoverableRefreshError(refreshError)) {
+                    tokenStorage.markLoggedOut();
+                }
+
                 redirectToLoginOnce();
 
                 return Promise.reject(refreshError);

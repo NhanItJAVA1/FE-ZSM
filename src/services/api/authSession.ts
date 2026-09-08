@@ -34,6 +34,14 @@ export function getAccessToken(response: TokenResponseRaw): string {
     return response.accessToken;
 }
 
+export function isUnrecoverableRefreshError(error: unknown): boolean {
+    if (!axios.isAxiosError(error)) {
+        return false;
+    }
+
+    return error.response?.status === 401 || error.response?.status === 403;
+}
+
 export async function refreshAccessToken(): Promise<string> {
     const { data } = await axios.post<TokenResponseRaw>(
         `${baseURL}/auth/refresh-token`,
