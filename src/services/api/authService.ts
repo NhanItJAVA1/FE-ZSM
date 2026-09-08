@@ -39,11 +39,13 @@ export const authService = {
         );
 
         const user = normalizeAuthUser(response.data.user);
+        const accessToken = getAccessToken(response.data);
 
-        tokenStorage.set(response.data.accessToken);
+        tokenStorage.set(accessToken);
 
         return {
             ...response.data,
+            accessToken,
             user,
         };
     },

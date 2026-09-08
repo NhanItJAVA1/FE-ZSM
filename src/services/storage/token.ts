@@ -3,6 +3,18 @@ const LEGACY_ACCESS_TOKEN_KEY = "access_token";
 const LEGACY_REFRESH_TOKEN_KEY = "refreshToken";
 const LOGGED_OUT_KEY = "auth:logged-out";
 
+interface TokenStorage {
+    get(): string | null;
+    getAccessToken(): string | null;
+    isExpired(accessToken?: string | null): boolean;
+    hasUsableAccessToken(): boolean;
+    set(accessToken: string): void;
+    wasLoggedOut(): boolean;
+    markLoggedOut(): void;
+    remove(): void;
+    clear(): void;
+}
+
 function decodeJwtPayload(token: string): { exp?: number } | null {
     const payload = token.split(".")[1];
 
@@ -23,7 +35,7 @@ function decodeJwtPayload(token: string): { exp?: number } | null {
     }
 }
 
-export const tokenStorage = {
+export const tokenStorage: TokenStorage = {
     get(): string | null {
         return (
             localStorage.getItem(ACCESS_TOKEN_KEY) ??
@@ -35,7 +47,7 @@ export const tokenStorage = {
         return this.get();
     },
 
-    isExpired(accessToken = this.get()): boolean {
+    isExpired(accessToken = tokenStorage.get()): boolean {
         if (!accessToken) {
             return true;
         }
