@@ -3,6 +3,8 @@ import { ROUTES } from "../../constants/routes.js";
 import { isUnrecoverableRefreshError, refreshAccessToken } from "./authSession.js";
 import { tokenStorage } from "../storage/token.js";
 import { userStorage } from "../storage/user.js";
+import { store } from "../../stores/index.js";
+import { setAuth, setUnauthenticated } from "../../stores/slices/authSlice.js";
 
 const baseURL = import.meta.env.VITE_API_URL || "/api";
 
@@ -128,6 +130,12 @@ api.interceptors.response.use(
 
             try {
                 const newToken = await refreshAccessToken();
+                const refreshedUser = userStorage.get();
+
+                if (refreshedUser) {
+                    store.dispatch(setAuth(refreshedUser));
+                }
+
                 flushRefreshQueue(newToken);
                 originalRequest.headers.Authorization = `Bearer ${newToken}`;
                 hasRedirectedToLogin = false;
@@ -140,6 +148,7 @@ api.interceptors.response.use(
                     tokenStorage.markLoggedOut();
                 }
 
+                store.dispatch(setUnauthenticated());
                 redirectToLoginOnce();
 
                 return Promise.reject(refreshError);
