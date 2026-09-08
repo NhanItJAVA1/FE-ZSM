@@ -112,6 +112,8 @@ api.interceptors.response.use(
             !isAuthRequest(originalRequest.url)
         ) {
             if (isRefreshing) {
+                originalRequest._retry = true;
+
                 return new Promise((resolve, reject) => {
                     refreshQueue.push((token) => {
                         if (!token) {
