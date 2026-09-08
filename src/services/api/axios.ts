@@ -1,6 +1,6 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { ROUTES } from "../../constants/routes.js";
-import { normalizeUserRole } from "../../constants/roles.js";
+import { refreshAccessToken } from "./authSession.js";
 import { tokenStorage } from "../storage/token.js";
 import { userStorage } from "../storage/user.js";
 
@@ -45,40 +45,6 @@ function isAuthRequest(url?: string) {
         url?.includes("/auth/external-login") ||
         url?.includes("/auth/logout")
     );
-}
-
-async function refreshAccessToken(): Promise<string> {
-    const { data } = await axios.post<{
-        accessToken: string;
-        user?: {
-            id: number;
-            username: string;
-            email: string;
-            displayName: string;
-            avatarUrl: string | null;
-            Role?: string;
-            role?: string;
-        };
-    }>(
-        `${baseURL}/auth/refresh-token`,
-        {},
-        { withCredentials: true }
-    );
-
-    tokenStorage.set(data.accessToken);
-
-    if (data.user) {
-        userStorage.set({
-            id: data.user.id,
-            username: data.user.username,
-            email: data.user.email,
-            displayName: data.user.displayName,
-            avatarUrl: data.user.avatarUrl,
-            role: normalizeUserRole(data.user.role ?? data.user.Role),
-        });
-    }
-
-    return data.accessToken;
 }
 
 function parseAxiosErrorMessage(axiosError: AxiosError): string {

@@ -11,11 +11,18 @@ export interface AuthState {
 
 const storedUser = userStorage.get();
 const storedToken = tokenStorage.get();
+const hasUsableStoredSession =
+    Boolean(storedUser && storedToken) && tokenStorage.hasUsableAccessToken();
+const wasLoggedOut = tokenStorage.wasLoggedOut();
 
 const initialState: AuthState = {
-    user: storedUser,
-    status: storedUser && storedToken ? "authenticated" : "checking",
-    isAuthenticated: Boolean(storedUser && storedToken),
+    user: hasUsableStoredSession ? storedUser : null,
+    status: wasLoggedOut
+        ? "unauthenticated"
+        : hasUsableStoredSession
+            ? "authenticated"
+            : "checking",
+    isAuthenticated: hasUsableStoredSession,
 };
 
 const authSlice = createSlice({

@@ -17,7 +17,15 @@ export default function ProtectedRoute({ requireAdmin = false }: ProtectedRouteP
     }
 
     if (!isAuthenticated) {
-        return <Navigate to={ROUTES.login} replace state={{ from: location.pathname }} />;
+        return (
+            <Navigate
+                to={ROUTES.login}
+                replace
+                state={{
+                    from: `${location.pathname}${location.search}${location.hash}`,
+                }}
+            />
+        );
     }
 
     if (requireAdmin && !adminCheck.allowed) {

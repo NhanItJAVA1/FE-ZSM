@@ -3,6 +3,26 @@ const LEGACY_ACCESS_TOKEN_KEY = "access_token";
 const LEGACY_REFRESH_TOKEN_KEY = "refreshToken";
 const LOGGED_OUT_KEY = "auth:logged-out";
 
+function decodeJwtPayload(token: string): { exp?: number } | null {
+    const payload = token.split(".")[1];
+
+    if (!payload) {
+        return null;
+    }
+
+    try {
+        const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+        const padded = normalized.padEnd(
+            normalized.length + ((4 - normalized.length % 4) % 4),
+            "="
+        );
+
+        return JSON.parse(atob(padded)) as { exp?: number };
+    } catch {
+        return null;
+    }
+}
+
 export const tokenStorage = {
     get(): string | null {
         return (
@@ -13,6 +33,24 @@ export const tokenStorage = {
 
     getAccessToken(): string | null {
         return this.get();
+    },
+
+    isExpired(accessToken = this.get()): boolean {
+        if (!accessToken) {
+            return true;
+        }
+
+        const payload = decodeJwtPayload(accessToken);
+
+        if (!payload?.exp) {
+            return true;
+        }
+
+        return payload.exp * 1000 <= Date.now();
+    },
+
+    hasUsableAccessToken(): boolean {
+        return !this.isExpired();
     },
 
     set(accessToken: string): void {

@@ -1,8 +1,13 @@
-import axios from "axios";
 import api from "./axios.js";
 import { tokenStorage } from "../storage/token.js";
 import { userStorage } from "../storage/user.js";
-import { normalizeUserRole } from "../../constants/roles.js";
+import {
+    fetchAuthUser,
+    getAccessToken,
+    normalizeAuthUser,
+    refreshAccessToken,
+    type UserResponseRaw,
+} from "./authSession.js";
 
 import type {
     GoogleLoginRequest,
@@ -13,47 +18,16 @@ import type {
 } from "../../features/auth/types.js";
 
 type LoginResponseRaw = Omit<LoginResponse, "user"> & {
-    user: Omit<User, "role"> & {
-        role?: User["role"];
-        Role?: User["role"];
-    };
+    user: UserResponseRaw;
 };
-
-type UserResponseRaw = LoginResponseRaw["user"];
 
 type ExternalLoginResponseRaw = {
-    accessToken?: string;
-    AccessToken?: string;
+    accessToken: string;
     user?: UserResponseRaw;
-    User?: UserResponseRaw;
     userId?: number;
-    UserId?: number;
     email?: string;
-    Email?: string;
     message?: string;
 };
-
-type RefreshSessionResponseRaw = {
-    accessToken?: string;
-    AccessToken?: string;
-    user?: UserResponseRaw;
-    User?: UserResponseRaw;
-};
-
-const baseURL = import.meta.env.VITE_API_URL || "/api";
-
-function normalizeLoginUser(
-    user: UserResponseRaw
-): User {
-    return {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        displayName: user.displayName,
-        avatarUrl: user.avatarUrl,
-        role: normalizeUserRole(user.role ?? user.Role),
-    };
-}
 
 export const authService = {
 
@@ -64,7 +38,7 @@ export const authService = {
             data
         );
 
-        const user = normalizeLoginUser(response.data.user);
+        const user = normalizeAuthUser(response.data.user);
 
         tokenStorage.set(response.data.accessToken);
 
@@ -80,15 +54,10 @@ export const authService = {
             data
         );
 
-        const accessToken = response.data.accessToken ?? response.data.AccessToken;
-
-        if (!accessToken) {
-            throw new Error("Google login response did not include access token.");
-        }
+        const accessToken = getAccessToken(response.data);
+        const user = await resolveAuthUser(response.data, accessToken);
 
         tokenStorage.set(accessToken);
-
-        const user = await resolveAuthUser(response.data);
 
         return {
             message: response.data.message ?? "Đăng nhập Google thành công.",
@@ -102,24 +71,7 @@ export const authService = {
             throw new Error("User logged out explicitly.");
         }
 
-        const response = await axios.post<RefreshSessionResponseRaw>(
-            `${baseURL}/auth/refresh-token`,
-            {},
-            { withCredentials: true }
-        );
-
-        const accessToken = response.data.accessToken ?? response.data.AccessToken;
-        const user = response.data.user ?? response.data.User;
-
-        if (!accessToken) {
-            throw new Error("Refresh token response did not include access token.");
-        }
-
-        tokenStorage.set(accessToken);
-
-        if (user) {
-            return normalizeLoginUser(user);
-        }
+        await refreshAccessToken();
 
         const storedUser = userStorage.get();
 
@@ -160,20 +112,21 @@ export const authService = {
     },
 };
 
-async function resolveAuthUser(response: ExternalLoginResponseRaw): Promise<User> {
-    const inlineUser = response.user ?? response.User;
+async function resolveAuthUser(
+    response: ExternalLoginResponseRaw,
+    accessToken: string
+): Promise<User> {
+    const inlineUser = response.user;
 
     if (inlineUser) {
-        return normalizeLoginUser(inlineUser);
+        return normalizeAuthUser(inlineUser);
     }
 
-    const userId = response.userId ?? response.UserId;
+    const userId = response.userId;
 
     if (!userId) {
         throw new Error("Google login response did not include user data.");
     }
 
-    const userResponse = await api.get<UserResponseRaw>(`/Users/${userId}`);
-
-    return normalizeLoginUser(userResponse.data);
+    return fetchAuthUser(userId, accessToken);
 }
