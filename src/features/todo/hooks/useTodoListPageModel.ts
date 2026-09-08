@@ -45,7 +45,7 @@ export function useTodoListPageModel() {
         selectedCategoryFilter: todoFilters.selectedCategoryFilter,
         saveTodos: mutations.saveTodos.mutateAsync,
         refetchTodos,
-        userId,
+        userId: userId!,
     });
     const todoDialogActions = useTodoDialogActions({
         createCategory: mutations.createCategory.mutateAsync,
