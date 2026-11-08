@@ -6,6 +6,7 @@ import { getCategoryFilterId, type CategoryFilter, type TodoCounts } from "../to
 interface TodoCategoryPanelProps {
     allTodos: TodoDto[];
     categories: TodoCategoryDto[];
+    categoryFormError: string | null;
     categoryName: string;
     counts: TodoCounts;
     createCategoryPending: boolean;
@@ -14,12 +15,13 @@ interface TodoCategoryPanelProps {
     onDeleteCategory: (category: TodoCategoryDto, taskCount: number) => void;
     onRenameCategory: (category: TodoCategoryDto) => void;
     onSelectCategory: (filter: CategoryFilter) => void;
-    onSubmitCategory: (event: FormEvent<HTMLFormElement>) => void;
+    onSubmitCategory: (event: FormEvent<HTMLFormElement>) => Promise<boolean>;
 }
 
 export default function TodoCategoryPanel({
     allTodos,
     categories,
+    categoryFormError,
     categoryName,
     counts,
     createCategoryPending,
@@ -39,10 +41,9 @@ export default function TodoCategoryPanel({
         }
     }, [categoryFormOpen]);
 
-    function submitCategory(event: FormEvent<HTMLFormElement>) {
-        const hasName = categoryName.trim().length > 0;
-        onSubmitCategory(event);
-        if (hasName) {
+    async function submitCategory(event: FormEvent<HTMLFormElement>) {
+        const created = await onSubmitCategory(event);
+        if (created) {
             setCategoryFormOpen(false);
         }
     }
@@ -101,6 +102,12 @@ export default function TodoCategoryPanel({
                     )}
                 </div>
             </div>
+
+            {categoryFormError && (
+                <p className="todo-inline-error" role="alert" aria-live="assertive">
+                    {categoryFormError}
+                </p>
+            )}
 
             <div className="todo-simple-category-list">
                 <button

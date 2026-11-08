@@ -4,6 +4,7 @@ import type { TodoCategoryDto, TodoDto } from "../types.js";
 import type { TodoDialogState } from "../todoPageUtils.js";
 
 interface TodoDialogProps {
+    categoryDialogError: string | null;
     deleteCategoryPending: boolean;
     deletePending: boolean;
     dialog: TodoDialogState;
@@ -40,6 +41,7 @@ function TrashIcon() {
 }
 
 export default function TodoDialog({
+    categoryDialogError,
     deleteCategoryPending,
     deletePending,
     dialog,
@@ -106,6 +108,11 @@ export default function TodoDialog({
                                     : "Category này chưa có task nào. Bạn có thể xóa category ngay."}
                             </p>
                         </div>
+                        {categoryDialogError && (
+                            <p className="todo-dialog-error" role="alert" aria-live="assertive">
+                                {categoryDialogError}
+                            </p>
+                        )}
                         <div className="todo-dialog-actions todo-dialog-actions--stacked">
                             <button type="button" className="ghost-btn" onClick={onCancel}>
                                 Hủy
@@ -164,6 +171,11 @@ export default function TodoDialog({
                                 />
                             </label>
                         </div>
+                        {categoryDialogError && (
+                            <p className="todo-dialog-error" role="alert" aria-live="assertive">
+                                {categoryDialogError}
+                            </p>
+                        )}
                         <div className="todo-dialog-actions">
                             <button type="button" className="ghost-btn" onClick={onCancel}>
                                 Hủy

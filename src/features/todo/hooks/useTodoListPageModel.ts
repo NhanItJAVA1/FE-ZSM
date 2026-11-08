@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { TodoCategoryDto, TodoDto } from "../types.js";
 import { countTodos, type CategoryFilter } from "../todoPageUtils.js";
 import { useTodoCategoriesQuery } from "../../../hooks/useTodoCategoriesQuery.js";
@@ -11,7 +11,15 @@ import { useTodoSelection } from "./useTodoSelection.js";
 import { useTodoTableEditing } from "./useTodoTableEditing.js";
 import { useAppSelector } from "../../../stores/hook.js";
 
+const EMPTY_TODOS: TodoDto[] = [];
+
 export function useTodoListPageModel() {
+    const [actionNotice, setActionNotice] = useState<{ id: number; message: string } | null>(null);
+    const noticeId = useRef(0);
+    const notifyActionError = useCallback((message: string) => {
+        noticeId.current += 1;
+        setActionNotice({ id: noticeId.current, message });
+    }, []);
     const userId = useAppSelector((state) => state.auth.user?.id);
     const leftPanelRef = useRef<HTMLElement | null>(null);
     const pageSize = useTodoPageSize(leftPanelRef);
@@ -26,8 +34,8 @@ export function useTodoListPageModel() {
     const categoriesQuery = useTodoCategoriesQuery();
     const mutations = useTodoMutations();
 
-    const todos = todosQuery.data?.items ?? [];
-    const allTodos = allTodosQuery.data?.items ?? [];
+    const todos = todosQuery.data?.items ?? EMPTY_TODOS;
+    const allTodos = allTodosQuery.data?.items ?? EMPTY_TODOS;
     const categories = categoriesQuery.data ?? [];
     const loading = todosQuery.isLoading || allTodosQuery.isLoading || categoriesQuery.isLoading;
     const counts = useMemo(() => countTodos(allTodos), [allTodos]);
@@ -44,6 +52,7 @@ export function useTodoListPageModel() {
     const todoEditing = useTodoTableEditing({
         selectedCategoryFilter: todoFilters.selectedCategoryFilter,
         saveTodos: mutations.saveTodos.mutateAsync,
+        notifyActionError,
         refetchTodos,
         userId: userId!,
     });
@@ -60,6 +69,7 @@ export function useTodoListPageModel() {
         selectedCategoryFilter: todoFilters.selectedCategoryFilter,
         selectedRows: todoSelection.selectedRows,
         updateCategory: mutations.updateCategory.mutateAsync,
+        notifyActionError,
     });
     const { setPage } = todoFilters.actions;
 
@@ -114,6 +124,7 @@ export function useTodoListPageModel() {
         categoryPanelProps: {
             allTodos,
             categories,
+            categoryFormError: todoDialogActions.categoryFormError,
             categoryName: todoDialogActions.categoryName,
             counts,
             createCategoryPending: mutations.createCategory.isPending,
@@ -126,6 +137,7 @@ export function useTodoListPageModel() {
         },
         dialogProps: {
             deleteCategoryPending: mutations.deleteCategory.isPending,
+            categoryDialogError: todoDialogActions.categoryDialogError,
             deletePending: mutations.saveTodos.isPending,
             dialog: todoDialogActions.todoDialog,
             renameCategoryName: todoDialogActions.renameCategoryName,
@@ -136,6 +148,10 @@ export function useTodoListPageModel() {
             onConfirmRenameCategory: todoDialogActions.actions.confirmRenameCategory,
             onRenameCategoryNameChange: todoDialogActions.actions.setRenameCategoryName,
             onConfirmDiscardChanges: todoDialogActions.actions.confirmDiscardChanges,
+        },
+        notificationProps: {
+            notice: actionNotice,
+            onDismiss: () => setActionNotice(null),
         },
         panelProps: {
             leftPanelRef,

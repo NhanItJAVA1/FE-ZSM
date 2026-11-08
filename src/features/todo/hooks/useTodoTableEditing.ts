@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { ApiError } from "../../../services/api/apiError.js";
 import type { SaveTodosPayload, TodoDto } from "../types.js";
 import {
     createTodoInlineDraft,
@@ -15,6 +16,7 @@ interface UseTodoTableEditingOptions {
     saveTodos: (payloads: SaveTodosPayload) => Promise<unknown>;
     selectedCategoryFilter: CategoryFilter;
     userId?: number;
+    notifyActionError: (message: string) => void;
 }
 
 interface TodoEditingDraftStorage {
@@ -31,6 +33,7 @@ export function useTodoTableEditing({
     saveTodos,
     selectedCategoryFilter,
     userId,
+    notifyActionError,
 }: UseTodoTableEditingOptions) {
     const storageKey = useMemo(
         () => userId ? `${TODO_EDITING_DRAFT_STORAGE_PREFIX}:${userId}` : null,
@@ -234,7 +237,14 @@ export function useTodoTableEditing({
             resetEditing();
             return true;
         } catch (error) {
-            setFormError(error instanceof Error ? error.message : "Không thể lưu todo.");
+            const message =
+                error instanceof ApiError && error.status === 403
+                    ? "Bạn không có quyền tạo, chỉnh sửa hoặc xóa task."
+                    : error instanceof Error
+                        ? error.message
+                        : "Không thể lưu todo.";
+            setFormError(message);
+            notifyActionError(message);
             return false;
         }
     }

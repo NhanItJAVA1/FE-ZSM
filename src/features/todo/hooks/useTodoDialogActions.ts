@@ -1,4 +1,5 @@
 import { type FormEvent, useState } from "react";
+import { ApiError } from "../../../services/api/apiError.js";
 import type { SaveTodosPayload, TodoCategoryDto, TodoDto } from "../types.js";
 import {
     getCategoryFilterId,
@@ -20,6 +21,7 @@ interface UseTodoDialogActionsOptions {
     selectedCategoryFilter: CategoryFilter;
     selectedRows: TodoDto[];
     updateCategory: (payload: { id: number; name: string }) => Promise<unknown>;
+    notifyActionError: (message: string) => void;
 }
 
 export function useTodoDialogActions({
@@ -35,11 +37,13 @@ export function useTodoDialogActions({
     selectedCategoryFilter,
     selectedRows,
     updateCategory,
+    notifyActionError,
 }: UseTodoDialogActionsOptions) {
     const [categoryName, setCategoryName] = useState("");
     const [todoDialog, setTodoDialog] = useState<TodoDialogState>(null);
     const [renameCategoryName, setRenameCategoryName] = useState("");
-
+    const [categoryFormError, setCategoryFormError] = useState<string | null>(null);
+    const [categoryDialogError, setCategoryDialogError] = useState<string | null>(null);
     function selectTodoCategory(filter: CategoryFilter) {
         selectCategory(filter);
         resetSelection();
@@ -52,10 +56,12 @@ export function useTodoDialogActions({
     }
 
     function openDeleteCategoryDialog(category: TodoCategoryDto, taskCount: number) {
+        setCategoryDialogError(null);
         setTodoDialog({ type: "deleteCategory", category, taskCount });
     }
 
     function openRenameCategoryDialog(category: TodoCategoryDto) {
+        setCategoryDialogError(null);
         setRenameCategoryName(category.name);
         setTodoDialog({ type: "renameCategory", category });
     }
@@ -64,30 +70,51 @@ export function useTodoDialogActions({
         setTodoDialog({ type: "discardChanges", onConfirm });
     }
 
-    async function submitCategory(event: FormEvent<HTMLFormElement>) {
+    async function submitCategory(event: FormEvent<HTMLFormElement>): Promise<boolean> {
         event.preventDefault();
         const name = categoryName.trim();
-        if (!name) return;
+        if (!name) return false;
 
-        await createCategory(name);
-        setCategoryName("");
+        setCategoryFormError(null);
+        try {
+            await createCategory(name);
+            setCategoryName("");
+            return true;
+        } catch (error) {
+            const message = getCategoryActionError(error, "tạo");
+            setCategoryFormError(message);
+            notifyActionError(message);
+            return false;
+        }
     }
 
     async function confirmDeleteSelected(todos: TodoDto[]) {
-        await saveTodos(todos.map(toDeletedPayload));
-        await refetchTodos();
+        try {
+            await saveTodos(todos.map(toDeletedPayload));
+            await refetchTodos();
 
-        const todoIds = todos.map((todo) => todo.id);
-        removeEditedTodos(todoIds);
-        removeDeletedTodos(todoIds);
-        setTodoDialog(null);
+            const todoIds = todos.map((todo) => todo.id);
+            removeEditedTodos(todoIds);
+            removeDeletedTodos(todoIds);
+            setTodoDialog(null);
+        } catch (error) {
+            notifyActionError(getTodoActionError(error, "xóa task"));
+        }
     }
 
     async function confirmDeleteCategory(
         category: TodoCategoryDto,
         deleteTodos: boolean
     ) {
-        await deleteCategory({ id: category.id, deleteTodos });
+        setCategoryDialogError(null);
+        try {
+            await deleteCategory({ id: category.id, deleteTodos });
+        } catch (error) {
+            const message = getCategoryActionError(error, "xóa");
+            setCategoryDialogError(message);
+            notifyActionError(message);
+            return;
+        }
 
         if (selectedCategoryFilter === getCategoryFilterId(category.id)) {
             selectCategory("all");
@@ -103,10 +130,18 @@ export function useTodoDialogActions({
         const name = renameCategoryName.trim();
         if (!name || name === todoDialog.category.name) return;
 
-        await updateCategory({
-            id: todoDialog.category.id,
-            name,
-        });
+        setCategoryDialogError(null);
+        try {
+            await updateCategory({
+                id: todoDialog.category.id,
+                name,
+            });
+        } catch (error) {
+            const message = getCategoryActionError(error, "đổi tên");
+            setCategoryDialogError(message);
+            notifyActionError(message);
+            return;
+        }
         setTodoDialog(null);
         setRenameCategoryName("");
     }
@@ -120,10 +155,15 @@ export function useTodoDialogActions({
 
     return {
         categoryName,
+        categoryFormError,
+        categoryDialogError,
         renameCategoryName,
         todoDialog,
         actions: {
-            closeDialog: () => setTodoDialog(null),
+            closeDialog: () => {
+                setTodoDialog(null);
+                setCategoryDialogError(null);
+            },
             confirmDeleteCategory,
             confirmDeleteSelected,
             confirmDiscardChanges,
@@ -138,4 +178,24 @@ export function useTodoDialogActions({
             submitCategory,
         },
     };
+}
+
+function getCategoryActionError(error: unknown, action: string): string {
+    if (error instanceof ApiError && error.status === 403) {
+        return `Bạn không có quyền ${action} category này.`;
+    }
+
+    return error instanceof Error
+        ? error.message
+        : `Không thể ${action} category. Vui lòng thử lại.`;
+}
+
+function getTodoActionError(error: unknown, action: string): string {
+    if (error instanceof ApiError && error.status === 403) {
+        return `Bạn không có quyền ${action}.`;
+    }
+
+    return error instanceof Error
+        ? error.message
+        : `Không thể ${action}. Vui lòng thử lại.`;
 }

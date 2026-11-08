@@ -10,14 +10,20 @@ export function useTodoSelection(visibleTodos: TodoDto[]) {
     );
 
     useEffect(() => {
-        if (visibleTodos.length === 0) {
-            setSelectedIds([]);
-            return;
-        }
+        setSelectedIds((previous) => {
+            const next = previous.filter((id) =>
+                visibleTodos.some((todo) => todo.id === id)
+            );
 
-        setSelectedIds((prev) =>
-            prev.filter((id) => visibleTodos.some((todo) => todo.id === id))
-        );
+            if (
+                next.length === previous.length &&
+                next.every((id, index) => id === previous[index])
+            ) {
+                return previous;
+            }
+
+            return next;
+        });
     }, [visibleTodos]);
 
     function clearSelection() {
