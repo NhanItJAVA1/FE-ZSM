@@ -14,7 +14,7 @@ export default function GuestRoute({ children }: GuestRouteProps) {
     }
 
     if (isAuthenticated) {
-        return <Navigate to={ROUTES.apps} replace />;
+        return <Navigate to={ROUTES.todoList} replace />;
     }
 
     return children;

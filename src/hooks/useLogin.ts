@@ -66,5 +66,5 @@ function getRedirectTarget(state: unknown) {
         return state.from;
     }
 
-    return ROUTES.apps;
+    return ROUTES.todoList;
 }

@@ -1,8 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import NavIcon, { type NavIconName } from "../components/ui/NavIcon.js";
 import { ROUTES } from "../constants/routes.js";
-import { useIsAdmin } from "../hooks/useIsAdmin.js";
 import { authService } from "../services/api/authService.js";
 import { useAppDispatch, useAppSelector } from "../stores/hook.js";
 import { logout } from "../stores/slices/authSlice.js";
@@ -12,25 +11,16 @@ const NAV_ITEMS: Array<{
     label: string;
     icon: NavIconName;
     end?: boolean;
-    adminOnly?: boolean;
 }> = [
-    { to: ROUTES.apps, label: "Chọn app", icon: "apps" },
-    { to: ROUTES.home, label: "Trang chủ", icon: "home", end: true },
     { to: ROUTES.todoList, label: "Todo list", icon: "todoList" },
-    { to: ROUTES.submit, label: "Đăng kỷ lục", icon: "submit" },
-    { to: ROUTES.myRecords, label: "Kỷ lục của tôi", icon: "records" },
-    { to: ROUTES.admin, label: "Kiểm duyệt", icon: "admin", adminOnly: true },
+    { to: ROUTES.admin, label: "Quản trị", icon: "admin" },
 ];
 
 export default function SiteHeader() {
     const dispatch = useAppDispatch();
     const queryClient = useQueryClient();
-    const location = useLocation();
     const navigate = useNavigate();
     const { user } = useAppSelector((state) => state.auth);
-    const isAdmin = useIsAdmin();
-    const isTodoWorkspace = location.pathname === ROUTES.todoList;
-    const isAppSelection = location.pathname === ROUTES.apps;
 
     async function handleLogout() {
         try {
@@ -42,22 +32,7 @@ export default function SiteHeader() {
         }
     }
 
-    const visibleNavItems = NAV_ITEMS.filter((item) => {
-        if (item.adminOnly && !isAdmin) return false;
-
-        if (isTodoWorkspace) {
-            return (
-                item.to === ROUTES.apps ||
-                item.to === ROUTES.todoList
-            );
-        }
-
-        if (isAppSelection) {
-            return item.to === ROUTES.apps;
-        }
-
-        return item.to !== ROUTES.todoList;
-    });
+    const visibleNavItems = NAV_ITEMS;
 
     return (
         <header className="site-header">

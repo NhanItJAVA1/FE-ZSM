@@ -1,16 +1,10 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { ROUTES } from "../../constants/routes.js";
-import { useRequireAdmin } from "../../hooks/useRequireAdmin.js";
 import { useAppSelector } from "../../stores/hook.js";
 
-interface ProtectedRouteProps {
-    requireAdmin?: boolean;
-}
-
-export default function ProtectedRoute({ requireAdmin = false }: ProtectedRouteProps) {
+export default function ProtectedRoute() {
     const { isAuthenticated, status } = useAppSelector((state) => state.auth);
     const location = useLocation();
-    const adminCheck = useRequireAdmin();
 
     if (status === "checking") {
         return null;
@@ -26,10 +20,6 @@ export default function ProtectedRoute({ requireAdmin = false }: ProtectedRouteP
                 }}
             />
         );
-    }
-
-    if (requireAdmin && !adminCheck.allowed) {
-        return <Navigate to={adminCheck.redirectTo ?? ROUTES.home} replace />;
     }
 
     return <Outlet />;

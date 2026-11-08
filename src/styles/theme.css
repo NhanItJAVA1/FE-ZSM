@@ -1,5 +1,5 @@
 /**
- * ZSM design tokens — single source of truth for project colors.
+ * Shared design tokens — single source of truth for project colors.
  * Import this file once in index.css; use var(--token) everywhere else.
  */
 :root {

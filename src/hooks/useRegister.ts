@@ -21,7 +21,7 @@ export function useRegister() {
                 password: values.password,
             });
             dispatch(setAuth(response.user));
-            navigate(ROUTES.home, { replace: true });
+            navigate(ROUTES.todoList, { replace: true });
         } catch (err) {
             const message =
                 err instanceof Error ? err.message : "Đăng ký thất bại";

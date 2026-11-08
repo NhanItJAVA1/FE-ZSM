@@ -1,79 +1,36 @@
-import { useState } from "react";
 import AppLayout from "../../layouts/AppLayout.js";
 import PageHeading from "../../layouts/PageHeading.js";
-import AdminPendingList from "../../features/zsm/admin/components/AdminPendingList.js";
-import AddMapForm from "../../features/zsm/admin/components/AddMapForm.js";
-import AddVehicleForm from "../../features/zsm/admin/components/AddVehicleForm.js";
-import AdminTabs, {
-    type AdminTab,
-} from "../../features/zsm/admin/components/AdminTabs.js";
-import { useModeration } from "../../features/zsm/hooks/useModeration.js";
+import { useState } from "react";
+import RoleManagementPanel from "../../features/rbac/components/RoleManagementPanel.js";
+import PermissionManagementPanel from "../../features/rbac/components/PermissionManagementPanel.js";
+import UserRoleAssignmentPanel from "../../features/rbac/components/UserRoleAssignmentPanel.js";
 
-const TAB_COPY: Record<
-    AdminTab,
-    { title: string; description: string }
-> = {
-    moderation: {
-        title: "Kiểm duyệt kỷ lục",
-        description:
-            "Duyệt hoặc từ chối các bản ghi chờ trước khi hiển thị công khai.",
-    },
-    maps: {
-        title: "Quản lý map",
-        description: "Thêm map mới với tên, ảnh và độ khó cho hệ thống.",
-    },
-    vehicles: {
-        title: "Quản lý xe",
-        description: "Thêm xe mới với tên, loại xe, cấp bậc và ảnh.",
-    },
-};
+type AdminSection = "roles" | "permissions" | "users";
 
 export default function AdminPage() {
-    const [activeTab, setActiveTab] = useState<AdminTab>("moderation");
-    const {
-        pending,
-        isLoading,
-        isFetching,
-        error,
-        refetch,
-        processingId,
-        message,
-        approve,
-        reject,
-    } = useModeration();
-    const tabCopy = TAB_COPY[activeTab];
+    const [section, setSection] = useState<AdminSection>("roles");
 
     return (
         <AppLayout>
             <PageHeading
                 eyebrow="Admin"
-                title={tabCopy.title}
-                description={tabCopy.description}
+                title="Quản lý truy cập"
+                description="Quản lý Roles, Permissions và vai trò được gán cho từng User."
             />
 
-            <AdminTabs activeTab={activeTab} onChange={setActiveTab} />
-
-            {activeTab === "moderation" && (
-                <>
-                    {message && <p className="form-status">{message}</p>}
-
-                    <AdminPendingList
-                        pending={pending}
-                        isLoading={isLoading}
-                        isFetching={isFetching}
-                        error={error}
-                        processingId={processingId}
-                        onApprove={approve}
-                        onReject={reject}
-                        onRefresh={() => {
-                            void refetch();
-                        }}
-                    />
-                </>
-            )}
-
-            {activeTab === "maps" && <AddMapForm />}
-            {activeTab === "vehicles" && <AddVehicleForm />}
+            <section className="rbac-workspace">
+                <div className="rbac-security-note" role="note">
+                    Quyền được xác thực bởi Backend trên mọi request. Giao diện không suy ra quyền từ JWT Role claim.
+                </div>
+                <nav className="rbac-tabs" aria-label="Quản lý truy cập">
+                    <button type="button" className={section === "roles" ? "active" : ""} onClick={() => setSection("roles")}>Roles</button>
+                    <button type="button" className={section === "permissions" ? "active" : ""} onClick={() => setSection("permissions")}>Permissions</button>
+                    <button type="button" className={section === "users" ? "active" : ""} onClick={() => setSection("users")}>User roles</button>
+                </nav>
+                {section === "roles" && <RoleManagementPanel />}
+                {section === "permissions" && <PermissionManagementPanel />}
+                {section === "users" && <UserRoleAssignmentPanel />}
+            </section>
         </AppLayout>
     );
 }

@@ -5,6 +5,7 @@ import { tokenStorage } from "../storage/token.js";
 import { userStorage } from "../storage/user.js";
 import { store } from "../../stores/index.js";
 import { setAuth, setUnauthenticated } from "../../stores/slices/authSlice.js";
+import { ApiError } from "./apiError.js";
 
 const baseURL = import.meta.env.VITE_API_URL || "/api";
 
@@ -56,6 +57,7 @@ function parseAxiosErrorMessage(axiosError: AxiosError): string {
               title?: string;
               detail?: string;
               errors?: Record<string, string[]>;
+              errorCode?: string;
           }
         | string
         | undefined;
@@ -159,18 +161,16 @@ api.interceptors.response.use(
             }
         }
 
-        if (
-            axiosError.response?.status === 403 &&
-            originalRequest?.url?.includes("/Records/admin/")
-        ) {
-            return Promise.reject(
-                new Error(
-                    "Tài khoản hiện tại không có quyền admin. Hãy đăng xuất và đăng nhập lại bằng user `admin` sau khi BE đã restart."
-                )
-            );
-        }
-
-        return Promise.reject(new Error(parseAxiosErrorMessage(axiosError)));
+        const responseData = axiosError.response?.data as
+            | { errorCode?: string }
+            | undefined;
+        return Promise.reject(
+            new ApiError(
+                parseAxiosErrorMessage(axiosError),
+                axiosError.response?.status ?? 0,
+                responseData?.errorCode
+            )
+        );
     }
 );
 

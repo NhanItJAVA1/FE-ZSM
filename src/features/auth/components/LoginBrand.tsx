@@ -1,9 +1,9 @@
 export default function LoginBrand() {
     return (
         <div className="login-brand">
-            <span className="brand-mark large">ZSM</span>
-            <h1>ZingSpeed Records</h1>
-            <p>Đăng nhập để xem và gửi video kỷ lục</p>
+            <span className="brand-mark large">Todo</span>
+            <h1>Quản lý công việc</h1>
+            <p>Đăng nhập để tiếp tục làm việc</p>
         </div>
     );
 }
