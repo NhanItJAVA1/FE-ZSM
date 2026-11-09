@@ -10,9 +10,25 @@ function isProtectedRole(role: RoleDto) {
     return role.id === 1 || role.id === 2 || ["user", "admin"].includes(role.name.trim().toLowerCase());
 }
 
-export default function RoleManagementPanel() {
+interface RoleManagementPanelProps {
+    canReadRoles: boolean;
+    canCreateRole: boolean;
+    canUpdateRole: boolean;
+    canDeleteRole: boolean;
+}
+
+export default function RoleManagementPanel({
+    canReadRoles,
+    canCreateRole,
+    canUpdateRole,
+    canDeleteRole,
+}: RoleManagementPanelProps) {
     const queryClient = useQueryClient();
-    const rolesQuery = useQuery({ queryKey: QUERY_KEYS.rbacRoles, queryFn: rbacService.getRoles });
+    const rolesQuery = useQuery({
+        queryKey: QUERY_KEYS.rbacRoles,
+        queryFn: rbacService.getRoles,
+        enabled: canReadRoles,
+    });
     const [editing, setEditing] = useState<RoleDto | null>(null);
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
@@ -66,12 +82,13 @@ export default function RoleManagementPanel() {
                         <h2>Roles</h2>
                         <p>Tạo vai trò và quản lý tên, mô tả.</p>
                     </div>
-                    <button type="button" className="ghost-btn" onClick={() => void rolesQuery.refetch()}>Làm mới</button>
+                    {canReadRoles && <button type="button" className="ghost-btn" onClick={() => void rolesQuery.refetch()}>Làm mới</button>}
                 </div>
-                {rolesQuery.isLoading && <RbacLoading />}
-                {rolesQuery.isError && <RbacError error={rolesQuery.error} action="tải Roles" />}
-                {rolesQuery.data && rolesQuery.data.length === 0 && <RbacEmpty>Chưa có Role nào.</RbacEmpty>}
-                {rolesQuery.data && rolesQuery.data.length > 0 && (
+                {canReadRoles && rolesQuery.isLoading && <RbacLoading />}
+                {canReadRoles && rolesQuery.isError && <RbacError error={rolesQuery.error} action="tải Roles" />}
+                {!canReadRoles && <p role="status">Bạn cần quyền roles.read để xem danh sách Role.</p>}
+                {canReadRoles && rolesQuery.data?.length === 0 && <RbacEmpty>Chưa có Role nào.</RbacEmpty>}
+                {canReadRoles && rolesQuery.data && rolesQuery.data.length > 0 && (
                     <div className="rbac-role-list">
                         {rolesQuery.data.map((role) => {
                             const protectedRole = isProtectedRole(role);
@@ -85,8 +102,8 @@ export default function RoleManagementPanel() {
                                         <p>{role.description || "Chưa có mô tả"}</p>
                                     </div>
                                     <div className="rbac-row-actions">
-                                        <button type="button" className="ghost-btn" disabled={protectedRole} onClick={() => beginEdit(role)}>Đổi tên</button>
-                                        <button
+                                        {canUpdateRole && <button type="button" className="ghost-btn" disabled={protectedRole} onClick={() => beginEdit(role)}>Đổi tên</button>}
+                                        {canDeleteRole && <button
                                             type="button"
                                             className="ghost-btn danger"
                                             disabled={protectedRole || deleteMutation.isPending}
@@ -96,7 +113,7 @@ export default function RoleManagementPanel() {
                                                     deleteMutation.mutate(role.id);
                                                 }
                                             }}
-                                        >Xóa</button>
+                                        >Xóa</button>}
                                     </div>
                                 </article>
                             );
@@ -105,7 +122,7 @@ export default function RoleManagementPanel() {
                 )}
             </section>
 
-            <section className="rbac-card rbac-form-card">
+            {(canCreateRole || (editing !== null && canUpdateRole)) && <section className="rbac-card rbac-form-card">
                 <div className="rbac-section-heading">
                     <div>
                         <h2>{editing ? `Sửa ${editing.name}` : "Tạo Role"}</h2>
@@ -129,7 +146,7 @@ export default function RoleManagementPanel() {
                         </button>
                     </div>
                 </form>
-            </section>
+            </section>}
         </div>
     );
 }

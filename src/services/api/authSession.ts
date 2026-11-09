@@ -4,8 +4,10 @@ import type { User } from "../../features/auth/types.js";
 import { tokenStorage } from "../storage/token.js";
 import { userStorage } from "../storage/user.js";
 
-export type UserResponseRaw = Omit<User, "role"> & {
+export type UserResponseRaw = Omit<User, "role" | "roles" | "permissions"> & {
     role?: User["role"];
+    roles?: string[];
+    permissions?: string[];
 };
 
 export type TokenResponseRaw = {
@@ -23,6 +25,9 @@ export function normalizeAuthUser(user: UserResponseRaw): User {
         displayName: user.displayName,
         avatarUrl: user.avatarUrl,
         role: normalizeUserRole(user.role),
+        roles: user.roles ?? [normalizeUserRole(user.role)],
+        permissions: user.permissions ?? [],
+        isSystemOwner: user.isSystemOwner,
     };
 }
 

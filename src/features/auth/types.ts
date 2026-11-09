@@ -7,6 +7,9 @@ export interface User {
     displayName: string;
     avatarUrl: string | null;
     role: UserRole;
+    roles: string[];
+    permissions: string[];
+    isSystemOwner: boolean;
 }
 
 export interface LoginRequest {

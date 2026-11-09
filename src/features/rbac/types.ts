@@ -23,8 +23,10 @@ export interface UserDto {
     avatarUrl: string | null;
     role: string;
     roles: string[];
+    permissions: string[];
     createdAt: string;
     updatedAt: string;
+    isSystemOwner: boolean;
 }
 
 export interface ReplaceRolePermissionsDto {

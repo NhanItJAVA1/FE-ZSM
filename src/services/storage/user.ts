@@ -15,6 +15,9 @@ function normalizeUser(raw: Partial<User> & { Role?: string }): User | null {
         displayName: raw.displayName ?? raw.username,
         avatarUrl: raw.avatarUrl ?? null,
         role: normalizeUserRole(raw.role ?? raw.Role),
+        roles: raw.roles ?? [normalizeUserRole(raw.role ?? raw.Role)],
+        permissions: raw.permissions ?? [],
+        isSystemOwner: raw.isSystemOwner ?? false,
     };
 }
 
