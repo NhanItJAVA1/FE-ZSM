@@ -37,6 +37,18 @@ const authSlice = createSlice({
             userStorage.set(action.payload);
         },
 
+        syncAuthFromStorage: (state, action: PayloadAction<User>) => {
+            state.user = action.payload;
+            state.status = "authenticated";
+            state.isAuthenticated = true;
+        },
+
+        syncUnauthenticatedFromStorage: (state) => {
+            state.user = null;
+            state.status = "unauthenticated";
+            state.isAuthenticated = false;
+        },
+
         logout: (state) => {
             state.user = null;
             state.status = "unauthenticated";
@@ -56,6 +68,12 @@ const authSlice = createSlice({
     },
 });
 
-export const { setAuth, logout, setUnauthenticated } = authSlice.actions;
+export const {
+    setAuth,
+    syncAuthFromStorage,
+    syncUnauthenticatedFromStorage,
+    logout,
+    setUnauthenticated,
+} = authSlice.actions;
 
 export default authSlice.reducer;

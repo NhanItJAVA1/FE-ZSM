@@ -1,7 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { NavLink, useNavigate } from "react-router-dom";
 import NavIcon, { type NavIconName } from "../components/ui/NavIcon.js";
-import { isAdminRole } from "../constants/roles.js";
 import { RBAC_PERMISSIONS } from "../constants/rbacPermissions.js";
 import { ROUTES } from "../constants/routes.js";
 import { authService } from "../services/api/authService.js";
@@ -23,9 +22,6 @@ export default function SiteHeader() {
     const queryClient = useQueryClient();
     const navigate = useNavigate();
     const { user } = useAppSelector((state) => state.auth);
-    const hasAdminRole = Boolean(
-        user && (isAdminRole(user.role) || user.roles.some((role) => role.toLowerCase() === "admin"))
-    );
     const isSystemOwner = user?.isSystemOwner ?? false;
     const permissionCodes = user?.permissions ?? [];
 
@@ -39,8 +35,12 @@ export default function SiteHeader() {
         }
     }
 
-    const canSeeAdmin = hasAdminRole || isSystemOwner || permissionCodes.some((code) =>
-        code === RBAC_PERMISSIONS.rolesManagePermissions || code === RBAC_PERMISSIONS.usersManageRoles
+    const canSeeAdmin = isSystemOwner || permissionCodes.some((code) =>
+        code === RBAC_PERMISSIONS.rolesCreate ||
+        code === RBAC_PERMISSIONS.rolesUpdate ||
+        code === RBAC_PERMISSIONS.rolesDelete ||
+        code === RBAC_PERMISSIONS.rolesManagePermissions ||
+        code === RBAC_PERMISSIONS.usersManageRoles
     );
     const visibleNavItems = NAV_ITEMS.filter(
         (item) => item.to !== ROUTES.admin || canSeeAdmin

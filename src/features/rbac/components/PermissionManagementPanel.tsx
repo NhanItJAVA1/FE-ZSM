@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../../../constants/queryKeys.js";
 import { rbacService } from "../../../services/api/rbacService.js";
+import { authService } from "../../../services/api/authService.js";
+import { useAppDispatch } from "../../../stores/hook.js";
+import { setAuth } from "../../../stores/slices/authSlice.js";
 import { getApiErrorMessage } from "../apiErrors.js";
 import type { PermissionDto } from "../types.js";
 import { RbacEmpty, RbacError, RbacLoading } from "./RbacStates.js";
@@ -12,6 +15,7 @@ function moduleName(permission: PermissionDto) {
 }
 
 export default function PermissionManagementPanel() {
+    const dispatch = useAppDispatch();
     const queryClient = useQueryClient();
     const rolesQuery = useQuery({ queryKey: QUERY_KEYS.rbacRoles, queryFn: rbacService.getRoles });
     const permissionsQuery = useQuery({ queryKey: QUERY_KEYS.rbacPermissions, queryFn: rbacService.getPermissions });
@@ -50,6 +54,11 @@ export default function PermissionManagementPanel() {
         onSuccess: async () => {
             setSaveError(null);
             await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.rolePermissions(selectedId!) });
+            try {
+                dispatch(setAuth(await authService.refreshSession()));
+            } catch {
+                setSaveError("Permissions đã lưu nhưng không thể làm mới quyền phiên hiện tại. Hãy tải lại trang.");
+            }
         },
         onError: (error) => setSaveError(getApiErrorMessage(error, "cập nhật Permissions")),
     });

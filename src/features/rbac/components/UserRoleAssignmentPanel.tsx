@@ -2,10 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../../../constants/queryKeys.js";
 import { rbacService } from "../../../services/api/rbacService.js";
+import { authService } from "../../../services/api/authService.js";
+import { useAppDispatch, useAppSelector } from "../../../stores/hook.js";
+import { setAuth } from "../../../stores/slices/authSlice.js";
 import { getApiErrorCode, getApiErrorMessage } from "../apiErrors.js";
 import { RbacEmpty, RbacError, RbacLoading } from "./RbacStates.js";
 
 export default function UserRoleAssignmentPanel() {
+    const dispatch = useAppDispatch();
+    const currentUserId = useAppSelector((state) => state.auth.user?.id);
     const queryClient = useQueryClient();
     const usersQuery = useQuery({ queryKey: QUERY_KEYS.users, queryFn: rbacService.getUsers });
     const rolesQuery = useQuery({ queryKey: QUERY_KEYS.rbacRoles, queryFn: rbacService.getRoles });
@@ -39,6 +44,13 @@ export default function UserRoleAssignmentPanel() {
                 queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userRoles(userId!) }),
                 queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users }),
             ]);
+            if (userId === currentUserId) {
+                try {
+                    dispatch(setAuth(await authService.refreshSession()));
+                } catch {
+                    setSaveError("Roles đã lưu nhưng không thể làm mới quyền phiên hiện tại. Hãy tải lại trang.");
+                }
+            }
         },
         onError: (error) => {
             setSaveError(getApiErrorMessage(error, "cập nhật Roles của User"));

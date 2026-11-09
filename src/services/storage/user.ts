@@ -1,7 +1,7 @@
 import type { User } from "../../features/auth/types.js";
 import { normalizeUserRole } from "../../constants/roles.js";
 
-const USER_KEY = "current_user";
+export const USER_STORAGE_KEY = "current_user";
 
 function normalizeUser(raw: Partial<User> & { Role?: string }): User | null {
     if (typeof raw.id !== "number" || typeof raw.username !== "string") {
@@ -23,7 +23,7 @@ function normalizeUser(raw: Partial<User> & { Role?: string }): User | null {
 
 export const userStorage = {
     get(): User | null {
-        const raw = localStorage.getItem(USER_KEY);
+        const raw = localStorage.getItem(USER_STORAGE_KEY);
 
         if (!raw) {
             return null;
@@ -37,10 +37,10 @@ export const userStorage = {
     },
 
     set(user: User): void {
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
     },
 
     remove(): void {
-        localStorage.removeItem(USER_KEY);
+        localStorage.removeItem(USER_STORAGE_KEY);
     },
 };
