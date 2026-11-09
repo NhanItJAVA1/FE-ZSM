@@ -12,6 +12,7 @@ import {
 } from "../todoPageUtils.js";
 
 interface UseTodoTableEditingOptions {
+    canWriteTodos: boolean;
     refetchTodos: () => Promise<unknown>;
     saveTodos: (payloads: SaveTodosPayload) => Promise<unknown>;
     selectedCategoryFilter: CategoryFilter;
@@ -29,6 +30,7 @@ const TODO_EDITING_DRAFT_STORAGE_VERSION = 1;
 const TODO_EDITING_DRAFT_STORAGE_PREFIX = "todo:editing-draft";
 
 export function useTodoTableEditing({
+    canWriteTodos,
     refetchTodos,
     saveTodos,
     selectedCategoryFilter,
@@ -40,8 +42,8 @@ export function useTodoTableEditing({
         [userId]
     );
     const restoredDraft = useMemo(
-        () => loadEditingDraft(storageKey),
-        [storageKey]
+        () => canWriteTodos ? loadEditingDraft(storageKey) : getEmptyEditingDraft(),
+        [canWriteTodos, storageKey]
     );
     const [editedRows, setEditedRows] = useState<Record<number, TodoFormState>>(
         () => restoredDraft.editedRows
@@ -57,25 +59,40 @@ export function useTodoTableEditing({
         () => drafts.filter(hasDraftContent),
         [drafts]
     );
-    const hasUnsavedChanges =
-        meaningfulDrafts.length > 0 || Object.keys(editedRows).length > 0;
+    const hasUnsavedChanges = canWriteTodos &&
+        (meaningfulDrafts.length > 0 || Object.keys(editedRows).length > 0);
 
     useEffect(() => {
+        if (!canWriteTodos) {
+            const emptyDraft = getEmptyEditingDraft();
+            setDrafts(emptyDraft.drafts);
+            setEditedRows(emptyDraft.editedRows);
+            setEditedRowVersions(emptyDraft.editedRowVersions);
+            setFormError(null);
+            persistEditingDraft(storageKey, emptyDraft);
+            return;
+        }
+
         const nextDraft = loadEditingDraft(storageKey);
 
         setDrafts(nextDraft.drafts);
         setEditedRows(nextDraft.editedRows);
         setEditedRowVersions(nextDraft.editedRowVersions);
         setFormError(null);
-    }, [storageKey]);
+    }, [canWriteTodos, storageKey]);
 
     useEffect(() => {
+        if (!canWriteTodos) {
+            persistEditingDraft(storageKey, getEmptyEditingDraft());
+            return;
+        }
+
         persistEditingDraft(storageKey, {
             drafts: meaningfulDrafts,
             editedRows,
             editedRowVersions,
         });
-    }, [editedRows, editedRowVersions, meaningfulDrafts, storageKey]);
+    }, [canWriteTodos, editedRows, editedRowVersions, meaningfulDrafts, storageKey]);
 
     function resetEditing() {
         setEditedRows({});
@@ -91,6 +108,7 @@ export function useTodoTableEditing({
     }
 
     function openNewTodoEditor() {
+        if (!canWriteTodos) return;
         setDrafts((prev) => [
             ...prev,
             createTodoInlineDraft(getDraftCategoryId()),
@@ -99,6 +117,7 @@ export function useTodoTableEditing({
     }
 
     function updateInlineDraft(id: string, patch: Partial<TodoFormState>) {
+        if (!canWriteTodos) return;
         setDrafts((prev) =>
             prev.map((draft) =>
                 draft.id === id ? { ...draft, ...patch } : draft
@@ -108,6 +127,7 @@ export function useTodoTableEditing({
     }
 
     function updateTodoRow(todo: TodoDto, patch: Partial<TodoFormState>) {
+        if (!canWriteTodos) return;
         setEditedRows((prev) => {
             const draft = prev[todo.id] ?? {
                 title: todo.title,
@@ -160,6 +180,7 @@ export function useTodoTableEditing({
     }
 
     function removeInlineDraft(id: string) {
+        if (!canWriteTodos) return;
         setDrafts((prev) => prev.filter((draft) => draft.id !== id));
         setFormError(null);
     }
@@ -182,6 +203,7 @@ export function useTodoTableEditing({
     }
 
     async function saveInlineTodo(deletedTodos: TodoDto[] = []) {
+        if (!canWriteTodos) return false;
         setFormError(null);
         const deletedTodoIds = new Set(deletedTodos.map((todo) => todo.id));
 
@@ -251,6 +273,7 @@ export function useTodoTableEditing({
 
     return {
         editing: {
+            canWriteTodos,
             editedRows,
             formError,
             drafts,

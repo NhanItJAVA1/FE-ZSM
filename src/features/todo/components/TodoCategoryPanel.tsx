@@ -10,6 +10,9 @@ interface TodoCategoryPanelProps {
     categoryName: string;
     counts: TodoCounts;
     createCategoryPending: boolean;
+    canCreateCategory: boolean;
+    canUpdateCategory: boolean;
+    canDeleteCategory: boolean;
     selectedCategoryFilter: CategoryFilter;
     onCategoryNameChange: (value: string) => void;
     onDeleteCategory: (category: TodoCategoryDto, taskCount: number) => void;
@@ -25,6 +28,9 @@ export default function TodoCategoryPanel({
     categoryName,
     counts,
     createCategoryPending,
+    canCreateCategory,
+    canUpdateCategory,
+    canDeleteCategory,
     selectedCategoryFilter,
     onCategoryNameChange,
     onDeleteCategory,
@@ -60,7 +66,7 @@ export default function TodoCategoryPanel({
                     </div>
                 </div>
 
-                <div className="todo-simple-category-create">
+                {canCreateCategory && <div className="todo-simple-category-create">
                     <button
                         type="button"
                         className={`todo-simple-category-create-trigger ${categoryFormOpen ? "active" : ""}`}
@@ -76,7 +82,7 @@ export default function TodoCategoryPanel({
                         )}
                     </button>
 
-                    {categoryFormOpen && (
+                    {categoryFormOpen && canCreateCategory && (
                         <form className="todo-simple-category-form" onSubmit={submitCategory}>
                             <input
                                 ref={inputRef}
@@ -100,7 +106,7 @@ export default function TodoCategoryPanel({
                             </button>
                         </form>
                     )}
-                </div>
+                </div>}
             </div>
 
             {categoryFormError && (
@@ -139,22 +145,22 @@ export default function TodoCategoryPanel({
                                 <small>{taskCount}</small>
                             </button>
                             <div className="todo-simple-category-actions">
-                                <button
+                                {canUpdateCategory && <button
                                     type="button"
                                     aria-label={`Đổi tên category ${category.name}`}
                                     title="Đổi tên category"
                                     onClick={() => onRenameCategory(category)}
                                 >
                                     <Pencil size={13} strokeWidth={2.3} />
-                                </button>
-                                <button
+                                </button>}
+                                {canDeleteCategory && <button
                                     type="button"
                                     aria-label={`Xóa category ${category.name}`}
                                     title="Xóa category"
                                     onClick={() => onDeleteCategory(category, taskCount)}
                                 >
                                     <Trash2 size={13} strokeWidth={2.3} />
-                                </button>
+                                </button>}
                             </div>
                         </article>
                     );

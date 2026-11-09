@@ -14,13 +14,24 @@ function moduleName(permission: PermissionDto) {
     return module?.replaceAll("-", " ") || "other";
 }
 
-export default function PermissionManagementPanel() {
+interface PermissionManagementPanelProps {
+    roleId?: number;
+    roleName?: string;
+}
+
+export default function PermissionManagementPanel({ roleId, roleName }: PermissionManagementPanelProps) {
     const dispatch = useAppDispatch();
     const queryClient = useQueryClient();
-    const rolesQuery = useQuery({ queryKey: QUERY_KEYS.rbacRoles, queryFn: rbacService.getRoles });
+    const rolesQuery = useQuery({
+        queryKey: QUERY_KEYS.rbacRoles,
+        queryFn: rbacService.getRoles,
+        enabled: roleId === undefined,
+    });
     const permissionsQuery = useQuery({ queryKey: QUERY_KEYS.rbacPermissions, queryFn: rbacService.getPermissions });
     const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
-    const role = rolesQuery.data?.find((item) => item.id === selectedRoleId) ?? rolesQuery.data?.[0];
+    const role = roleId === undefined
+        ? rolesQuery.data?.find((item) => item.id === selectedRoleId) ?? rolesQuery.data?.[0]
+        : { id: roleId, name: roleName ?? `Role ${roleId}`, description: "" };
     const selectedId = role?.id;
     const rolePermissionsQuery = useQuery({
         queryKey: selectedId ? QUERY_KEYS.rolePermissions(selectedId) : ["rbac", "role-permissions", "none"],
@@ -70,27 +81,27 @@ export default function PermissionManagementPanel() {
     }
 
     return (
-        <section className="rbac-card">
+        <section className={`rbac-card${roleId !== undefined ? " rbac-card-embedded" : ""}`}>
             <div className="rbac-section-heading">
                 <div>
-                    <h2>Permissions theo Role</h2>
-                    <p>Chọn Role rồi cấu hình quyền hiệu lực của Role đó.</p>
+                    <h2>Permissions · {role?.name ?? "Role"}</h2>
+                    <p>Cấu hình quyền hiệu lực được cấp cho Role này.</p>
                 </div>
                 {role && <button type="button" className="ghost-btn" onClick={() => void rolePermissionsQuery.refetch()}>Tải lại</button>}
             </div>
 
-            {rolesQuery.isLoading && <RbacLoading />}
-            {rolesQuery.isError && <RbacError error={rolesQuery.error} action="tải Roles" />}
-            {rolesQuery.data && rolesQuery.data.length === 0 && <RbacEmpty>Tạo Role trước khi cấu hình Permissions.</RbacEmpty>}
+            {roleId === undefined && rolesQuery.isLoading && <RbacLoading />}
+            {roleId === undefined && rolesQuery.isError && <RbacError error={rolesQuery.error} action="tải Roles" />}
+            {roleId === undefined && rolesQuery.data && rolesQuery.data.length === 0 && <RbacEmpty>Tạo Role trước khi cấu hình Permissions.</RbacEmpty>}
 
-            {rolesQuery.data && rolesQuery.data.length > 0 && (
+            {((roleId !== undefined && role !== undefined) || (roleId === undefined && rolesQuery.data && rolesQuery.data.length > 0)) && (
                 <>
-                    <label className="rbac-role-select">
+                    {roleId === undefined && rolesQuery.data && <label className="rbac-role-select">
                         Role
                         <select value={role?.id ?? ""} onChange={(event) => setSelectedRoleId(Number(event.target.value))}>
                             {rolesQuery.data.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
                         </select>
-                    </label>
+                    </label>}
 
                     <div className="rbac-replace-warning" role="note">
                         <strong>Lưu sẽ thay thế toàn bộ danh sách Permission hiện tại của Role.</strong>

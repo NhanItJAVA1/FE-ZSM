@@ -10,6 +10,7 @@ import { useTodoPageSize } from "./useTodoPageSize.js";
 import { useTodoSelection } from "./useTodoSelection.js";
 import { useTodoTableEditing } from "./useTodoTableEditing.js";
 import { useAppSelector } from "../../../stores/hook.js";
+import { RBAC_PERMISSIONS } from "../../../constants/rbacPermissions.js";
 
 const EMPTY_TODOS: TodoDto[] = [];
 
@@ -20,7 +21,12 @@ export function useTodoListPageModel() {
         noticeId.current += 1;
         setActionNotice({ id: noticeId.current, message });
     }, []);
-    const userId = useAppSelector((state) => state.auth.user?.id);
+    const authUser = useAppSelector((state) => state.auth.user);
+    const userId = authUser?.id;
+    const canWriteTodos = Boolean(authUser?.isSystemOwner || authUser?.permissions.includes(RBAC_PERMISSIONS.todoWrite));
+    const canCreateCategory = Boolean(authUser?.isSystemOwner || authUser?.permissions.includes(RBAC_PERMISSIONS.todoCategoryCreate));
+    const canUpdateCategory = Boolean(authUser?.isSystemOwner || authUser?.permissions.includes(RBAC_PERMISSIONS.todoCategoryUpdate));
+    const canDeleteCategory = Boolean(authUser?.isSystemOwner || authUser?.permissions.includes(RBAC_PERMISSIONS.todoCategoryDelete));
     const leftPanelRef = useRef<HTMLElement | null>(null);
     const pageSize = useTodoPageSize(leftPanelRef);
     const todoFilters = useTodoFilters(pageSize);
@@ -48,8 +54,9 @@ export function useTodoListPageModel() {
         todoFilters.selectedCategoryFilter === "uncategorized"
             ? visibleTodos.length
             : todosQuery.data?.totalItems ?? visibleTodos.length;
-    const todoSelection = useTodoSelection(visibleTodos);
+    const todoSelection = useTodoSelection(visibleTodos, canWriteTodos);
     const todoEditing = useTodoTableEditing({
+        canWriteTodos,
         selectedCategoryFilter: todoFilters.selectedCategoryFilter,
         saveTodos: mutations.saveTodos.mutateAsync,
         notifyActionError,
@@ -106,11 +113,13 @@ export function useTodoListPageModel() {
     }
 
     function openNewTodoEditor() {
+        if (!canWriteTodos) return;
         todoEditing.actions.openNewTodoEditor();
         todoFilters.actions.closeFilter();
     }
 
     async function saveTodoPanel() {
+        if (!canWriteTodos) return;
         const saved = await todoEditing.actions.saveInlineTodo(
             todoSelection.selectedRows
         );
@@ -128,18 +137,26 @@ export function useTodoListPageModel() {
             categoryName: todoDialogActions.categoryName,
             counts,
             createCategoryPending: mutations.createCategory.isPending,
+            canCreateCategory,
+            canUpdateCategory,
+            canDeleteCategory,
             selectedCategoryFilter: todoFilters.selectedCategoryFilter,
             onCategoryNameChange: todoDialogActions.actions.setCategoryName,
-            onDeleteCategory: todoDialogActions.actions.openDeleteCategoryDialog,
-            onRenameCategory: todoDialogActions.actions.openRenameCategoryDialog,
+            onDeleteCategory: canDeleteCategory ? todoDialogActions.actions.openDeleteCategoryDialog : () => undefined,
+            onRenameCategory: canUpdateCategory ? todoDialogActions.actions.openRenameCategoryDialog : () => undefined,
             onSelectCategory: selectTodoCategory,
-            onSubmitCategory: todoDialogActions.actions.submitCategory,
+            onSubmitCategory: canCreateCategory ? todoDialogActions.actions.submitCategory : async () => false,
         },
         dialogProps: {
             deleteCategoryPending: mutations.deleteCategory.isPending,
             categoryDialogError: todoDialogActions.categoryDialogError,
             deletePending: mutations.saveTodos.isPending,
-            dialog: todoDialogActions.todoDialog,
+            dialog: shouldHideTodoDialog(
+                todoDialogActions.todoDialog,
+                canWriteTodos,
+                canUpdateCategory,
+                canDeleteCategory
+            ) ? null : todoDialogActions.todoDialog,
             renameCategoryName: todoDialogActions.renameCategoryName,
             updateCategoryPending: mutations.updateCategory.isPending,
             onCancel: todoDialogActions.actions.closeDialog,
@@ -163,6 +180,7 @@ export function useTodoListPageModel() {
                 totalRows: visibleTodoCount,
             },
             editing: {
+                canWriteTodos,
                 editedRows: todoEditing.editing.editedRows,
                 formError: todoEditing.editing.formError,
                 drafts: todoEditing.editing.drafts,
@@ -178,7 +196,7 @@ export function useTodoListPageModel() {
             actions: {
                 onClearFilters: todoFilters.actions.clearTodoFilters,
                 onClearAdvancedFilters: todoFilters.actions.clearAdvancedFilters,
-                onDeleteSelected: todoDialogActions.actions.openDeleteSelectedDialog,
+                onDeleteSelected: canWriteTodos ? todoDialogActions.actions.openDeleteSelectedDialog : () => undefined,
                 onAddDraft: openNewTodoEditor,
                 onResetForm: resetTodoPanel,
                 onSearchChange: todoFilters.actions.setSearch,
@@ -197,6 +215,18 @@ export function useTodoListPageModel() {
             },
         },
     };
+}
+
+function shouldHideTodoDialog(
+    dialog: ReturnType<typeof useTodoDialogActions>["todoDialog"],
+    canWriteTodos: boolean,
+    canUpdateCategory: boolean,
+    canDeleteCategory: boolean
+) {
+    if (!dialog) return false;
+    if ((dialog.type === "deleteSelected" || dialog.type === "discardChanges") && !canWriteTodos) return true;
+    if (dialog.type === "renameCategory" && !canUpdateCategory) return true;
+    return dialog.type === "deleteCategory" && !canDeleteCategory;
 }
 
 function getVisibleTodos(todos: TodoDto[], selectedCategoryFilter: CategoryFilter) {

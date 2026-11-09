@@ -29,6 +29,7 @@ export interface TodoPanelSelection {
 }
 
 export interface TodoPanelEditing {
+    canWriteTodos: boolean;
     editedRows: Record<number, TodoFormState>;
     formError: string | null;
     drafts: TodoInlineDraft[];

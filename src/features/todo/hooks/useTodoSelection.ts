@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { TodoDto } from "../types.js";
 
-export function useTodoSelection(visibleTodos: TodoDto[]) {
+export function useTodoSelection(visibleTodos: TodoDto[], enabled = true) {
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
     const selectedRows = useMemo(
@@ -11,6 +11,10 @@ export function useTodoSelection(visibleTodos: TodoDto[]) {
 
     useEffect(() => {
         setSelectedIds((previous) => {
+            if (!enabled) {
+                return [];
+            }
+
             const next = previous.filter((id) =>
                 visibleTodos.some((todo) => todo.id === id)
             );
@@ -24,17 +28,19 @@ export function useTodoSelection(visibleTodos: TodoDto[]) {
 
             return next;
         });
-    }, [visibleTodos]);
+    }, [enabled, visibleTodos]);
 
     function clearSelection() {
         setSelectedIds([]);
     }
 
     function selectPage() {
+        if (!enabled) return;
         setSelectedIds(visibleTodos.map((todo) => todo.id));
     }
 
     function toggleSelection(id: number) {
+        if (!enabled) return;
         setSelectedIds((prev) =>
             prev.includes(id)
                 ? prev.filter((selectedId) => selectedId !== id)

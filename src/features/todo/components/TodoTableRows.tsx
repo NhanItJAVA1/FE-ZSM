@@ -124,6 +124,7 @@ export function TodoDraftRow({
 }
 
 interface TodoRowProps {
+    canWrite: boolean;
     categories: TodoPanelData["categories"];
     editedRows: Record<number, TodoFormState>;
     isDeleteSelected: boolean;
@@ -133,6 +134,7 @@ interface TodoRowProps {
 }
 
 export function TodoRow({
+    canWrite,
     categories,
     editedRows,
     isDeleteSelected,
@@ -140,7 +142,7 @@ export function TodoRow({
     onUpdateRow,
     onToggleSelection,
 }: TodoRowProps) {
-    const rowDraft = editedRows[todo.id];
+    const rowDraft = canWrite ? editedRows[todo.id] : undefined;
     const rowValues = rowDraft ?? {
         title: todo.title,
         description: todo.description ?? "",
@@ -155,7 +157,7 @@ export function TodoRow({
         >
             <div className="todo-card-body">
                 <div className="todo-card-name">
-                    <button
+                    {canWrite ? <button
                         type="button"
                         className={`todo-delete-checkbox ${isDeleteSelected ? "active" : ""}`}
                         title={isDeleteSelected ? "Bỏ chọn task" : "Chọn task để xóa"}
@@ -163,12 +165,13 @@ export function TodoRow({
                         onClick={() => onToggleSelection(todo.id)}
                     >
                         {isDeleteSelected && <Check size={13} strokeWidth={2.6} />}
-                    </button>
+                    </button> : <span className="todo-delete-checkbox-spacer" aria-hidden="true" />}
                     <textarea
                         className="todo-inline-field todo-inline-field--strong"
                         value={rowValues.title}
                         placeholder="Task name"
                         rows={2}
+                        disabled={!canWrite}
                         onChange={(event) =>
                             onUpdateRow(todo, {
                                 title: event.target.value,
@@ -182,6 +185,7 @@ export function TodoRow({
                         value={rowValues.description}
                         placeholder="Description"
                         rows={2}
+                        disabled={!canWrite}
                         onChange={(event) =>
                             onUpdateRow(todo, {
                                 description: event.target.value,
@@ -195,6 +199,7 @@ export function TodoRow({
                         type="datetime-local"
                         value={rowValues.dueDate}
                         placeholder={formatShortDate(todo.dueDate)}
+                        disabled={!canWrite}
                         onChange={(event) =>
                             onUpdateRow(todo, {
                                 dueDate: event.target.value,
@@ -206,6 +211,7 @@ export function TodoRow({
                     <select
                         className="todo-inline-field todo-inline-field--label"
                         value={rowValues.priority}
+                        disabled={!canWrite}
                         onChange={(event) =>
                             onUpdateRow(todo, {
                                 priority: event.target.value as TodoPriority,
@@ -221,6 +227,7 @@ export function TodoRow({
                     <select
                         className="todo-inline-field todo-inline-field--label"
                         value={rowValues.categoryId}
+                        disabled={!canWrite}
                         onChange={(event) =>
                             onUpdateRow(todo, {
                                 categoryId: event.target.value,

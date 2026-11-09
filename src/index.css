@@ -2532,6 +2532,8 @@ button:disabled {
 .todo-delete-checkbox--head {
   margin-left: -6px;
 }
+.todo-delete-checkbox-spacer { display: inline-block; width: 28px; height: 28px; flex: 0 0 28px; }
+.todo-readonly-note { margin: 0; color: var(--muted); font-size: 12px; }
 
 .todo-delete-checkbox--draft {
   color: var(--accent);
@@ -3419,6 +3421,9 @@ button:disabled {
   align-items: start;
   gap: 14px;
 }
+.rbac-panel-grid > .rbac-editor-card,
+.rbac-panel-grid > .rbac-user-editor-card { grid-column: 1 / -1; }
+.rbac-card-embedded { padding: 16px 0 0; border: 0; box-shadow: none; }
 
 .rbac-card {
   min-width: 0;
@@ -3447,7 +3452,9 @@ button:disabled {
 
 .rbac-role-list,
 .rbac-permission-groups,
-.rbac-user-role-list { display: grid; gap: 10px; }
+.rbac-user-role-list,
+.rbac-user-list,
+.rbac-effective-permissions { display: grid; gap: 10px; }
 .rbac-role-row {
   padding: 12px;
   border: 1px solid var(--border);
@@ -3510,6 +3517,29 @@ button:disabled {
 .rbac-footer-actions button { min-height: 38px; padding: 0 14px; }
 .rbac-user-role-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .rbac-user-summary { margin: -4px 0 14px; }
+.rbac-create-permissions {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+}
+.rbac-create-permissions legend { padding: 0 6px; font-weight: 700; }
+.rbac-user-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.rbac-user-row p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+.rbac-user-edit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.rbac-user-edit-grid > section { min-width: 0; }
+.rbac-user-edit-grid h3 { margin: 0 0 12px; }
+.rbac-effective-permissions { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; padding-left: 20px; }
+.rbac-effective-permissions li { overflow-wrap: anywhere; color: var(--muted); font-size: 12px; }
 
 @media (max-width: 860px) {
   .rbac-panel-grid { grid-template-columns: 1fr; }
@@ -3519,7 +3549,8 @@ button:disabled {
   .rbac-card { padding: 13px; }
   .rbac-role-row { align-items: flex-start; flex-direction: column; }
   .rbac-row-actions { width: 100%; justify-content: flex-start; }
-  .rbac-permission-list, .rbac-user-role-list { grid-template-columns: 1fr; }
+  .rbac-permission-list, .rbac-user-role-list, .rbac-user-edit-grid, .rbac-effective-permissions { grid-template-columns: 1fr; }
+  .rbac-user-row { align-items: flex-start; }
   .rbac-tabs { overflow-x: auto; }
   .rbac-tabs button { flex: 0 0 auto; }
   .rbac-footer-actions { align-items: flex-start; flex-direction: column; }

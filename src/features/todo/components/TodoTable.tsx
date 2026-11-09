@@ -29,7 +29,7 @@ export default function TodoTable({
         totalRows,
     } = data;
     const { editedRows, formError, drafts } = editing;
-    const showDrafts = drafts.length > 0;
+    const showDrafts = editing.canWriteTodos && drafts.length > 0;
     const showTaskTable = totalRows > 0 || showDrafts;
     const hasSelectedRows = selectedIds.length > 0;
 
@@ -41,7 +41,7 @@ export default function TodoTable({
 
                     {!loading && totalRows === 0 && !showDrafts && (
                         <div className="empty-state empty-state--composed">
-                            <p className="empty-state-desc">Hãy tạo task đầu tiên!</p>
+                            <p className="empty-state-desc">{editing.canWriteTodos ? "Hãy tạo task đầu tiên!" : "Chưa có Todo để hiển thị."}</p>
                             {(filters.search || filters.filterActive) && (
                                 <button
                                     type="button"
@@ -58,7 +58,7 @@ export default function TodoTable({
                         <div className="todo-task-list">
                             <div className="todo-task-table-head">
                                 <span className="todo-task-name-head">
-                                    <button
+                                    {editing.canWriteTodos ? <button
                                         type="button"
                                         className={`todo-delete-checkbox todo-delete-checkbox--head ${hasSelectedRows ? "active" : ""}`}
                                         title={hasSelectedRows ? "Bỏ chọn tất cả" : "Chọn tất cả task trên trang"}
@@ -72,7 +72,7 @@ export default function TodoTable({
                                         {hasSelectedRows && (
                                             <X size={13} strokeWidth={2.5} />
                                         )}
-                                    </button>
+                                    </button> : <span className="todo-delete-checkbox-spacer" aria-hidden="true" />}
                                     <span>Task Name</span>
                                 </span>
                                 <span>Description</span>
@@ -82,7 +82,7 @@ export default function TodoTable({
                             {formError && (
                                 <p className="todo-inline-error">{formError}</p>
                             )}
-                            {drafts.map((draft, index) => (
+                            {editing.canWriteTodos && drafts.map((draft, index) => (
                                 <TodoDraftRow
                                     key={draft.id}
                                     categories={categories}
@@ -99,6 +99,7 @@ export default function TodoTable({
                                     categories={categories}
                                     editedRows={editedRows}
                                     isDeleteSelected={selectedIds.includes(todo.id)}
+                                    canWrite={editing.canWriteTodos}
                                     todo={todo}
                                     onUpdateRow={actions.onUpdateRow}
                                     onToggleSelection={actions.onToggleSelection}
