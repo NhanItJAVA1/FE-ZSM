@@ -93,6 +93,21 @@ dl {
   flex-wrap: nowrap;
 }
 
+.site-header-greeting {
+  max-width: 220px;
+  overflow: hidden;
+  padding: 6px 10px;
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  backdrop-filter: blur(10px);
+}
+
 .site-header-rail {
   overflow: hidden;
   border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);

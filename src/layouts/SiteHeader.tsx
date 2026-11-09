@@ -80,6 +80,12 @@ export default function SiteHeader() {
                 )}
             </div>
 
+            {user && (
+                <span className="site-header-greeting" title={user.displayName || user.username}>
+                    Hi, {user.displayName || user.username}
+                </span>
+            )}
+
         </header>
     );
 }
