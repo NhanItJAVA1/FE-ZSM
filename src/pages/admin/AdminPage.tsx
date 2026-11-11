@@ -1,15 +1,18 @@
 import AppLayout from "../../layouts/AppLayout.js";
 import PageHeading from "../../layouts/PageHeading.js";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import RoleManagementPanel from "../../features/rbac/components/RoleManagementPanel.js";
 import UserRoleAssignmentPanel from "../../features/rbac/components/UserRoleAssignmentPanel.js";
 import { useAppSelector } from "../../stores/hook.js";
 import { RBAC_PERMISSIONS } from "../../constants/rbacPermissions.js";
+import { RbacToast, type RbacToastNotice, type RbacToastType } from "../../features/rbac/components/RbacStates.js";
 
 type AdminSection = "roles" | "users";
 
 export default function AdminPage() {
     const [section, setSection] = useState<AdminSection>("roles");
+    const [toast, setToast] = useState<RbacToastNotice | null>(null);
+    const toastId = useRef(0);
     const { user } = useAppSelector((state) => state.auth);
     const isSystemOwner = user?.isSystemOwner ?? false;
     const permissions = new Set(user?.permissions ?? []);
@@ -24,6 +27,11 @@ export default function AdminPage() {
         ...(hasPermission(RBAC_PERMISSIONS.usersManageRoles) ? ["users" as const] : []),
     ];
     const activeSection = visibleSections.includes(section) ? section : visibleSections[0];
+    const showToast = useCallback((message: string, type: RbacToastType = "success") => {
+        toastId.current += 1;
+        setToast({ id: toastId.current, message, type });
+    }, []);
+    const dismissToast = useCallback(() => setToast(null), []);
 
     return (
         <AppLayout>
@@ -53,12 +61,14 @@ export default function AdminPage() {
                                 canUpdateRole={canUpdateRole}
                                 canDeleteRole={canDeleteRole}
                                 canManagePermissions={canManagePermissions}
+                                onToast={showToast}
                             />
                         )}
-                        {activeSection === "users" && <UserRoleAssignmentPanel />}
+                        {activeSection === "users" && <UserRoleAssignmentPanel onToast={showToast} />}
                     </>
                 )}
             </section>
+            <RbacToast notice={toast} onDismiss={dismissToast} />
         </AppLayout>
     );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../../../constants/queryKeys.js";
 import { rbacService } from "../../../services/api/rbacService.js";
 import { authService } from "../../../services/api/authService.js";
@@ -7,8 +7,10 @@ import { useAppDispatch, useAppSelector } from "../../../stores/hook.js";
 import { setAuth } from "../../../stores/slices/authSlice.js";
 import { getApiErrorCode, getApiErrorMessage } from "../apiErrors.js";
 import { RbacEmpty, RbacError, RbacLoading } from "./RbacStates.js";
+import type { RbacToastType } from "./RbacStates.js";
+import type { PermissionDto } from "../types.js";
 
-export default function UserRoleAssignmentPanel() {
+export default function UserRoleAssignmentPanel({ onToast }: { onToast: (message: string, type?: RbacToastType) => void }) {
     const dispatch = useAppDispatch();
     const currentUserId = useAppSelector((state) => state.auth.user?.id);
     const queryClient = useQueryClient();
@@ -21,8 +23,37 @@ export default function UserRoleAssignmentPanel() {
         queryFn: () => rbacService.getUserRoles(user!.id),
         enabled: user !== undefined,
     });
-    const savedIds = useMemo(() => userRolesQuery.data?.map((role) => role.id) ?? [], [userRolesQuery.data]);
     const [selectedRoleIds, setSelectedRoleIds] = useState<number[]>([]);
+    const selectedRoles = useMemo(
+        () => (rolesQuery.data ?? []).filter((role) => selectedRoleIds.includes(role.id)),
+        [rolesQuery.data, selectedRoleIds]
+    );
+    const rolePermissionQueries = useQueries({
+        queries: selectedRoles.map((role) => ({
+            queryKey: QUERY_KEYS.rolePermissions(role.id),
+            queryFn: () => rbacService.getRolePermissions(role.id),
+        })),
+    });
+    const effectivePermissions = useMemo(() => {
+        const permissionsById = new Map<number, { permission: PermissionDto; roles: string[] }>();
+        selectedRoles.forEach((role, index) => {
+            for (const permission of rolePermissionQueries[index]?.data ?? []) {
+                const existing = permissionsById.get(permission.id);
+                if (existing) {
+                    existing.roles.push(role.name);
+                } else {
+                    permissionsById.set(permission.id, { permission, roles: [role.name] });
+                }
+            }
+        });
+
+        return [...permissionsById.values()].sort((left, right) =>
+            (left.permission.description || left.permission.code).localeCompare(
+                right.permission.description || right.permission.code
+            )
+        );
+    }, [rolePermissionQueries, selectedRoles]);
+    const savedIds = useMemo(() => userRolesQuery.data?.map((role) => role.id) ?? [], [userRolesQuery.data]);
     const [saveError, setSaveError] = useState<string | null>(null);
     const [lastAdminError, setLastAdminError] = useState(false);
 
@@ -43,6 +74,7 @@ export default function UserRoleAssignmentPanel() {
                 queryClient.invalidateQueries({ queryKey: QUERY_KEYS.userRoles(user!.id) }),
                 queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users }),
             ]);
+            onToast(`Đã cập nhật Roles cho User “${user!.displayName || user!.username}”.`);
             if (user!.id === currentUserId) {
                 try {
                     dispatch(setAuth(await authService.refreshSession()));
@@ -80,15 +112,18 @@ export default function UserRoleAssignmentPanel() {
                 {usersQuery.data && usersQuery.data.length > 0 && (
                     <div className="rbac-user-list">
                         {usersQuery.data.map((item) => (
-                            <article className="rbac-user-row" key={item.id}>
+                            <button
+                                type="button"
+                                className="rbac-user-row"
+                                key={item.id}
+                                onClick={() => editUser(item.id)}
+                                aria-label={`Sửa quyền của ${item.displayName || item.username}`}
+                            >
                                 <div className="rbac-role-copy">
                                     <strong>{item.displayName || item.username}</strong>
                                     <p>{item.email} · {item.roles.join(", ") || item.role}</p>
                                 </div>
-                                <button type="button" className="ghost-btn" onClick={() => editUser(item.id)}>
-                                    {editingUserId === item.id ? "Đang sửa" : "Sửa"}
-                                </button>
-                            </article>
+                            </button>
                         ))}
                     </div>
                 )}
@@ -98,63 +133,88 @@ export default function UserRoleAssignmentPanel() {
                 <section className="rbac-card rbac-user-editor-card">
                     <div className="rbac-section-heading">
                         <div>
-                            <h2>Quyền của {user.displayName || user.username}</h2>
-                            <p>Permission được kế thừa từ các Role. Thay đổi Role bên dưới để cập nhật quyền hiệu lực.</p>
+                            <h2>Chỉnh quyền truy cập</h2>
+                            <p>{user.displayName || user.username} · {user.email}</p>
                         </div>
-                        <button type="button" className="ghost-btn" onClick={() => setEditingUserId(null)}>Đóng</button>
                     </div>
 
                     <div className="rbac-user-edit-grid">
                         <section>
-                            <h3>Roles</h3>
+                            <div className="rbac-user-subsection-heading">
+                                <h3>Roles</h3>
+                                <button type="button" className="rbac-link-button" onClick={() => setEditingUserId(null)}>← Quay lại</button>
+                            </div>
                             {rolesQuery.isLoading && <RbacLoading />}
                             {rolesQuery.isError && <RbacError error={rolesQuery.error} action="tải Roles" />}
                             {rolesQuery.data?.length === 0 && <RbacEmpty>Chưa có Role để gán.</RbacEmpty>}
                             {userRolesQuery.isLoading && <RbacLoading />}
                             {userRolesQuery.isError && <RbacError error={userRolesQuery.error} action="tải Roles của User" />}
                             {rolesQuery.data && rolesQuery.data.length > 0 && !userRolesQuery.isLoading && !userRolesQuery.isError && (
-                                <div className="rbac-user-role-list">
-                                    {rolesQuery.data.map((role) => (
-                                        <label className="rbac-permission-item" key={role.id}>
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedRoleIds.includes(role.id)}
-                                                onChange={(event) => setSelectedRoleIds((current) => event.target.checked
-                                                    ? [...new Set([...current, role.id])]
-                                                    : current.filter((id) => id !== role.id))}
-                                            />
-                                            <span>
-                                                <strong>{role.name}</strong>
-                                                <small>{role.description || "Chưa có mô tả"}</small>
-                                            </span>
-                                        </label>
-                                    ))}
+                                <div className="rbac-user-table-wrap">
+                                    <table className="rbac-user-table rbac-user-roles-table">
+                                        <thead><tr><th scope="col">Role</th><th scope="col">Mô tả</th></tr></thead>
+                                        <tbody>
+                                            {rolesQuery.data.map((role) => (
+                                                <tr key={role.id}>
+                                                    <td>
+                                                        <label className="rbac-role-check">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={selectedRoleIds.includes(role.id)}
+                                                                onChange={(event) => setSelectedRoleIds((current) => event.target.checked
+                                                                    ? [...new Set([...current, role.id])]
+                                                                    : current.filter((id) => id !== role.id))}
+                                                            />
+                                                            <strong>{role.name}</strong>
+                                                        </label>
+                                                    </td>
+                                                    <td>{role.description || "—"}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                             )}
                         </section>
 
                         <section>
-                            <h3>Permissions hiệu lực</h3>
-                            {user.permissions.length > 0 ? (
-                                <ul className="rbac-effective-permissions">
-                                    {user.permissions.map((permission) => <li key={permission}>{permission}</li>)}
-                                </ul>
-                            ) : <RbacEmpty>User chưa có Permission hiệu lực.</RbacEmpty>}
-                            <p className="rbac-user-summary">Để chỉnh Permission, mở tab Roles và cập nhật danh sách Permission của Role tương ứng.</p>
+                            <h3>Quyền hiệu lực dự kiến</h3>
+                            {userRolesQuery.isLoading && <RbacLoading />}
+                            {userRolesQuery.isError && <RbacError error={userRolesQuery.error} action="tải Roles của User" />}
+                            {!userRolesQuery.isLoading && selectedRoles.length === 0 && <RbacEmpty>Tick Role để xem Permissions tương ứng.</RbacEmpty>}
+                            {rolePermissionQueries.map((query, index) => query.isLoading && <RbacLoading key={selectedRoles[index]?.id ?? index} />)}
+                            {rolePermissionQueries.map((query, index) => query.isError && <RbacError key={selectedRoles[index]?.id ?? index} error={query.error} action={`tải Permissions của ${selectedRoles[index]?.name ?? "Role"}`} />)}
+                            {selectedRoles.length > 0 && !rolePermissionQueries.some((query) => query.isLoading || query.isError) && effectivePermissions.length === 0 && <RbacEmpty>Các Role đã chọn chưa có Permission.</RbacEmpty>}
+                            {effectivePermissions.length > 0 && (
+                                <div className="rbac-user-table-wrap">
+                                    <table className="rbac-user-table rbac-effective-permissions-table">
+                                        <thead><tr><th scope="col">Permission</th><th scope="col">Được cấp bởi</th></tr></thead>
+                                        <tbody>
+                                            {effectivePermissions.map(({ permission, roles }) => (
+                                                <tr key={permission.id}>
+                                                    <td>{permission.description || permission.code}</td>
+                                                    <td><div className="rbac-role-source-list">{roles.map((roleName) => <span key={roleName}>{roleName}</span>)}</div></td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                            <p className="rbac-user-summary">Quyền được cộng gộp từ các Role đã chọn; cột bên phải cho biết từng quyền đến từ Role nào.</p>
                         </section>
                     </div>
 
                     {selectedRoleIds.length === 0 && <p className="rbac-inline-error" role="alert">Phải chọn ít nhất một Role trước khi lưu.</p>}
                     {lastAdminError && <p className="rbac-inline-error" role="alert">Không thể bỏ các quyền quản trị RBAC khỏi Admin cuối cùng.</p>}
                     {saveError && !lastAdminError && <p className="rbac-inline-error" role="alert">{saveError}</p>}
-                    <div className="rbac-footer-actions">
-                        <span>{selectedRoleIds.length} Role được chọn</span>
+                    <div className="rbac-footer-actions rbac-user-save-actions">
                         <button
                             type="button"
                             className="rbac-primary-button"
                             disabled={!dirty || selectedRoleIds.length === 0 || saveMutation.isPending || rolesQuery.isLoading || rolesQuery.isError || userRolesQuery.isLoading || userRolesQuery.isError}
                             onClick={() => saveMutation.mutate()}
                         >{saveMutation.isPending ? "Đang lưu…" : "Lưu thay đổi"}</button>
+                        <span>{selectedRoleIds.length} Role được chọn</span>
                     </div>
                 </section>
             )}

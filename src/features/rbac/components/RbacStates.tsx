@@ -1,4 +1,43 @@
+import { useEffect } from "react";
+import { X } from "lucide-react";
 import { getApiErrorMessage, isApiStatus } from "../apiErrors.js";
+
+export type RbacToastType = "success" | "error";
+
+export interface RbacToastNotice {
+    id: number;
+    message: string;
+    type: RbacToastType;
+}
+
+export function RbacToast({
+    notice,
+    onDismiss,
+}: {
+    notice: RbacToastNotice | null;
+    onDismiss: () => void;
+}) {
+    useEffect(() => {
+        if (!notice) return;
+        const timeout = window.setTimeout(onDismiss, 4000);
+        return () => window.clearTimeout(timeout);
+    }, [notice, onDismiss]);
+
+    if (!notice) return null;
+
+    return (
+        <aside
+            className={`rbac-toast rbac-toast--${notice.type}`}
+            role={notice.type === "success" ? "status" : "alert"}
+            aria-live={notice.type === "success" ? "polite" : "assertive"}
+        >
+            <p>{notice.message}</p>
+            <button type="button" aria-label="Đóng thông báo" onClick={onDismiss}>
+                <X size={16} />
+            </button>
+        </aside>
+    );
+}
 
 export function RbacError({ error, action }: { error: unknown; action: string }) {
     return (

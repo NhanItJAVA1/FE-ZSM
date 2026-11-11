@@ -8,6 +8,7 @@ import { setAuth } from "../../../stores/slices/authSlice.js";
 import { getApiErrorMessage } from "../apiErrors.js";
 import type { PermissionDto } from "../types.js";
 import { RbacEmpty, RbacError, RbacLoading } from "./RbacStates.js";
+import type { RbacToastType } from "./RbacStates.js";
 
 function moduleName(permission: PermissionDto) {
     const [module] = permission.code.split(".");
@@ -17,9 +18,10 @@ function moduleName(permission: PermissionDto) {
 interface PermissionManagementPanelProps {
     roleId?: number;
     roleName?: string;
+    onToast: (message: string, type?: RbacToastType) => void;
 }
 
-export default function PermissionManagementPanel({ roleId, roleName }: PermissionManagementPanelProps) {
+export default function PermissionManagementPanel({ roleId, roleName, onToast }: PermissionManagementPanelProps) {
     const dispatch = useAppDispatch();
     const queryClient = useQueryClient();
     const rolesQuery = useQuery({
@@ -65,6 +67,7 @@ export default function PermissionManagementPanel({ roleId, roleName }: Permissi
         onSuccess: async () => {
             setSaveError(null);
             await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.rolePermissions(selectedId!) });
+            onToast(`Đã cập nhật Permissions cho Role “${role?.name ?? ""}”.`);
             try {
                 dispatch(setAuth(await authService.refreshSession()));
             } catch {
@@ -139,8 +142,8 @@ export default function PermissionManagementPanel({ roleId, roleName }: Permissi
                                                         onChange={(event) => togglePermission(permission.id, event.target.checked)}
                                                     />
                                                     <span>
-                                                        <strong>{permission.code}</strong>
-                                                        <small>{permission.description}</small>
+                                                    <strong>{permission.description || permission.code}</strong>
+                                                    <small>{permission.code}</small>
                                                     </span>
                                                 </label>
                                             ))}
