@@ -131,15 +131,12 @@ export default function UserRoleAssignmentPanel({ onToast }: { onToast: (message
 
             {user && (
                 <section className="rbac-card rbac-user-editor-card">
-                    <div className="rbac-section-heading">
-                        <div>
-                            <h2>Chỉnh quyền truy cập</h2>
-                            <p>{user.displayName || user.username} · {user.email}</p>
-                        </div>
-                    </div>
-
                     <div className="rbac-user-edit-grid">
                         <section>
+                            <div className="rbac-user-editor-title">
+                                <h2>Chỉnh quyền truy cập</h2>
+                                <p>{user.displayName || user.username} · {user.email}</p>
+                            </div>
                             <div className="rbac-user-subsection-heading">
                                 <h3>Roles</h3>
                                 <button type="button" className="rbac-link-button" onClick={() => setEditingUserId(null)}>← Quay lại</button>
@@ -178,7 +175,6 @@ export default function UserRoleAssignmentPanel({ onToast }: { onToast: (message
                         </section>
 
                         <section>
-                            <h3>Quyền hiệu lực dự kiến</h3>
                             {userRolesQuery.isLoading && <RbacLoading />}
                             {userRolesQuery.isError && <RbacError error={userRolesQuery.error} action="tải Roles của User" />}
                             {!userRolesQuery.isLoading && selectedRoles.length === 0 && <RbacEmpty>Tick Role để xem Permissions tương ứng.</RbacEmpty>}
@@ -200,7 +196,6 @@ export default function UserRoleAssignmentPanel({ onToast }: { onToast: (message
                                     </table>
                                 </div>
                             )}
-                            <p className="rbac-user-summary">Quyền được cộng gộp từ các Role đã chọn; cột bên phải cho biết từng quyền đến từ Role nào.</p>
                         </section>
                     </div>
 

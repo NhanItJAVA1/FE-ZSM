@@ -3480,6 +3480,9 @@ button:disabled {
 .rbac-section-heading h2 { margin: 0; color: var(--text-h); font-size: 18px; }
 .rbac-section-heading p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
 .rbac-section-heading .ghost-btn { flex: 0 0 auto; }
+.rbac-user-editor-title { margin-bottom: 16px; }
+.rbac-user-editor-title h2 { margin: 0; color: var(--text-h); font-size: 18px; }
+.rbac-user-editor-title p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
 
 .rbac-role-list,
 .rbac-permission-groups,
