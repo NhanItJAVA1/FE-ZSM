@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../../../constants/queryKeys.js";
 import { rbacService } from "../../../services/api/rbacService.js";
@@ -47,6 +47,16 @@ export default function RoleManagementPanel({
     const [description, setDescription] = useState("");
     const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>([]);
     const [formError, setFormError] = useState<string | null>(null);
+    const createPermissionGroups = useMemo(() => {
+        const groups = new Map<string, PermissionDto[]>();
+        for (const permission of permissionsQuery.data ?? []) {
+            const [module] = permission.code.split(".");
+            const groupName = module?.replaceAll("-", " ") || "other";
+            groups.set(groupName, [...(groups.get(groupName) ?? []), permission]);
+        }
+
+        return [...groups.entries()].sort(([left], [right]) => left.localeCompare(right));
+    }, [permissionsQuery.data]);
 
     const refreshRoles = () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.rbacRoles });
     const saveMutation = useMutation({
@@ -164,8 +174,7 @@ export default function RoleManagementPanel({
                         <p>Tạo vai trò, quản lý thông tin và Permissions được cấp cho từng Role.</p>
                     </div>
                     <div className="rbac-row-actions">
-                        {canCreateRole && <button type="button" className="rbac-primary-button" onClick={beginCreate}>Tạo Role</button>}
-                        {canReadRoles && <button type="button" className="ghost-btn" onClick={() => void rolesQuery.refetch()}>Làm mới</button>}
+                        {canCreateRole && <button type="button" className="rbac-primary-button" onClick={beginCreate} aria-label="Tạo Role" title="Tạo Role">+</button>}
                     </div>
                 </div>
                 {canReadRoles && rolesQuery.isLoading && <RbacLoading />}
@@ -239,19 +248,28 @@ export default function RoleManagementPanel({
                             {permissionsQuery.isError && <RbacError error={permissionsQuery.error} action="tải Permissions" />}
                             {permissionsQuery.data?.length === 0 && <RbacEmpty>Backend chưa có Permissions.</RbacEmpty>}
                             {permissionsQuery.data && permissionsQuery.data.length > 0 && (
-                                <div className="rbac-user-role-list">
-                                    {permissionsQuery.data.map((permission) => (
-                                        <label className="rbac-permission-item" key={permission.id}>
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedPermissionIds.includes(permission.id)}
-                                                onChange={(event) => toggleCreatePermission(permission, event.target.checked)}
-                                            />
-                                            <span>
-                                                <strong>{permission.description || permission.code}</strong>
-                                                <small>{permission.code}</small>
-                                            </span>
-                                        </label>
+                                <div className="rbac-permission-groups">
+                                    {createPermissionGroups.map(([groupName, permissions]) => (
+                                        <section className="rbac-permission-group" key={groupName}>
+                                            <div className="rbac-group-heading">
+                                                <h3>{groupName}</h3>
+                                            </div>
+                                            <div className="rbac-permission-list">
+                                                {permissions.map((permission) => (
+                                                    <label className="rbac-permission-item" key={permission.id}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedPermissionIds.includes(permission.id)}
+                                                            onChange={(event) => toggleCreatePermission(permission, event.target.checked)}
+                                                        />
+                                                        <span>
+                                                            <strong>{permission.description || permission.code}</strong>
+                                                            <small>{permission.code}</small>
+                                                        </span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </section>
                                     ))}
                                 </div>
                             )}

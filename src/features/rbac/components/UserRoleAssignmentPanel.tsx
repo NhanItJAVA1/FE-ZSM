@@ -103,7 +103,6 @@ export default function UserRoleAssignmentPanel({ onToast }: { onToast: (message
                         <h2>Users</h2>
                         <p>Chọn User để thay Role và xem Permissions hiệu lực được kế thừa.</p>
                     </div>
-                    <button type="button" className="ghost-btn" onClick={() => void usersQuery.refetch()}>Làm mới</button>
                 </div>
 
                 {usersQuery.isLoading && <RbacLoading />}
