@@ -253,6 +253,16 @@ export default function RoleManagementPanel({
                                         <section className="rbac-permission-group" key={groupName}>
                                             <div className="rbac-group-heading">
                                                 <h3>{groupName}</h3>
+                                                <button
+                                                    type="button"
+                                                    className="rbac-link-button"
+                                                    onClick={() => setSelectedPermissionIds((current) => {
+                                                        const groupIds = permissions.map((permission) => permission.id);
+                                                        return permissions.every((permission) => current.includes(permission.id))
+                                                            ? current.filter((id) => !groupIds.includes(id))
+                                                            : [...new Set([...current, ...groupIds])];
+                                                    })}
+                                                >{permissions.every((permission) => selectedPermissionIds.includes(permission.id)) ? "Bỏ chọn" : "Chọn nhanh"}</button>
                                             </div>
                                             <div className="rbac-permission-list">
                                                 {permissions.map((permission) => (
