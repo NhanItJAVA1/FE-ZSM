@@ -13,7 +13,7 @@ import { USER_STORAGE_KEY, userStorage } from "./services/storage/user.js";
 
 let authBootstrapPromise: Promise<void> | null = null;
 const AUTH_REFRESH_COOLDOWN_KEY = "auth_session_refresh_at";
-const AUTH_REFRESH_COOLDOWN_MS = 10_000;
+const AUTH_REFRESH_COOLDOWN_MS = 5_000;
 
 export default function App() {
     const dispatch = useAppDispatch();

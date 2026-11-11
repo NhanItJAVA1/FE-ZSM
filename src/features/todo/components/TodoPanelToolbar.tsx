@@ -41,6 +41,7 @@ export default function TodoPanelToolbar({
 
     return (
         <div className="todo-panel-heading">
+            {editing.canWriteTodos ? <>
             <div className="todo-filter-row">
                 <input
                     value={search}
@@ -82,7 +83,7 @@ export default function TodoPanelToolbar({
                 )}
             </div>
 
-            {editing.canWriteTodos && <div className="todo-header-action-table" aria-label="Task actions">
+            <div className="todo-header-action-table" aria-label="Task actions">
                 <button
                     type="button"
                     className={`todo-header-action-btn todo-header-action-btn--save ${hasChanges ? "active" : ""}`}
@@ -113,9 +114,9 @@ export default function TodoPanelToolbar({
                 >
                     <Trash2 size={14} strokeWidth={2.4} />
                 </button>
-            </div>}
+            </div>
 
-            {editing.canWriteTodos && <div className="todo-panel-actions">
+            <div className="todo-panel-actions">
                 <button
                     type="button"
                     className="todo-door-trigger"
@@ -125,8 +126,8 @@ export default function TodoPanelToolbar({
                     <span>+</span>
                     <span className="sr-only">Tạo task mới</span>
                 </button>
-            </div>}
-            {!editing.canWriteTodos && <p className="todo-readonly-note">Bạn chỉ có thể xem Todo vì chưa được cấp quyền todo.write.</p>}
+            </div>
+            </> : <p className="todo-readonly-note">Bạn chỉ có thể xem Todo vì chưa được cấp quyền todo.write.</p>}
         </div>
     );
 }
