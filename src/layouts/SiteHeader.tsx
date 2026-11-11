@@ -36,6 +36,8 @@ export default function SiteHeader() {
     }
 
     const canSeeAdmin = isSystemOwner || permissionCodes.some((code) =>
+        code === RBAC_PERMISSIONS.rolesRead ||
+        code === RBAC_PERMISSIONS.permissionsRead ||
         code === RBAC_PERMISSIONS.rolesCreate ||
         code === RBAC_PERMISSIONS.rolesUpdate ||
         code === RBAC_PERMISSIONS.rolesDelete ||

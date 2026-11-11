@@ -19,9 +19,19 @@ interface PermissionManagementPanelProps {
     roleId?: number;
     roleName?: string;
     onToast: (message: string, type?: RbacToastType) => void;
+    onCancel?: () => void;
+    onBeforeSave?: () => Promise<boolean>;
+    hasAdditionalChanges?: boolean;
 }
 
-export default function PermissionManagementPanel({ roleId, roleName, onToast }: PermissionManagementPanelProps) {
+export default function PermissionManagementPanel({
+    roleId,
+    roleName,
+    onToast,
+    onCancel,
+    onBeforeSave,
+    hasAdditionalChanges = false,
+}: PermissionManagementPanelProps) {
     const dispatch = useAppDispatch();
     const queryClient = useQueryClient();
     const rolesQuery = useQuery({
@@ -63,11 +73,24 @@ export default function PermissionManagementPanel({ roleId, roleName, onToast }:
     const dirty = [...selectedPermissionIds].sort((a, b) => a - b).join(",") !== [...savedIds].sort((a, b) => a - b).join(",");
 
     const saveMutation = useMutation({
-        mutationFn: () => rbacService.replaceRolePermissions(selectedId!, { permissionIds: selectedPermissionIds }),
-        onSuccess: async () => {
+        mutationFn: async () => {
+            const roleDetailsUpdated = await onBeforeSave?.() ?? false;
+            try {
+                await rbacService.replaceRolePermissions(selectedId!, { permissionIds: selectedPermissionIds });
+            } catch (error) {
+                if (roleDetailsUpdated) {
+                    throw new Error(`Tên và mô tả Role đã lưu, nhưng không thể lưu Permissions: ${getApiErrorMessage(error, "cập nhật Permissions")}`);
+                }
+                throw error;
+            }
+            return roleDetailsUpdated;
+        },
+        onSuccess: async (roleDetailsUpdated) => {
             setSaveError(null);
             await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.rolePermissions(selectedId!) });
-            onToast(`Đã cập nhật Permissions cho Role “${role?.name ?? ""}”.`);
+            onToast(roleDetailsUpdated
+                ? `Đã lưu Role và Permissions cho “${role?.name ?? ""}”.`
+                : `Đã cập nhật Permissions cho Role “${role?.name ?? ""}”.`);
             try {
                 dispatch(setAuth(await authService.refreshSession()));
             } catch {
@@ -90,7 +113,6 @@ export default function PermissionManagementPanel({ roleId, roleName, onToast }:
                     <h2>Permissions · {role?.name ?? "Role"}</h2>
                     <p>Cấu hình quyền hiệu lực được cấp cho Role này.</p>
                 </div>
-                {role && <button type="button" className="ghost-btn" onClick={() => void rolePermissionsQuery.refetch()}>Tải lại</button>}
             </div>
 
             {roleId === undefined && rolesQuery.isLoading && <RbacLoading />}
@@ -157,12 +179,15 @@ export default function PermissionManagementPanel({ roleId, roleName, onToast }:
                     {saveError && <p className="rbac-inline-error" role="alert">{saveError}</p>}
                     <div className="rbac-footer-actions">
                         <span>{selectedPermissionIds.length} Permission được chọn</span>
-                        <button
-                            type="button"
-                            className="rbac-primary-button"
-                            disabled={!dirty || saveMutation.isPending || rolePermissionsQuery.isLoading || permissionsQuery.isLoading || permissionsQuery.isError || rolePermissionsQuery.isError}
-                            onClick={() => saveMutation.mutate()}
-                        >{saveMutation.isPending ? "Đang lưu…" : "Lưu Permissions"}</button>
+                        <div className="rbac-row-actions">
+                            {onCancel && <button type="button" className="ghost-btn" onClick={onCancel}>Hủy</button>}
+                            <button
+                                type="button"
+                                className="rbac-primary-button"
+                                disabled={(!dirty && !hasAdditionalChanges) || saveMutation.isPending || rolePermissionsQuery.isLoading || permissionsQuery.isLoading || permissionsQuery.isError || rolePermissionsQuery.isError}
+                                onClick={() => saveMutation.mutate()}
+                            >{saveMutation.isPending ? "Đang lưu…" : onBeforeSave ? "Lưu" : "Lưu Permissions"}</button>
+                        </div>
                     </div>
                 </>
             )}

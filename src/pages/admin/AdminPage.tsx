@@ -21,9 +21,10 @@ export default function AdminPage() {
     const canUpdateRole = hasPermission(RBAC_PERMISSIONS.rolesUpdate);
     const canDeleteRole = hasPermission(RBAC_PERMISSIONS.rolesDelete);
     const canReadRoles = hasPermission(RBAC_PERMISSIONS.rolesRead);
+    const canReadPermissions = hasPermission(RBAC_PERMISSIONS.permissionsRead);
     const canManagePermissions = hasPermission(RBAC_PERMISSIONS.rolesManagePermissions);
     const visibleSections: AdminSection[] = [
-        ...(canCreateRole || canUpdateRole || canDeleteRole || canManagePermissions ? ["roles" as const] : []),
+        ...(canReadRoles || canReadPermissions || canCreateRole || canUpdateRole || canDeleteRole || canManagePermissions ? ["roles" as const] : []),
         ...(hasPermission(RBAC_PERMISSIONS.usersManageRoles) ? ["users" as const] : []),
     ];
     const activeSection = visibleSections.includes(section) ? section : visibleSections[0];

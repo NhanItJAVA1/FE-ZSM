@@ -127,6 +127,35 @@ export default function RoleManagementPanel({
         onError: (error) => setFormError(getApiErrorMessage(error, "xóa Role")),
     });
 
+    const roleDetailsChanged = Boolean(editingRole && (
+        name.trim() !== editingRole.name || description.trim() !== editingRole.description
+    ));
+
+    async function saveRoleDetailsBeforePermissions() {
+        if (!editingRole || !canUpdateRole || isProtectedRole(editingRole) || !roleDetailsChanged) {
+            return false;
+        }
+        if (!name.trim()) {
+            throw new Error("Tên Role không được để trống.");
+        }
+
+        let updatedRole: RoleDto;
+        try {
+            updatedRole = await rbacService.updateRole(editingRole.id, {
+                name: name.trim(),
+                description: description.trim(),
+            });
+        } catch (error) {
+            throw new Error(getApiErrorMessage(error, "cập nhật tên và mô tả Role"));
+        }
+
+        setEditingRole(updatedRole);
+        setName(updatedRole.name);
+        setDescription(updatedRole.description);
+        await refreshRoles();
+        return true;
+    }
+
     function beginCreate() {
         setEditingRole(null);
         setCreatingRole(true);
@@ -155,6 +184,7 @@ export default function RoleManagementPanel({
 
     function submit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
+        if (editingRole && canManagePermissions) return;
         setFormError(null);
         saveMutation.mutate({ name: name.trim(), description: description.trim() });
     }
@@ -286,16 +316,23 @@ export default function RoleManagementPanel({
                         </fieldset>
                     )}
                     {formError && <p className="rbac-inline-error" role="alert">{formError}</p>}
-                    <div className="rbac-row-actions">
-                        <button type="button" className="ghost-btn" onClick={closeEditor}>Hủy</button>
+                    {(creatingRole || !canManagePermissions) && <div className="rbac-row-actions">
+                        {creatingRole && <button type="button" className="ghost-btn" onClick={closeEditor}>Hủy</button>}
                         <button type="submit" className="rbac-primary-button" disabled={saveMutation.isPending || !name.trim()}>
-                            {saveMutation.isPending ? "Đang lưu…" : creatingRole ? "Tạo Role" : "Lưu thay đổi"}
+                            {saveMutation.isPending ? "Đang lưu…" : creatingRole ? "Tạo Role" : "Lưu"}
                         </button>
-                    </div>
+                    </div>}
                 </form>}
 
                 {editingRole && canManagePermissions && (
-                    <PermissionManagementPanel roleId={editingRole.id} roleName={editingRole.name} onToast={onToast} />
+                    <PermissionManagementPanel
+                        roleId={editingRole.id}
+                        roleName={editingRole.name}
+                        onToast={onToast}
+                        onCancel={closeEditor}
+                        onBeforeSave={saveRoleDetailsBeforePermissions}
+                        hasAdditionalChanges={roleDetailsChanged && Boolean(name.trim())}
+                    />
                 )}
                 {editingRole && isProtectedRole(editingRole) && !canUpdateRole && <p className="rbac-user-summary">Role mặc định không thể đổi tên hoặc mô tả.</p>}
                 {editingRole && isProtectedRole(editingRole) && canUpdateRole && <p className="rbac-user-summary">Role mặc định được khóa thông tin; chỉ có thể chỉnh Permissions.</p>}

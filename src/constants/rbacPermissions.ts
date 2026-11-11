@@ -6,6 +6,7 @@ export const RBAC_PERMISSIONS = {
     todoCategoryUpdate: "todo-category.update",
     todoCategoryDelete: "todo-category.delete",
     rolesRead: "roles.read",
+    permissionsRead: "permissions.read",
     rolesCreate: "roles.create",
     rolesUpdate: "roles.update",
     rolesDelete: "roles.delete",
