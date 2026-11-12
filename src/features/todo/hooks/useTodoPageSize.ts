@@ -7,10 +7,11 @@ import {
     TODO_ROW_ESTIMATED_HEIGHT,
 } from "../todoPageUtils.js";
 
-export function useTodoPageSize(panelRef: RefObject<HTMLElement | null>) {
+export function useTodoPageSize(panelRef: RefObject<HTMLElement | null>, enabled = true) {
     const [pageSize, setPageSize] = useState(TODO_PAGE_SIZE_DEFAULT);
 
     useEffect(() => {
+        if (!enabled) return;
         const panelElement = panelRef.current;
         if (!panelElement || typeof ResizeObserver === "undefined") return;
         const observedPanel: HTMLElement = panelElement;
@@ -37,7 +38,7 @@ export function useTodoPageSize(panelRef: RefObject<HTMLElement | null>) {
             observer.disconnect();
             window.removeEventListener("resize", calculatePageSize);
         };
-    }, [panelRef]);
+    }, [enabled, panelRef]);
 
     return pageSize - 1;
 }

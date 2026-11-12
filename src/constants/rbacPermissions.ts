@@ -1,6 +1,8 @@
 export const RBAC_PERMISSIONS = {
     todoRead: "todo.read",
     todoWrite: "todo.write",
+    todosRead: "todos.read",
+    todosReadAll: "todos.read-all",
     todoCategoryRead: "todo-category.read",
     todoCategoryCreate: "todo-category.create",
     todoCategoryUpdate: "todo-category.update",

@@ -31,6 +31,17 @@ export interface PagedResult<T> {
     totalPages: number;
 }
 
+export type TodoView =
+    | { type: "mine" }
+    | { type: "user"; userId: number };
+
+export interface TodoUserSummaryDto {
+    userId: number;
+    displayName: string;
+    email: string;
+    todoCount: number;
+}
+
 export interface TodoQuery {
     search?: string;
     status?: TodoStatus;

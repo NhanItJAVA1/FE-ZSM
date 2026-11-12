@@ -14,9 +14,8 @@ export default function AdminPage() {
     const [toast, setToast] = useState<RbacToastNotice | null>(null);
     const toastId = useRef(0);
     const { user } = useAppSelector((state) => state.auth);
-    const isSystemOwner = user?.isSystemOwner ?? false;
     const permissions = new Set(user?.permissions ?? []);
-    const hasPermission = (permission: string) => isSystemOwner || permissions.has(permission);
+    const hasPermission = (permission: string) => permissions.has(permission);
     const canCreateRole = hasPermission(RBAC_PERMISSIONS.rolesCreate);
     const canUpdateRole = hasPermission(RBAC_PERMISSIONS.rolesUpdate);
     const canDeleteRole = hasPermission(RBAC_PERMISSIONS.rolesDelete);

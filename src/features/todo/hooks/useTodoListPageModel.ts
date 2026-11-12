@@ -1,5 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { TodoCategoryDto, TodoDto } from "../types.js";
+import { useQuery } from "@tanstack/react-query";
+import { QUERY_KEYS } from "../../../constants/queryKeys.js";
+import { useDebouncedValue } from "../../../hooks/useDebouncedValue.js";
+import { todoService } from "../../../services/api/todoService.js";
+import { ApiError } from "../../../services/api/apiError.js";
+import type { TodoCategoryDto, TodoDto, TodoUserSummaryDto, TodoView } from "../types.js";
 import { countTodos, type CategoryFilter } from "../todoPageUtils.js";
 import { useTodoCategoriesQuery } from "../../../hooks/useTodoCategoriesQuery.js";
 import { useTodoMutations } from "../../../hooks/useTodoMutations.js";
@@ -23,27 +28,56 @@ export function useTodoListPageModel() {
     }, []);
     const authUser = useAppSelector((state) => state.auth.user);
     const userId = authUser?.id;
+    const permissions = authUser?.permissions ?? [];
+    const canReadMine = permissions.includes(RBAC_PERMISSIONS.todosRead);
+    const canReadAll = permissions.includes(RBAC_PERMISSIONS.todosReadAll);
+    const [activeTab, setActiveTab] = useState<"todos" | "users">(() => canReadMine ? "todos" : "users");
+    const [todoView, setTodoView] = useState<TodoView>({ type: "mine" });
+    const [viewingUser, setViewingUser] = useState<TodoUserSummaryDto | null>(null);
+    const [usersSearch, setUsersSearch] = useState("");
+    const debouncedUsersSearch = useDebouncedValue(usersSearch, 500);
+    const [usersPage, setUsersPage] = useState(1);
+    const usersPageSize = 10;
+    const canReadCurrentView = todoView.type === "mine" ? canReadMine : canReadAll;
     const canWriteTodos = Boolean(authUser?.isSystemOwner || authUser?.permissions.includes(RBAC_PERMISSIONS.todoWrite));
+    const canWriteCurrentTodos = todoView.type === "mine" && canWriteTodos;
     const canCreateCategory = Boolean(authUser?.isSystemOwner || authUser?.permissions.includes(RBAC_PERMISSIONS.todoCategoryCreate));
     const canUpdateCategory = Boolean(authUser?.isSystemOwner || authUser?.permissions.includes(RBAC_PERMISSIONS.todoCategoryUpdate));
     const canDeleteCategory = Boolean(authUser?.isSystemOwner || authUser?.permissions.includes(RBAC_PERMISSIONS.todoCategoryDelete));
     const leftPanelRef = useRef<HTMLElement | null>(null);
-    const pageSize = useTodoPageSize(leftPanelRef);
+    const pageSize = useTodoPageSize(leftPanelRef, activeTab === "todos" && canReadCurrentView);
     const todoFilters = useTodoFilters(pageSize);
     const allTodosQuery = useTodosQuery({
         page: 1,
         pageSize: 100,
         sortBy: "createdat",
         isDescending: true,
+    }, { type: "mine" }, canReadMine && activeTab === "todos" && todoView.type === "mine");
+    const todosQuery = useTodosQuery(todoFilters.todoQuery, todoView, canReadCurrentView);
+    const categoriesQuery = useTodoCategoriesQuery(todoView.type === "mine" && canReadMine && activeTab === "todos");
+    const usersSummaryQuery = useQuery({
+        queryKey: [
+            ...QUERY_KEYS.todoUsersSummary(debouncedUsersSearch, usersPage, usersPageSize),
+            userId ?? null,
+        ],
+        queryFn: ({ signal }) => todoService.getUsersSummary({
+            search: debouncedUsersSearch,
+            page: usersPage,
+            pageSize: usersPageSize,
+        }, signal),
+        enabled: canReadAll && activeTab === "users",
+        retry: false,
     });
-    const todosQuery = useTodosQuery(todoFilters.todoQuery);
-    const categoriesQuery = useTodoCategoriesQuery();
     const mutations = useTodoMutations();
 
     const todos = todosQuery.data?.items ?? EMPTY_TODOS;
-    const allTodos = allTodosQuery.data?.items ?? EMPTY_TODOS;
+    const allTodos = todoView.type === "mine"
+        ? allTodosQuery.data?.items ?? EMPTY_TODOS
+        : todos;
     const categories = categoriesQuery.data ?? [];
-    const loading = todosQuery.isLoading || allTodosQuery.isLoading || categoriesQuery.isLoading;
+    const loading = todosQuery.isLoading || (todoView.type === "mine" && (
+        allTodosQuery.isLoading || categoriesQuery.isLoading
+    ));
     const counts = useMemo(() => countTodos(allTodos), [allTodos]);
     const totalPages = Math.max(1, todosQuery.data?.totalPages ?? 1);
     const visibleTodos = useMemo(
@@ -54,9 +88,10 @@ export function useTodoListPageModel() {
         todoFilters.selectedCategoryFilter === "uncategorized"
             ? visibleTodos.length
             : todosQuery.data?.totalItems ?? visibleTodos.length;
-    const todoSelection = useTodoSelection(visibleTodos, canWriteTodos);
+    const todoSelection = useTodoSelection(visibleTodos, canWriteCurrentTodos);
     const todoEditing = useTodoTableEditing({
         canWriteTodos,
+        canEditCurrentView: canWriteCurrentTodos,
         selectedCategoryFilter: todoFilters.selectedCategoryFilter,
         saveTodos: mutations.saveTodos.mutateAsync,
         notifyActionError,
@@ -79,13 +114,23 @@ export function useTodoListPageModel() {
         notifyActionError,
     });
     const { setPage } = todoFilters.actions;
+    const usersSearchIsDebouncing = usersSearch.trim() !== debouncedUsersSearch.trim();
 
     useEffect(() => {
         setPage((prev) => Math.min(prev, totalPages));
     }, [setPage, totalPages]);
 
+    useEffect(() => {
+        if (activeTab === "users" && !canReadAll && (canReadMine || todoView.type === "user")) {
+            setActiveTab("todos");
+        } else if (activeTab === "todos" && !canReadMine && todoView.type === "mine" && canReadAll) {
+            setActiveTab("users");
+        }
+    }, [activeTab, canReadAll, canReadMine, todoView]);
+
     async function refetchTodos() {
-        await Promise.all([todosQuery.refetch(), allTodosQuery.refetch()]);
+        await todosQuery.refetch();
+        if (todoView.type === "mine") await allTodosQuery.refetch();
     }
 
     function resetTodoPanel() {
@@ -112,14 +157,56 @@ export function useTodoListPageModel() {
         todoDialogActions.actions.selectTodoCategory(filter);
     }
 
+    function switchTodoView(nextView: TodoView, targetUser: TodoUserSummaryDto | null, tab: "todos" | "users") {
+        const isSameView = nextView.type === todoView.type &&
+            (nextView.type === "mine" || (todoView.type === "user" && nextView.userId === todoView.userId));
+        if (isSameView) {
+            setActiveTab(tab);
+            return;
+        }
+
+        const applyViewChange = () => {
+            todoEditing.actions.resetEditing();
+            todoSelection.actions.resetDeleteSelection();
+            todoFilters.actions.selectCategory("all");
+            todoFilters.actions.setPage(() => 1);
+            setTodoView(nextView);
+            setViewingUser(targetUser);
+            setActiveTab(tab);
+        };
+
+        if (todoView.type === "mine" && todoEditing.editing.hasUnsavedChanges) {
+            todoDialogActions.actions.openDiscardChangesDialog(applyViewChange);
+            return;
+        }
+
+        applyViewChange();
+    }
+
+    function selectSummaryUser(user: TodoUserSummaryDto) {
+        if (!canReadAll) return;
+        switchTodoView({ type: "user", userId: user.userId }, user, "todos");
+    }
+
+    function returnToMyTodos() {
+        if (!canReadMine) return;
+        switchTodoView({ type: "mine" }, null, "todos");
+    }
+
+    function selectManagementTab(tab: "todos" | "users") {
+        if (tab === "users" && !canReadAll) return;
+        if (tab === "todos" && !canReadMine && todoView.type !== "user") return;
+        setActiveTab(tab);
+    }
+
     function openNewTodoEditor() {
-        if (!canWriteTodos) return;
+        if (!canWriteCurrentTodos) return;
         todoEditing.actions.openNewTodoEditor();
         todoFilters.actions.closeFilter();
     }
 
     async function saveTodoPanel() {
-        if (!canWriteTodos) return;
+        if (!canWriteCurrentTodos) return;
         const saved = await todoEditing.actions.saveInlineTodo(
             todoSelection.selectedRows
         );
@@ -129,7 +216,34 @@ export function useTodoListPageModel() {
         }
     }
 
+    const todoQueryError = todosQuery.isError ? getTodoReadError(todosQuery.error) : null;
+
     return {
+        managementProps: {
+            activeTab,
+            canReadMine,
+            canReadAll,
+            canShowTodosTab: canReadMine || todoView.type === "user",
+            canReadCurrentView,
+            todoView,
+            viewingUser,
+            users: usersSummaryQuery.data?.items ?? [],
+            usersLoading: usersSearchIsDebouncing || usersSummaryQuery.isLoading,
+            usersFetching: usersSummaryQuery.isFetching,
+            usersError: usersSearchIsDebouncing ? null : usersSummaryQuery.error,
+            usersPage,
+            usersTotalPages: Math.max(1, usersSummaryQuery.data?.totalPages ?? 1),
+            usersSearch,
+            onSelectTab: selectManagementTab,
+            onUsersSearchChange: (value: string) => {
+                setUsersSearch(value);
+                setUsersPage(1);
+            },
+            onUsersPage: setUsersPage,
+            onSelectUser: selectSummaryUser,
+            onRetryUsers: () => void usersSummaryQuery.refetch(),
+            onReturnToMyTodos: returnToMyTodos,
+        },
         categoryPanelProps: {
             allTodos,
             categories,
@@ -153,7 +267,7 @@ export function useTodoListPageModel() {
             deletePending: mutations.saveTodos.isPending,
             dialog: shouldHideTodoDialog(
                 todoDialogActions.todoDialog,
-                canWriteTodos,
+                canWriteCurrentTodos,
                 canUpdateCategory,
                 canDeleteCategory
             ) ? null : todoDialogActions.todoDialog,
@@ -176,11 +290,15 @@ export function useTodoListPageModel() {
                 categories,
                 counts,
                 loading,
+                error: todoQueryError,
                 rows: visibleTodos,
                 totalRows: visibleTodoCount,
             },
             editing: {
-                canWriteTodos,
+                canWriteTodos: canWriteCurrentTodos,
+                readOnlyMessage: todoView.type === "user"
+                    ? "Viewing another User's Todos is read-only."
+                    : "You can only view Todo because you don't have todo.write.",
                 editedRows: todoEditing.editing.editedRows,
                 formError: todoEditing.editing.formError,
                 drafts: todoEditing.editing.drafts,
@@ -196,7 +314,7 @@ export function useTodoListPageModel() {
             actions: {
                 onClearFilters: todoFilters.actions.clearTodoFilters,
                 onClearAdvancedFilters: todoFilters.actions.clearAdvancedFilters,
-                onDeleteSelected: canWriteTodos ? todoDialogActions.actions.openDeleteSelectedDialog : () => undefined,
+                onDeleteSelected: canWriteCurrentTodos ? todoDialogActions.actions.openDeleteSelectedDialog : () => undefined,
                 onAddDraft: openNewTodoEditor,
                 onResetForm: resetTodoPanel,
                 onSearchChange: todoFilters.actions.setSearch,
@@ -212,9 +330,20 @@ export function useTodoListPageModel() {
                 onSetStatusFilter: todoFilters.actions.setStatusFilter,
                 onSetPage: todoFilters.actions.setPage,
                 onSave: () => void saveTodoPanel(),
+                onRetry: () => void refetchTodos(),
             },
         },
     };
+}
+
+function getTodoReadError(error: unknown) {
+    if (error instanceof ApiError) {
+        if (error.status === 401) return "Your session has expired. Please sign in again.";
+        if (error.status === 403) return "You do not have permission to view these todos.";
+        return error.message || "Could not load todos. Please try again.";
+    }
+
+    return error instanceof Error ? error.message : "Could not load todos. Please try again.";
 }
 
 function shouldHideTodoDialog(

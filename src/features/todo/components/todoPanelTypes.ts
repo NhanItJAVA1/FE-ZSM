@@ -11,6 +11,7 @@ export interface TodoPanelData {
     categories: TodoCategoryDto[];
     counts: TodoCounts;
     loading: boolean;
+    error: string | null;
     rows: TodoDto[];
     totalRows: number;
 }
@@ -30,6 +31,7 @@ export interface TodoPanelSelection {
 
 export interface TodoPanelEditing {
     canWriteTodos: boolean;
+    readOnlyMessage: string;
     editedRows: Record<number, TodoFormState>;
     formError: string | null;
     drafts: TodoInlineDraft[];
@@ -61,6 +63,7 @@ export interface TodoPanelActions {
     onToggleFilter: () => void;
     onToggleSelection: (id: number) => void;
     onSave: () => void;
+    onRetry: () => void;
 }
 
 export interface TodoPanelProps {

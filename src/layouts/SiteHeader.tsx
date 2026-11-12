@@ -1,7 +1,7 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { NavLink, useNavigate } from "react-router-dom";
 import NavIcon, { type NavIconName } from "../components/ui/NavIcon.js";
-import { RBAC_PERMISSIONS } from "../constants/rbacPermissions.js";
+import { RBAC_ADMIN_PAGE_ACCESS_PERMISSIONS } from "../constants/rbacPermissions.js";
 import { ROUTES } from "../constants/routes.js";
 import { authService } from "../services/api/authService.js";
 import { useAppDispatch, useAppSelector } from "../stores/hook.js";
@@ -15,6 +15,7 @@ const NAV_ITEMS: Array<{
 }> = [
     { to: ROUTES.todoList, label: "Todo list", icon: "todoList" },
     { to: ROUTES.admin, label: "Quản trị", icon: "admin" },
+    { to: ROUTES.adminRecovery, label: "Admin Recovery", icon: "search" },
 ];
 
 export default function SiteHeader() {
@@ -35,18 +36,12 @@ export default function SiteHeader() {
         }
     }
 
-    const canSeeAdmin = isSystemOwner || permissionCodes.some((code) =>
-        code === RBAC_PERMISSIONS.rolesRead ||
-        code === RBAC_PERMISSIONS.permissionsRead ||
-        code === RBAC_PERMISSIONS.rolesCreate ||
-        code === RBAC_PERMISSIONS.rolesUpdate ||
-        code === RBAC_PERMISSIONS.rolesDelete ||
-        code === RBAC_PERMISSIONS.rolesManagePermissions ||
-        code === RBAC_PERMISSIONS.usersManageRoles
-    );
-    const visibleNavItems = NAV_ITEMS.filter(
-        (item) => item.to !== ROUTES.admin || canSeeAdmin
-    );
+    const canSeeAdmin = RBAC_ADMIN_PAGE_ACCESS_PERMISSIONS.some((permission) => permissionCodes.includes(permission));
+    const visibleNavItems = NAV_ITEMS.filter((item) => {
+        if (item.to === ROUTES.admin) return canSeeAdmin;
+        if (item.to === ROUTES.adminRecovery) return isSystemOwner;
+        return true;
+    });
 
     return (
         <header className="site-header">

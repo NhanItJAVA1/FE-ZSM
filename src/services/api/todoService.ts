@@ -6,6 +6,7 @@ import type {
     TodoDto,
     TodoQuery,
     TodoStatus,
+    TodoUserSummaryDto,
 } from "../../features/todo/types.js";
 
 function cleanTodoBatchPayload(payload: SaveTodoRowPayload): SaveTodoRowPayload {
@@ -26,11 +27,48 @@ async function requestSaveBatch(payloads: SaveTodosPayload): Promise<void> {
 }
 
 export const todoService = {
+    async getMine(
+        query?: TodoQuery,
+        signal?: AbortSignal
+    ): Promise<PagedResult<TodoDto>> {
+        const response = await api.get<PagedResult<TodoDto>>("/todos/me", {
+            params: query,
+            ...(signal ? { signal } : {}),
+        });
+
+        return response.data;
+    },
+
     async getAll(
         query?: TodoQuery,
         signal?: AbortSignal
     ): Promise<PagedResult<TodoDto>> {
         const response = await api.get<PagedResult<TodoDto>>("/todos", {
+            params: query,
+            ...(signal ? { signal } : {}),
+        });
+
+        return response.data;
+    },
+
+    async getForUser(
+        userId: number,
+        query?: TodoQuery,
+        signal?: AbortSignal
+    ): Promise<PagedResult<TodoDto>> {
+        const response = await api.get<PagedResult<TodoDto>>(`/todos/users/${userId}`, {
+            params: query,
+            ...(signal ? { signal } : {}),
+        });
+
+        return response.data;
+    },
+
+    async getUsersSummary(
+        query: { search: string; page: number; pageSize: number },
+        signal?: AbortSignal
+    ): Promise<PagedResult<TodoUserSummaryDto>> {
+        const response = await api.get<PagedResult<TodoUserSummaryDto>>("/todos/users/summary", {
             params: query,
             ...(signal ? { signal } : {}),
         });

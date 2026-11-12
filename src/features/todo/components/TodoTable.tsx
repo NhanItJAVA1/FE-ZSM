@@ -25,6 +25,7 @@ export default function TodoTable({
     const {
         categories,
         loading,
+        error,
         rows,
         totalRows,
     } = data;
@@ -38,8 +39,14 @@ export default function TodoTable({
             <div className="todo-list-layer">
                 <div className="todo-category-list">
                     {loading && <div className="empty-state">Đang tải todo...</div>}
+                    {!loading && error && (
+                        <div className="empty-state" role="alert">
+                            <p className="empty-state-desc">{error}</p>
+                            <button type="button" className="ghost-btn" onClick={actions.onRetry}>Retry</button>
+                        </div>
+                    )}
 
-                    {!loading && totalRows === 0 && !showDrafts && (
+                    {!loading && !error && totalRows === 0 && !showDrafts && (
                         <div className="empty-state empty-state--composed">
                             <p className="empty-state-desc">{editing.canWriteTodos ? "Hãy tạo task đầu tiên!" : "Chưa có Todo để hiển thị."}</p>
                             {(filters.search || filters.filterActive) && (
@@ -54,7 +61,7 @@ export default function TodoTable({
                         </div>
                     )}
 
-                    {!loading && showTaskTable && (
+                    {!loading && !error && showTaskTable && (
                         <div className="todo-task-list">
                             <div className="todo-task-table-head">
                                 <span className="todo-task-name-head">

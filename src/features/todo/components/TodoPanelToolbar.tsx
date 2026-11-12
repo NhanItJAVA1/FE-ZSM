@@ -127,7 +127,7 @@ export default function TodoPanelToolbar({
                     <span className="sr-only">Tạo task mới</span>
                 </button>
             </div>
-            </> : <p className="todo-readonly-note">Bạn chỉ có thể xem Todo vì chưa được cấp quyền todo.write.</p>}
+            </> : <p className="todo-readonly-note">{editing.readOnlyMessage}</p>}
         </div>
     );
 }
