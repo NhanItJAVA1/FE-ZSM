@@ -52,7 +52,8 @@ export default function RoleManagementPanel({
         const groups = new Map<string, PermissionDto[]>();
         for (const permission of permissionsQuery.data ?? []) {
             const [module] = permission.code.split(".");
-            const groupName = module?.replaceAll("-", " ") || "other";
+            const normalizedModule = module === "todos" ? "todo" : module;
+            const groupName = normalizedModule?.replaceAll("-", " ") || "other";
             groups.set(groupName, [...(groups.get(groupName) ?? []), permission]);
         }
 

@@ -42,7 +42,7 @@ export default function TodoUsersTab({
 }: TodoUsersTabProps) {
     return (
         <section className="todo-users-panel">
-            <div className="todo-users-toolbar">
+            <div className="todo-users-toolbar todo-view-context">
                 <div>
                     <p className="eyebrow">Todos</p>
                     <h2>Users</h2>

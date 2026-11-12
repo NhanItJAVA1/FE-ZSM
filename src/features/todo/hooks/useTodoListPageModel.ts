@@ -29,9 +29,9 @@ export function useTodoListPageModel() {
     const authUser = useAppSelector((state) => state.auth.user);
     const userId = authUser?.id;
     const permissions = authUser?.permissions ?? [];
-    const canReadMine = permissions.includes(RBAC_PERMISSIONS.todosRead);
+    const canReadMine = permissions.includes(RBAC_PERMISSIONS.todoRead);
     const canReadAll = permissions.includes(RBAC_PERMISSIONS.todosReadAll);
-    const [activeTab, setActiveTab] = useState<"todos" | "users">(() => canReadMine ? "todos" : "users");
+    const [activeTab, setActiveTab] = useState<"todos" | "users">("todos");
     const [todoView, setTodoView] = useState<TodoView>({ type: "mine" });
     const [viewingUser, setViewingUser] = useState<TodoUserSummaryDto | null>(null);
     const [usersSearch, setUsersSearch] = useState("");

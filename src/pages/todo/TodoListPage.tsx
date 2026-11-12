@@ -70,19 +70,19 @@ export default function TodoListPage() {
                 </main>
             )}
 
-            {managementProps.activeTab === "todos" && !managementProps.canReadCurrentView && (
+            {hasAnyReadPermission && managementProps.activeTab === "todos" && !managementProps.canReadCurrentView && (
                 <div className="empty-state todo-scope-empty" role="status">
                     {managementProps.todoView.type === "user"
                         ? "You need todos.read-all to view another user's todos."
                         : managementProps.canReadAll
                             ? "Select a user from the Users tab to view their todos."
-                            : "You need todos.read to view your todos."}
+                            : "You need todo.read to view your todos."}
                 </div>
             )}
 
             {!hasAnyReadPermission && (
                 <div className="empty-state todo-scope-empty" role="status">
-                    You need todos.read or todos.read-all to view todos.
+                    You need todo.read or todos.read-all to view todos.
                 </div>
             )}
 

@@ -13,7 +13,8 @@ import type { RbacToastType } from "./RbacStates.js";
 
 function moduleName(permission: PermissionDto) {
     const [module] = permission.code.split(".");
-    return module?.replaceAll("-", " ") || "other";
+    const normalizedModule = module === "todos" ? "todo" : module;
+    return normalizedModule?.replaceAll("-", " ") || "other";
 }
 
 interface PermissionManagementPanelProps {
