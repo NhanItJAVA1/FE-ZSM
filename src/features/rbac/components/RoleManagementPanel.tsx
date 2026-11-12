@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../../../constants/queryKeys.js";
+import { RBAC_ADMIN_PAGE_ACCESS_PERMISSIONS } from "../../../constants/rbacPermissions.js";
 import { rbacService } from "../../../services/api/rbacService.js";
 import { getApiErrorMessage } from "../apiErrors.js";
 import type { PermissionDto, RoleDto, SaveRoleDto } from "../types.js";
@@ -273,7 +274,9 @@ export default function RoleManagementPanel({
                     </label>
                     {creatingRole && canManagePermissions && (
                         <fieldset className="rbac-create-permissions">
-                            <legend>Permissions cho Role</legend>
+                            <legend>
+                                Permissions cho Role
+                            </legend>
                             {permissionsQuery.isLoading && <RbacLoading />}
                             {permissionsQuery.isError && <RbacError error={permissionsQuery.error} action="tải Permissions" />}
                             {permissionsQuery.data?.length === 0 && <RbacEmpty>Backend chưa có Permissions.</RbacEmpty>}
@@ -303,7 +306,12 @@ export default function RoleManagementPanel({
                                                             onChange={(event) => toggleCreatePermission(permission, event.target.checked)}
                                                         />
                                                         <span>
-                                                            <strong>{permission.description || permission.code}</strong>
+                                                            <span className="rbac-permission-title">
+                                                                <strong>{permission.description || permission.code}</strong>
+                                                                {RBAC_ADMIN_PAGE_ACCESS_PERMISSIONS.some((code) => code === permission.code) && (
+                                                                    <small className="rbac-admin-access-badge">Có thể vào AdminPage</small>
+                                                                )}
+                                                            </span>
                                                             <small>{permission.code}</small>
                                                         </span>
                                                     </label>

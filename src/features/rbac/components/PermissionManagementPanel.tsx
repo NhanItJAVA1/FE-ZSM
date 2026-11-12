@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { RBAC_ADMIN_PAGE_ACCESS_PERMISSIONS } from "../../../constants/rbacPermissions.js";
 import { QUERY_KEYS } from "../../../constants/queryKeys.js";
 import { rbacService } from "../../../services/api/rbacService.js";
 import { authService } from "../../../services/api/authService.js";
@@ -164,8 +165,13 @@ export default function PermissionManagementPanel({
                                                         onChange={(event) => togglePermission(permission.id, event.target.checked)}
                                                     />
                                                     <span>
-                                                    <strong>{permission.description || permission.code}</strong>
-                                                    <small>{permission.code}</small>
+                                                        <span className="rbac-permission-title">
+                                                            <strong>{permission.description || permission.code}</strong>
+                                                            {RBAC_ADMIN_PAGE_ACCESS_PERMISSIONS.some((code) => code === permission.code) && (
+                                                                <small className="rbac-admin-access-badge">Có thể vào AdminPage</small>
+                                                            )}
+                                                        </span>
+                                                        <small>{permission.code}</small>
                                                     </span>
                                                 </label>
                                             ))}

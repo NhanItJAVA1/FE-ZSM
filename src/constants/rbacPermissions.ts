@@ -13,3 +13,13 @@ export const RBAC_PERMISSIONS = {
     rolesManagePermissions: "roles.manage-permissions",
     usersManageRoles: "users.manage-roles",
 } as const;
+
+export const RBAC_ADMIN_PAGE_ACCESS_PERMISSIONS = [
+    RBAC_PERMISSIONS.rolesRead,
+    RBAC_PERMISSIONS.permissionsRead,
+    RBAC_PERMISSIONS.rolesCreate,
+    RBAC_PERMISSIONS.rolesUpdate,
+    RBAC_PERMISSIONS.rolesDelete,
+    RBAC_PERMISSIONS.rolesManagePermissions,
+    RBAC_PERMISSIONS.usersManageRoles,
+] as const;
