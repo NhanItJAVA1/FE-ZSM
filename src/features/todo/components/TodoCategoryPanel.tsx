@@ -9,6 +9,7 @@ interface TodoCategoryPanelProps {
     categoryFormError: string | null;
     categoryName: string;
     counts: TodoCounts;
+    canReadTodos: boolean;
     createCategoryPending: boolean;
     canCreateCategory: boolean;
     canUpdateCategory: boolean;
@@ -27,6 +28,7 @@ export default function TodoCategoryPanel({
     categoryFormError,
     categoryName,
     counts,
+    canReadTodos,
     createCategoryPending,
     canCreateCategory,
     canUpdateCategory,
@@ -59,11 +61,11 @@ export default function TodoCategoryPanel({
             <div className="todo-panel-heading todo-simple-category-heading">
                 <div className="todo-simple-category-title">
                     <p className="eyebrow">Category</p>
-                    <div className="todo-stat-row todo-simple-category-stats">
+                    {canReadTodos && <div className="todo-stat-row todo-simple-category-stats">
                         <span><b>{counts.all}</b> Total</span>
                         <span><b>{counts.progress}</b> Running</span>
                         <span><b>{counts.overdue}</b> Overdue</span>
-                    </div>
+                    </div>}
                 </div>
 
                 {canCreateCategory && <div className="todo-simple-category-create">
@@ -116,14 +118,14 @@ export default function TodoCategoryPanel({
             )}
 
             <div className="todo-simple-category-list">
-                <button
+                {canReadTodos && <button
                     type="button"
                     className={`todo-simple-category-item ${selectedCategoryFilter === "all" ? "active" : ""}`}
                     onClick={() => onSelectCategory("all")}
                 >
                     <span>All</span>
                     <small>{allTodos.length}</small>
-                </button>
+                </button>}
 
                 {categories.map((category) => {
                     const filterId = getCategoryFilterId(category.id);
@@ -140,9 +142,10 @@ export default function TodoCategoryPanel({
                                 type="button"
                                 className="todo-simple-category-item todo-simple-category-item--main"
                                 onClick={() => onSelectCategory(filterId)}
+                                disabled={!canReadTodos}
                             >
                                 <span>{category.name}</span>
-                                <small>{taskCount}</small>
+                                {canReadTodos && <small>{taskCount}</small>}
                             </button>
                             <div className="todo-simple-category-actions">
                                 {canUpdateCategory && <button
@@ -166,14 +169,14 @@ export default function TodoCategoryPanel({
                     );
                 })}
 
-                <button
+                {canReadTodos && <button
                     type="button"
                     className={`todo-simple-category-item ${selectedCategoryFilter === "uncategorized" ? "active" : ""}`}
                     onClick={() => onSelectCategory("uncategorized")}
                 >
                     <span>others</span>
                     <small>{allTodos.filter((todo) => todo.categoryId === null).length}</small>
-                </button>
+                </button>}
             </div>
         </aside>
     );

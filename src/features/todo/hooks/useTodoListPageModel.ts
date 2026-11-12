@@ -31,6 +31,7 @@ export function useTodoListPageModel() {
     const permissions = authUser?.permissions ?? [];
     const canReadMine = permissions.includes(RBAC_PERMISSIONS.todoRead);
     const canReadAll = permissions.includes(RBAC_PERMISSIONS.todosReadAll);
+    const canReadCategories = Boolean(authUser?.isSystemOwner || permissions.includes(RBAC_PERMISSIONS.todoCategoryRead));
     const [activeTab, setActiveTab] = useState<"todos" | "users">("todos");
     const [todoView, setTodoView] = useState<TodoView>({ type: "mine" });
     const [viewingUser, setViewingUser] = useState<TodoUserSummaryDto | null>(null);
@@ -45,7 +46,7 @@ export function useTodoListPageModel() {
     const canUpdateCategory = Boolean(authUser?.isSystemOwner || authUser?.permissions.includes(RBAC_PERMISSIONS.todoCategoryUpdate));
     const canDeleteCategory = Boolean(authUser?.isSystemOwner || authUser?.permissions.includes(RBAC_PERMISSIONS.todoCategoryDelete));
     const leftPanelRef = useRef<HTMLElement | null>(null);
-    const pageSize = useTodoPageSize(leftPanelRef, activeTab === "todos" && canReadCurrentView);
+    const pageSize = useTodoPageSize(leftPanelRef, activeTab === "todos" && (canReadCurrentView || canReadCategories));
     const todoFilters = useTodoFilters(pageSize);
     const allTodosQuery = useTodosQuery({
         page: 1,
@@ -54,7 +55,7 @@ export function useTodoListPageModel() {
         isDescending: true,
     }, { type: "mine" }, canReadMine && activeTab === "todos" && todoView.type === "mine");
     const todosQuery = useTodosQuery(todoFilters.todoQuery, todoView, canReadCurrentView);
-    const categoriesQuery = useTodoCategoriesQuery(todoView.type === "mine" && canReadMine && activeTab === "todos");
+    const categoriesQuery = useTodoCategoriesQuery(todoView.type === "mine" && canReadCategories && activeTab === "todos");
     const usersSummaryQuery = useQuery({
         queryKey: [
             ...QUERY_KEYS.todoUsersSummary(debouncedUsersSearch, usersPage, usersPageSize),
@@ -223,6 +224,7 @@ export function useTodoListPageModel() {
             activeTab,
             canReadMine,
             canReadAll,
+            canReadCategories,
             canShowTodosTab: canReadMine || todoView.type === "user",
             canReadCurrentView,
             todoView,
@@ -250,6 +252,7 @@ export function useTodoListPageModel() {
             categoryFormError: todoDialogActions.categoryFormError,
             categoryName: todoDialogActions.categoryName,
             counts,
+            canReadTodos: canReadMine,
             createCategoryPending: mutations.createCategory.isPending,
             canCreateCategory,
             canUpdateCategory,

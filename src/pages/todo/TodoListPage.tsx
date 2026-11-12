@@ -9,6 +9,9 @@ import AppLayout from "../../layouts/AppLayout.js";
 export default function TodoListPage() {
     const { categoryPanelProps, dialogProps, managementProps, notificationProps, panelProps } = useTodoListPageModel();
     const hasAnyReadPermission = managementProps.canReadMine || managementProps.canReadAll;
+    const showCategoryPanel = managementProps.todoView.type === "mine" && managementProps.canReadCategories;
+    const showTodoPage = managementProps.activeTab === "todos" &&
+        (managementProps.canReadCurrentView || showCategoryPanel);
     const userLabel = managementProps.viewingUser?.displayName.trim() ||
         managementProps.viewingUser?.email.trim() ||
         `User ${managementProps.todoView.type === "user" ? managementProps.todoView.userId : ""}`;
@@ -50,9 +53,9 @@ export default function TodoListPage() {
                 />
             )}
 
-            {managementProps.activeTab === "todos" && managementProps.canReadCurrentView && (
+            {showTodoPage && (
                 <main className={`todo-list-page${managementProps.todoView.type === "user" ? " todo-list-page--viewing-user" : ""}`}>
-                    {managementProps.todoView.type === "mine" && <TodoCategoryPanel {...categoryPanelProps} />}
+                    {showCategoryPanel && <TodoCategoryPanel {...categoryPanelProps} />}
 
                     <div className="todo-list-page-panel">
                         <div className="todo-view-context">
@@ -65,7 +68,11 @@ export default function TodoListPage() {
                                 <button type="button" className="ghost-btn" onClick={managementProps.onReturnToMyTodos}>Return to My Todos</button>
                             )}
                         </div>
-                        <TodoPanel {...panelProps} />
+                        {managementProps.canReadCurrentView
+                            ? <TodoPanel {...panelProps} />
+                            : <div className="empty-state todo-scope-empty" role="status">
+                                You need todo.read or todos.read-all to view todos.
+                            </div>}
                     </div>
                 </main>
             )}
@@ -80,7 +87,7 @@ export default function TodoListPage() {
                 </div>
             )}
 
-            {!hasAnyReadPermission && (
+            {!hasAnyReadPermission && !managementProps.canReadCategories && (
                 <div className="empty-state todo-scope-empty" role="status">
                     You need todo.read or todos.read-all to view todos.
                 </div>
