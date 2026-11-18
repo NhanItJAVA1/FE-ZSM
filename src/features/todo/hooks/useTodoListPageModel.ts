@@ -115,11 +115,13 @@ export function useTodoListPageModel() {
         notifyActionError,
     });
     const { setPage } = todoFilters.actions;
+    const currentTodoPage = todoFilters.pagination.page;
     const usersSearchIsDebouncing = usersSearch.trim() !== debouncedUsersSearch.trim();
 
     useEffect(() => {
-        setPage((prev) => Math.min(prev, totalPages));
-    }, [setPage, totalPages]);
+        if (!todosQuery.data || todosQuery.data.page !== currentTodoPage) return;
+        if (currentTodoPage > totalPages) setPage(() => totalPages);
+    }, [currentTodoPage, setPage, todosQuery.data, totalPages]);
 
     useEffect(() => {
         if (activeTab === "users" && !canReadAll && (canReadMine || todoView.type === "user")) {
