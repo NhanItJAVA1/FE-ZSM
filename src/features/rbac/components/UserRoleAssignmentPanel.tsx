@@ -130,6 +130,7 @@ export default function UserRoleAssignmentPanel({ onToast }: { onToast: (message
 
             {user && (
                 <section className="rbac-card rbac-user-editor-card">
+                    <button type="button" className="rbac-link-button rbac-back-button" onClick={() => setEditingUserId(null)}>← Quay lại</button>
                     <div className="rbac-user-edit-grid">
                         <section>
                             <div className="rbac-user-editor-title">
@@ -138,7 +139,6 @@ export default function UserRoleAssignmentPanel({ onToast }: { onToast: (message
                             </div>
                             <div className="rbac-user-subsection-heading">
                                 <h3>Roles</h3>
-                                <button type="button" className="rbac-link-button" onClick={() => setEditingUserId(null)}>← Quay lại</button>
                             </div>
                             {rolesQuery.isLoading && <RbacLoading />}
                             {rolesQuery.isError && <RbacError error={rolesQuery.error} action="tải Roles" />}

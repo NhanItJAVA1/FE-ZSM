@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { Eye } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../../../constants/queryKeys.js";
 import { RBAC_ADMIN_PAGE_ACCESS_PERMISSIONS } from "../../../constants/rbacPermissions.js";
@@ -8,6 +9,15 @@ import type { PermissionDto, RoleDto, SaveRoleDto } from "../types.js";
 import PermissionManagementPanel from "./PermissionManagementPanel.js";
 import { RbacEmpty, RbacError, RbacLoading } from "./RbacStates.js";
 import type { RbacToastType } from "./RbacStates.js";
+import TodoPagination from "../../todo/components/TodoPagination.js";
+
+const ASSIGNED_USERS_PAGE_SIZE = 20;
+
+interface BulkRemoveConfirmation {
+    roleId: number;
+    roleName: string;
+    userIds: number[];
+}
 
 function isProtectedRole(role: RoleDto) {
     return role.id === 1 || role.id === 2 || ["user", "admin"].includes(role.name.trim().toLowerCase());
@@ -19,6 +29,7 @@ interface RoleManagementPanelProps {
     canUpdateRole: boolean;
     canDeleteRole: boolean;
     canManagePermissions: boolean;
+    canManageUserRoles: boolean;
     onToast: (message: string, type?: RbacToastType) => void;
 }
 
@@ -28,6 +39,7 @@ export default function RoleManagementPanel({
     canUpdateRole,
     canDeleteRole,
     canManagePermissions,
+    canManageUserRoles,
     onToast,
 }: RoleManagementPanelProps) {
     const queryClient = useQueryClient();
@@ -47,7 +59,29 @@ export default function RoleManagementPanel({
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [selectedPermissionIds, setSelectedPermissionIds] = useState<number[]>([]);
+    const [selectedRoleId, setSelectedRoleId] = useState<number | null>(null);
+    const [assignedUsersPage, setAssignedUsersPage] = useState(1);
+    const [selectedUserIds, setSelectedUserIds] = useState<Set<number>>(() => new Set());
+    const [bulkRemoveConfirmation, setBulkRemoveConfirmation] = useState<BulkRemoveConfirmation | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
+    const selectedRole = rolesQuery.data?.find((role) => role.id === selectedRoleId) ?? null;
+    const assignedUsersQuery = useQuery({
+        queryKey: selectedRoleId === null
+            ? ["rbac", "roles", "none", "users", assignedUsersPage, ASSIGNED_USERS_PAGE_SIZE]
+            : QUERY_KEYS.roleUsers(selectedRoleId, assignedUsersPage, ASSIGNED_USERS_PAGE_SIZE),
+        queryFn: ({ signal }) => rbacService.getRoleUsers(selectedRoleId!, assignedUsersPage, ASSIGNED_USERS_PAGE_SIZE, signal),
+        enabled: canReadRoles && selectedRoleId !== null,
+        retry: false,
+    });
+    const assignedUsersTotalPages = assignedUsersQuery.data
+        ? Math.max(1, Math.ceil(assignedUsersQuery.data.totalItems / ASSIGNED_USERS_PAGE_SIZE))
+        : assignedUsersPage;
+
+    useEffect(() => {
+        if (assignedUsersQuery.data && assignedUsersPage > assignedUsersTotalPages) {
+            setAssignedUsersPage(assignedUsersTotalPages);
+        }
+    }, [assignedUsersPage, assignedUsersQuery.data, assignedUsersTotalPages]);
     const createPermissionGroups = useMemo(() => {
         const groups = new Map<string, PermissionDto[]>();
         for (const permission of permissionsQuery.data ?? []) {
@@ -120,13 +154,38 @@ export default function RoleManagementPanel({
         mutationFn: async (id: number) => {
             const roleName = rolesQuery.data?.find((role) => role.id === id)?.name;
             await rbacService.deleteRole(id);
-            return roleName;
+            return { roleName, roleId: id };
         },
-        onSuccess: (roleName) => {
+        onSuccess: ({ roleName, roleId }) => {
             onToast(roleName ? `Đã xóa Role “${roleName}”.` : "Đã xóa Role thành công.");
+            if (selectedRoleId === roleId) {
+                setSelectedRoleId(null);
+                setAssignedUsersPage(1);
+                setSelectedUserIds(new Set());
+            }
             void refreshRoles();
         },
-        onError: (error) => setFormError(getApiErrorMessage(error, "xóa Role")),
+        onError: (error) => onToast(getApiErrorMessage(error, "xóa Role"), "error"),
+    });
+    const bulkRemoveUsersMutation = useMutation({
+        mutationFn: ({ roleId, userIds }: BulkRemoveConfirmation) =>
+            rbacService.bulkRemoveUsersFromRole(roleId, userIds),
+        onSuccess: async (_result, { roleId, roleName, userIds }) => {
+            const currentTotal = selectedRoleId === roleId ? assignedUsersQuery.data?.totalItems : undefined;
+            setSelectedUserIds(new Set());
+            if (currentTotal !== undefined) {
+                const nextTotalPages = Math.max(1, Math.ceil(Math.max(0, currentTotal - userIds.length) / ASSIGNED_USERS_PAGE_SIZE));
+                setAssignedUsersPage((page) => Math.min(page, nextTotalPages));
+            }
+            setBulkRemoveConfirmation(null);
+            onToast(`Đã gỡ Role “${roleName}” khỏi ${userIds.length} User.`);
+            await queryClient.invalidateQueries({ queryKey: ["rbac", "roles", roleId, "users"] });
+            await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users });
+        },
+        onError: (error) => {
+            setBulkRemoveConfirmation(null);
+            onToast(getApiErrorMessage(error, "gỡ Role khỏi Users"), "error");
+        },
     });
 
     const roleDetailsChanged = Boolean(editingRole && (
@@ -197,8 +256,53 @@ export default function RoleManagementPanel({
             : current.filter((id) => id !== permission.id));
     }
 
+    function selectRoleForUsers(role: RoleDto) {
+        if (selectedRoleId !== role.id) setSelectedUserIds(new Set());
+        setSelectedRoleId(role.id);
+        setAssignedUsersPage(1);
+    }
+
+    const currentPageUserIds = assignedUsersQuery.data?.items.map((user) => user.userId) ?? [];
+    const allCurrentPageUsersSelected = currentPageUserIds.length > 0 &&
+        currentPageUserIds.every((userId) => selectedUserIds.has(userId));
+    const someCurrentPageUsersSelected = currentPageUserIds.some((userId) => selectedUserIds.has(userId));
+
+    function toggleUserSelection(userId: number) {
+        setSelectedUserIds((current) => {
+            const next = new Set(current);
+            if (next.has(userId)) next.delete(userId);
+            else next.add(userId);
+            return next;
+        });
+    }
+
+    function toggleCurrentPageUsers(checked: boolean) {
+        setSelectedUserIds((current) => {
+            const next = new Set(current);
+            currentPageUserIds.forEach((userId) => {
+                if (checked) next.add(userId);
+                else next.delete(userId);
+            });
+            return next;
+        });
+    }
+
+    function beginBulkRemove() {
+        if (!selectedRole || selectedUserIds.size === 0 || !canManageUserRoles) return;
+        setBulkRemoveConfirmation({
+            roleId: selectedRole.id,
+            roleName: selectedRole.name,
+            userIds: [...selectedUserIds],
+        });
+    }
+
+    function confirmBulkRemove() {
+        if (!bulkRemoveConfirmation || bulkRemoveUsersMutation.isPending) return;
+        bulkRemoveUsersMutation.mutate(bulkRemoveConfirmation);
+    }
+
     return (
-        <div className="rbac-panel-grid">
+        <div className="rbac-panel-grid rbac-role-master-detail">
             {!editorOpen && <section className="rbac-card">
                 <div className="rbac-section-heading">
                     <div>
@@ -228,26 +332,35 @@ export default function RoleManagementPanel({
                                 </div>
                             );
                             return (
-                                <article className="rbac-role-row" key={role.id}>
+                                <article className={`rbac-role-row${selectedRoleId === role.id ? " rbac-role-row--selected" : ""}`} key={role.id}>
                                     {canEditRole ? <button
                                         type="button"
                                         className="rbac-role-row-main"
                                         onClick={() => beginEdit(role)}
                                         aria-label={`Sửa Role ${role.name}`}
                                     >{roleCopy}</button> : roleCopy}
-                                    {canDeleteRole && <div className="rbac-row-actions">
+                                    <div className="rbac-row-actions rbac-role-row-actions">
                                         <button
                                             type="button"
+                                            className={`rbac-icon-button${selectedRoleId === role.id ? " active" : ""}`}
+                                            aria-label={`Xem người dùng có Role ${role.name}`}
+                                            aria-pressed={selectedRoleId === role.id}
+                                            title="Xem người dùng có Role này"
+                                            disabled={bulkRemoveUsersMutation.isPending}
+                                            onClick={() => selectRoleForUsers(role)}
+                                        ><Eye size={17} aria-hidden="true" /></button>
+                                        {canDeleteRole && <button
+                                            type="button"
                                             className="ghost-btn danger"
-                                            disabled={protectedRole || deleteMutation.isPending}
+                                            disabled={protectedRole || deleteMutation.isPending || bulkRemoveUsersMutation.isPending}
                                             onClick={() => {
                                                 if (window.confirm(`Xóa Role “${role.name}”? Thao tác này không thể hoàn tác.`)) {
                                                     setFormError(null);
                                                     deleteMutation.mutate(role.id);
                                                 }
                                             }}
-                                        >Xóa</button>
-                                    </div>}
+                                        >Xóa</button>}
+                                    </div>
                                 </article>
                             );
                         })}
@@ -255,10 +368,118 @@ export default function RoleManagementPanel({
                 )}
             </section>}
 
-            {editorOpen && <section className="rbac-card rbac-form-card rbac-editor-card">
+            {!editorOpen && <section className="rbac-card rbac-role-users-panel" aria-live="polite">
                 <div className="rbac-section-heading">
                     <div>
-                        <button type="button" className="rbac-link-button" onClick={closeEditor}>← Danh sách Roles</button>
+                        <h2>{selectedRole ? `Người dùng · ${selectedRole.name}` : "Người dùng được gán Role"}</h2>
+                        {selectedRole && <p>
+                            {assignedUsersQuery.isLoading
+                                ? "Đang tải danh sách người dùng…"
+                                : assignedUsersQuery.data
+                                    ? `${assignedUsersQuery.data.totalItems} người dùng`
+                                    : assignedUsersQuery.isError ? "Không tải được danh sách" : ""}
+                        </p>}
+                    </div>
+                </div>
+
+                {!canReadRoles && <RbacEmpty>Bạn cần quyền roles.read để xem danh sách người dùng.</RbacEmpty>}
+                {canReadRoles && !selectedRole && <RbacEmpty>Chọn một Role để xem danh sách người dùng.</RbacEmpty>}
+                {canReadRoles && selectedRole && canManageUserRoles && <div className="rbac-role-users-selection">
+                    <label className="rbac-role-users-select-all">
+                        <input
+                            type="checkbox"
+                            checked={allCurrentPageUsersSelected}
+                            ref={(input) => {
+                                if (input) input.indeterminate = someCurrentPageUsersSelected && !allCurrentPageUsersSelected;
+                            }}
+                            disabled={currentPageUserIds.length === 0 || assignedUsersQuery.isFetching || bulkRemoveUsersMutation.isPending}
+                            onChange={(event) => toggleCurrentPageUsers(event.target.checked)}
+                        />
+                        <span>Chọn tất cả</span>
+                    </label>
+                    <span className="rbac-role-users-selected-count">Đã chọn {selectedUserIds.size} User</span>
+                    <div className="rbac-row-actions">
+                        {selectedUserIds.size > 0 && <button
+                            type="button"
+                            className="rbac-link-button"
+                            disabled={bulkRemoveUsersMutation.isPending}
+                            onClick={() => setSelectedUserIds(new Set())}
+                        >Bỏ chọn tất cả</button>}
+                        <button
+                            type="button"
+                            className="rbac-primary-button"
+                            disabled={selectedUserIds.size === 0 || bulkRemoveUsersMutation.isPending}
+                            onClick={beginBulkRemove}
+                        >Gỡ Role ({selectedUserIds.size})</button>
+                    </div>
+                </div>}
+                {canReadRoles && selectedRole && assignedUsersQuery.isLoading && <RbacLoading />}
+                {canReadRoles && selectedRole && assignedUsersQuery.isError && <RbacError error={assignedUsersQuery.error} action="tải người dùng của Role" />}
+                {canReadRoles && selectedRole && assignedUsersQuery.data?.items.length === 0 && <RbacEmpty>Role này chưa được gán cho User nào.</RbacEmpty>}
+                {canReadRoles && selectedRole && assignedUsersQuery.data && assignedUsersQuery.data.items.length > 0 && (
+                    <div className="rbac-role-assigned-users">
+                        {assignedUsersQuery.data.items.map((user) => (
+                            <article className="rbac-role-assigned-user" key={user.userId}>
+                                {canManageUserRoles && <input
+                                    type="checkbox"
+                                    checked={selectedUserIds.has(user.userId)}
+                                    disabled={assignedUsersQuery.isFetching || bulkRemoveUsersMutation.isPending}
+                                    aria-label={`Chọn ${user.displayName}`}
+                                    onChange={() => toggleUserSelection(user.userId)}
+                                />}
+                                <span>{user.displayName}</span>
+                            </article>
+                        ))}
+                        {assignedUsersTotalPages > 1 && <TodoPagination
+                            onSetPage={setAssignedUsersPage}
+                            pagination={{ page: assignedUsersPage, totalPages: assignedUsersTotalPages }}
+                        />}
+                    </div>
+                )}
+            </section>}
+
+            {bulkRemoveConfirmation && <div
+                className="modal-backdrop todo-dialog-backdrop"
+                role="presentation"
+                onClick={() => {
+                    if (!bulkRemoveUsersMutation.isPending) setBulkRemoveConfirmation(null);
+                }}
+            >
+                <section
+                    className="modal-panel todo-dialog rbac-bulk-remove-dialog"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="rbac-bulk-remove-title"
+                    aria-describedby="rbac-bulk-remove-message"
+                    onClick={(event) => event.stopPropagation()}
+                >
+                    <div className="todo-dialog-copy">
+                        <h2 id="rbac-bulk-remove-title">Xác nhận gỡ Role</h2>
+                        <p id="rbac-bulk-remove-message">
+                            Bạn có chắc muốn gỡ Role {bulkRemoveConfirmation.roleName} khỏi {bulkRemoveConfirmation.userIds.length} người dùng đã chọn không?
+                        </p>
+                    </div>
+                    <div className="todo-dialog-actions">
+                        <button
+                            type="button"
+                            className="ghost-btn"
+                            disabled={bulkRemoveUsersMutation.isPending}
+                            onClick={() => setBulkRemoveConfirmation(null)}
+                        >Hủy</button>
+                        <button
+                            type="button"
+                            className="todo-danger-btn"
+                            disabled={bulkRemoveUsersMutation.isPending}
+                            onClick={confirmBulkRemove}
+                        >{bulkRemoveUsersMutation.isPending ? "Đang gỡ…" : "Xác nhận gỡ"}</button>
+                    </div>
+                </section>
+            </div>}
+
+            {editorOpen && <section className="rbac-card rbac-form-card rbac-editor-card">
+                <button type="button" className="rbac-link-button rbac-back-button" onClick={closeEditor}>← Danh sách Roles</button>
+                <div className="rbac-section-heading">
+                    <div>
                         <h2>{creatingRole ? "Tạo Role" : `Sửa ${editingRole?.name ?? "Role"}`}</h2>
                         <p>{creatingRole ? "Có thể gán Permissions ngay khi tạo Role." : "Cập nhật thông tin và Permissions của Role."}</p>
                     </div>

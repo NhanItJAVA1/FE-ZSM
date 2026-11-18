@@ -36,3 +36,15 @@ export interface ReplaceRolePermissionsDto {
 export interface ReplaceUserRolesDto {
     roleIds: number[];
 }
+
+export interface RoleAssignedUserDto {
+    userId: number;
+    displayName: string;
+}
+
+export interface RoleUsersPageDto {
+    items: RoleAssignedUserDto[];
+    totalItems: number;
+    page: number;
+    pageSize: number;
+}

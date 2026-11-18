@@ -17,6 +17,8 @@ export function getApiErrorMessage(error: unknown, action: string): string {
         case 409:
             return error.code === "LAST_ADMIN_PROTECTED"
                 ? "Không thể hoàn tất: thao tác sẽ loại bỏ RBAC administrator cuối cùng."
+                : error.code === "ROLE_IN_USE" || error.code === "ROLE_DELETE_CONFLICT"
+                    ? "Không thể xóa Role vì đang được User sử dụng hoặc Role vẫn còn Permissions."
                 : `Xung đột dữ liệu: ${error.message}`;
         default:
             return error.message || `Không thể ${action}.`;

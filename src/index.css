@@ -3489,6 +3489,26 @@ button:disabled {
   align-items: start;
   gap: 14px;
 }
+.rbac-role-master-detail { grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); align-items: stretch; }
+.rbac-role-master-detail > .rbac-card { min-height: 100%; }
+.rbac-role-row--selected { border-color: color-mix(in srgb, var(--accent) 48%, var(--border)); background: color-mix(in srgb, var(--accent) 6%, var(--surface)); }
+.rbac-role-row-actions { width: auto; justify-content: flex-end; flex-flow: row nowrap; }
+.rbac-icon-button { width: 34px; min-width: 34px; height: 34px; display: flex; flex: 0 0 34px; align-items: center; justify-content: center; padding: 0; border: 1px solid var(--border); background: var(--surface); color: var(--muted); line-height: 0; cursor: pointer; }
+.rbac-icon-button svg { display: block; flex: 0 0 auto; }
+.rbac-icon-button:hover, .rbac-icon-button.active { border-color: color-mix(in srgb, var(--accent) 58%, var(--border)); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); color: var(--accent); }
+.rbac-icon-button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rbac-role-users-panel { display: flex; min-width: 0; flex-direction: column; }
+.rbac-role-users-selection { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; margin: 0 0 12px; padding: 0 0 12px; border-bottom: 1px solid var(--border); }
+.rbac-role-users-select-all { display: inline-flex; align-items: center; gap: 7px; color: var(--text-h); font-size: 12px; font-weight: 700; cursor: pointer; }
+.rbac-role-users-select-all input, .rbac-role-assigned-user input { accent-color: var(--accent); }
+.rbac-role-users-selected-count { color: var(--muted); font-size: 12px; }
+.rbac-role-users-selection .rbac-row-actions { width: auto; margin-left: auto; }
+.rbac-role-users-selection .rbac-primary-button { min-height: 34px; }
+.rbac-role-assigned-users { display: grid; gap: 8px; }
+.rbac-role-assigned-user { min-width: 0; display: flex; align-items: center; justify-content: flex-start; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); background: color-mix(in srgb, var(--surface) 74%, var(--field)); color: var(--text-h); font-size: 13px; }
+.rbac-role-assigned-user > span { min-width: 0; overflow-wrap: anywhere; }
+.rbac-role-assigned-user > input { flex: 0 0 auto; }
+.rbac-bulk-remove-dialog { border-radius: 8px; }
 .rbac-panel-grid > .rbac-editor-card,
 .rbac-panel-grid > .rbac-user-editor-card { grid-column: 1 / -1; }
 .rbac-card-embedded { padding: 16px 0 0; border: 0; box-shadow: none; }
@@ -3514,6 +3534,7 @@ button:disabled {
 }
 
 .rbac-section-heading { margin-bottom: 16px; }
+.rbac-back-button { display: inline-flex; align-items: center; margin: 0 0 12px; padding-left: 0; }
 .rbac-section-heading h2 { margin: 0; color: var(--text-h); font-size: 18px; }
 .rbac-section-heading p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
 .rbac-section-heading .ghost-btn { flex: 0 0 auto; }
@@ -3689,6 +3710,9 @@ button:disabled {
   .admin-recovery-user-row { align-items: flex-start; flex-direction: column; }
   .rbac-role-row { align-items: flex-start; flex-direction: column; }
   .rbac-row-actions { width: 100%; justify-content: flex-start; }
+  .rbac-role-row-actions { width: 100%; justify-content: flex-start; }
+  .rbac-role-users-selection { align-items: flex-start; flex-direction: column; }
+  .rbac-role-users-selection .rbac-row-actions { width: 100%; margin-left: 0; justify-content: flex-start; }
   .rbac-permission-list, .rbac-user-role-list, .rbac-user-edit-grid { grid-template-columns: 1fr; }
   .rbac-user-row { align-items: flex-start; }
   .rbac-tabs { overflow-x: auto; }

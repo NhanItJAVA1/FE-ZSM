@@ -4,6 +4,7 @@ import type {
     ReplaceRolePermissionsDto,
     ReplaceUserRolesDto,
     RoleDto,
+    RoleUsersPageDto,
     SaveRoleDto,
     UserDto,
 } from "../../features/rbac/types.js";
@@ -26,6 +27,18 @@ export const rbacService = {
 
     async deleteRole(id: number): Promise<void> {
         await api.delete(`/roles/${id}`);
+    },
+
+    async getRoleUsers(roleId: number, page: number, pageSize: number, signal?: AbortSignal): Promise<RoleUsersPageDto> {
+        const response = await api.get<RoleUsersPageDto>(`/roles/${roleId}/users`, {
+            params: { page, pageSize },
+            ...(signal ? { signal } : {}),
+        });
+        return response.data;
+    },
+
+    async bulkRemoveUsersFromRole(roleId: number, userIds: number[]): Promise<void> {
+        await api.post<void>(`/roles/${roleId}/users/bulk-remove`, { userIds });
     },
 
     async getPermissions(): Promise<PermissionDto[]> {

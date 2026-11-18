@@ -4,6 +4,8 @@ export const QUERY_KEYS = {
         ["todos", "users-summary", search, page, pageSize] as const,
     todoCategories: (userId: number) => ["todo-categories", "user", userId] as const,
     rbacRoles: ["rbac", "roles"] as const,
+    roleUsers: (roleId: number, page: number, pageSize: number) =>
+        ["rbac", "roles", roleId, "users", page, pageSize] as const,
     rbacPermissions: ["rbac", "permissions"] as const,
     rolePermissions: (roleId: number) => ["rbac", "roles", roleId, "permissions"] as const,
     users: ["rbac", "users"] as const,

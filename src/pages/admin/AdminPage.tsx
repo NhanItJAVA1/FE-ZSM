@@ -61,6 +61,7 @@ export default function AdminPage() {
                                 canUpdateRole={canUpdateRole}
                                 canDeleteRole={canDeleteRole}
                                 canManagePermissions={canManagePermissions}
+                                canManageUserRoles={hasPermission(RBAC_PERMISSIONS.usersManageRoles)}
                                 onToast={showToast}
                             />
                         )}
