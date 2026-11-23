@@ -38,8 +38,9 @@ export default function SiteHeader() {
 
     const canSeeAdmin = RBAC_ADMIN_PAGE_ACCESS_PERMISSIONS.some((permission) => permissionCodes.includes(permission));
     const visibleNavItems = NAV_ITEMS.filter((item) => {
+        if (isSystemOwner) return item.to === ROUTES.adminRecovery;
         if (item.to === ROUTES.admin) return canSeeAdmin;
-        if (item.to === ROUTES.adminRecovery) return isSystemOwner;
+        if (item.to === ROUTES.adminRecovery) return false;
         return true;
     });
 

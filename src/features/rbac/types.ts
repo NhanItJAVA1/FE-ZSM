@@ -21,7 +21,7 @@ export interface UserDto {
     email: string;
     displayName: string | null;
     avatarUrl: string | null;
-    role: string;
+    role: string | null;
     roles: string[];
     permissions: string[];
     createdAt: string;

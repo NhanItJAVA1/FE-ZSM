@@ -120,7 +120,7 @@ export default function UserRoleAssignmentPanel({ onToast }: { onToast: (message
                             >
                                 <div className="rbac-role-copy">
                                     <strong>{item.displayName || item.username}</strong>
-                                    <p>{item.email} · {item.roles.join(", ") || item.role}</p>
+                                    <p>{item.email} · {item.roles.join(", ") || item.role || "Chưa có Role"}</p>
                                 </div>
                             </button>
                         ))}
@@ -176,7 +176,7 @@ export default function UserRoleAssignmentPanel({ onToast }: { onToast: (message
                         <section>
                             {userRolesQuery.isLoading && <RbacLoading />}
                             {userRolesQuery.isError && <RbacError error={userRolesQuery.error} action="tải Roles của User" />}
-                            {!userRolesQuery.isLoading && selectedRoles.length === 0 && <RbacEmpty>Tick Role để xem Permissions tương ứng.</RbacEmpty>}
+                            {!rolesQuery.isLoading && !rolesQuery.isError && !userRolesQuery.isLoading && selectedRoles.length === 0 && <RbacEmpty>User này sẽ không có Role hoặc Permission nào sau khi lưu.</RbacEmpty>}
                             {rolePermissionQueries.map((query, index) => query.isLoading && <RbacLoading key={selectedRoles[index]?.id ?? index} />)}
                             {rolePermissionQueries.map((query, index) => query.isError && <RbacError key={selectedRoles[index]?.id ?? index} error={query.error} action={`tải Permissions của ${selectedRoles[index]?.name ?? "Role"}`} />)}
                             {selectedRoles.length > 0 && !rolePermissionQueries.some((query) => query.isLoading || query.isError) && effectivePermissions.length === 0 && <RbacEmpty>Các Role đã chọn chưa có Permission.</RbacEmpty>}
@@ -198,14 +198,13 @@ export default function UserRoleAssignmentPanel({ onToast }: { onToast: (message
                         </section>
                     </div>
 
-                    {selectedRoleIds.length === 0 && <p className="rbac-inline-error" role="alert">Phải chọn ít nhất một Role trước khi lưu.</p>}
                     {lastAdminError && <p className="rbac-inline-error" role="alert">Không thể bỏ các quyền quản trị RBAC khỏi Admin cuối cùng.</p>}
                     {saveError && !lastAdminError && <p className="rbac-inline-error" role="alert">{saveError}</p>}
                     <div className="rbac-footer-actions rbac-user-save-actions">
                         <button
                             type="button"
                             className="rbac-primary-button"
-                            disabled={!dirty || selectedRoleIds.length === 0 || saveMutation.isPending || rolesQuery.isLoading || rolesQuery.isError || userRolesQuery.isLoading || userRolesQuery.isError}
+                            disabled={!dirty || saveMutation.isPending || rolesQuery.isLoading || rolesQuery.isError || userRolesQuery.isLoading || userRolesQuery.isError}
                             onClick={() => saveMutation.mutate()}
                         >{saveMutation.isPending ? "Đang lưu…" : "Lưu thay đổi"}</button>
                         <span>{selectedRoleIds.length} Role được chọn</span>

@@ -32,7 +32,9 @@ export function useTodoListPageModel() {
     const canReadMine = permissions.includes(RBAC_PERMISSIONS.todoRead);
     const canReadAll = permissions.includes(RBAC_PERMISSIONS.todosReadAll);
     const canReadCategories = Boolean(authUser?.isSystemOwner || permissions.includes(RBAC_PERMISSIONS.todoCategoryRead));
-    const [activeTab, setActiveTab] = useState<"todos" | "users">("todos");
+    const [activeTab, setActiveTab] = useState<"todos" | "users">(
+        !canReadMine && canReadAll ? "users" : "todos"
+    );
     const [todoView, setTodoView] = useState<TodoView>({ type: "mine" });
     const [viewingUser, setViewingUser] = useState<TodoUserSummaryDto | null>(null);
     const [usersSearch, setUsersSearch] = useState("");
