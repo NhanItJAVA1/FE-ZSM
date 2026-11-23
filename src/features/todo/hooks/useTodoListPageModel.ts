@@ -31,7 +31,7 @@ export function useTodoListPageModel() {
     const permissions = authUser?.permissions ?? [];
     const canReadMine = permissions.includes(RBAC_PERMISSIONS.todoRead);
     const canReadAll = permissions.includes(RBAC_PERMISSIONS.todosReadAll);
-    const canReadCategories = Boolean(authUser?.isSystemOwner || permissions.includes(RBAC_PERMISSIONS.todoCategoryRead));
+    const canReadCategories = permissions.includes(RBAC_PERMISSIONS.todoCategoryRead);
     const [activeTab, setActiveTab] = useState<"todos" | "users">(
         !canReadMine && canReadAll ? "users" : "todos"
     );
@@ -42,11 +42,11 @@ export function useTodoListPageModel() {
     const [usersPage, setUsersPage] = useState(1);
     const usersPageSize = 10;
     const canReadCurrentView = todoView.type === "mine" ? canReadMine : canReadAll;
-    const canWriteTodos = Boolean(authUser?.isSystemOwner || authUser?.permissions.includes(RBAC_PERMISSIONS.todoWrite));
+    const canWriteTodos = permissions.includes(RBAC_PERMISSIONS.todoWrite);
     const canWriteCurrentTodos = todoView.type === "mine" && canWriteTodos;
-    const canCreateCategory = Boolean(authUser?.isSystemOwner || authUser?.permissions.includes(RBAC_PERMISSIONS.todoCategoryCreate));
-    const canUpdateCategory = Boolean(authUser?.isSystemOwner || authUser?.permissions.includes(RBAC_PERMISSIONS.todoCategoryUpdate));
-    const canDeleteCategory = Boolean(authUser?.isSystemOwner || authUser?.permissions.includes(RBAC_PERMISSIONS.todoCategoryDelete));
+    const canCreateCategory = permissions.includes(RBAC_PERMISSIONS.todoCategoryCreate);
+    const canUpdateCategory = permissions.includes(RBAC_PERMISSIONS.todoCategoryUpdate);
+    const canDeleteCategory = permissions.includes(RBAC_PERMISSIONS.todoCategoryDelete);
     const leftPanelRef = useRef<HTMLElement | null>(null);
     const pageSize = useTodoPageSize(leftPanelRef, activeTab === "todos" && (canReadCurrentView || canReadCategories));
     const todoFilters = useTodoFilters(pageSize);
