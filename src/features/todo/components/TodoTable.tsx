@@ -107,9 +107,13 @@ export default function TodoTable({
                                     editedRows={editedRows}
                                     isDeleteSelected={selectedIds.includes(todo.id)}
                                     canWrite={editing.canWriteTodos}
+                                    canShare={editing.canShareTodos}
+                                    canShowNotes={editing.canShowNotes}
                                     todo={todo}
                                     onUpdateRow={actions.onUpdateRow}
                                     onToggleSelection={actions.onToggleSelection}
+                                    onShareTodo={actions.onShareTodo}
+                                    onOpenNotes={actions.onOpenTodoNotes}
                                 />
                             ))}
                         </div>

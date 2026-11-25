@@ -3,14 +3,15 @@ import TodoDialog from "../../features/todo/components/TodoDialog.js";
 import TodoPanel from "../../features/todo/components/TodoPanel.js";
 import TodoActionNotice from "../../features/todo/components/TodoActionNotice.js";
 import TodoUsersTab from "../../features/todo/components/TodoUsersTab.js";
+import TodoCollaborationDialog from "../../features/todo/components/TodoCollaborationDialog.js";
 import { useTodoListPageModel } from "../../features/todo/hooks/useTodoListPageModel.js";
 import AppLayout from "../../layouts/AppLayout.js";
 
 export default function TodoListPage() {
-    const { categoryPanelProps, dialogProps, managementProps, notificationProps, panelProps } = useTodoListPageModel();
-    const hasAnyReadPermission = managementProps.canReadMine || managementProps.canReadAll;
+    const { categoryPanelProps, collaborationProps, dialogProps, managementProps, notificationProps, panelProps } = useTodoListPageModel();
+    const hasAnyReadPermission = managementProps.canReadMine || managementProps.canReadAll || managementProps.canReadShared;
     const showCategoryPanel = managementProps.todoView.type === "mine" && managementProps.canReadCategories;
-    const showTodoPage = managementProps.activeTab === "todos" &&
+    const showTodoPage = (managementProps.activeTab === "todos" || managementProps.activeTab === "shared") &&
         (managementProps.canReadCurrentView || showCategoryPanel);
     const userLabel = managementProps.viewingUser?.displayName.trim() ||
         managementProps.viewingUser?.email.trim() ||
@@ -26,7 +27,14 @@ export default function TodoListPage() {
                         aria-selected={managementProps.activeTab === "todos"}
                         className={managementProps.activeTab === "todos" ? "active" : ""}
                         onClick={() => managementProps.onSelectTab("todos")}
-                    >Todos</button>}
+                    >My Todos</button>}
+                    {managementProps.canShowSharedTab && <button
+                        type="button"
+                        role="tab"
+                        aria-selected={managementProps.activeTab === "shared"}
+                        className={managementProps.activeTab === "shared" ? "active" : ""}
+                        onClick={() => managementProps.onSelectTab("shared")}
+                    >Shared with me</button>}
                     {managementProps.canReadAll && <button
                         type="button"
                         role="tab"
@@ -60,8 +68,8 @@ export default function TodoListPage() {
                     <div className="todo-list-page-panel">
                         <div className="todo-view-context">
                             <div>
-                                <p className="eyebrow">{managementProps.todoView.type === "mine" ? "Todos" : "Viewing user"}</p>
-                                <strong>{managementProps.todoView.type === "mine" ? "My Todos" : userLabel}</strong>
+                                <p className="eyebrow">{managementProps.todoView.type === "mine" ? "My Todos" : managementProps.todoView.type === "shared" ? "Shared with me" : "Viewing user"}</p>
+                                <strong>{managementProps.todoView.type === "mine" ? "My Todos" : managementProps.todoView.type === "shared" ? "Shared Todos" : userLabel}</strong>
                                 {managementProps.todoView.type === "user" && <small>User ID: {managementProps.todoView.userId}</small>}
                             </div>
                             {managementProps.todoView.type === "user" && managementProps.canReadMine && (
@@ -71,7 +79,7 @@ export default function TodoListPage() {
                         {managementProps.canReadCurrentView
                             ? <TodoPanel {...panelProps} />
                             : <div className="empty-state todo-scope-empty" role="status">
-                                You need todo.read or todos.read-all to view todos.
+                                You need todo.read, todos.read-all, or todos.read-shared to view todos.
                             </div>}
                     </div>
                 </main>
@@ -89,11 +97,12 @@ export default function TodoListPage() {
 
             {!hasAnyReadPermission && !managementProps.canReadCategories && (
                 <div className="empty-state todo-scope-empty" role="status">
-                    You need todo.read or todos.read-all to view todos.
+                You need todo.read, todos.read-all, or todos.read-shared to view todos.
                 </div>
             )}
 
             <TodoDialog {...dialogProps} />
+            <TodoCollaborationDialog {...collaborationProps} />
             <TodoActionNotice {...notificationProps} />
         </AppLayout>
     );

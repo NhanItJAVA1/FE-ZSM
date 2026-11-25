@@ -1,4 +1,4 @@
-import { Check, Trash2 } from "lucide-react";
+import { Check, MessageSquareText, Share2, Trash2 } from "lucide-react";
 import type { TodoDto, TodoPriority } from "../types.js";
 import {
     PRIORITIES,
@@ -125,22 +125,30 @@ export function TodoDraftRow({
 
 interface TodoRowProps {
     canWrite: boolean;
+    canShare: boolean;
+    canShowNotes: boolean;
     categories: TodoPanelData["categories"];
     editedRows: Record<number, TodoFormState>;
     isDeleteSelected: boolean;
     todo: TodoDto;
     onUpdateRow: TodoPanelActions["onUpdateRow"];
     onToggleSelection: TodoPanelActions["onToggleSelection"];
+    onShareTodo: TodoPanelActions["onShareTodo"];
+    onOpenNotes: TodoPanelActions["onOpenTodoNotes"];
 }
 
 export function TodoRow({
     canWrite,
+    canShare,
+    canShowNotes,
     categories,
     editedRows,
     isDeleteSelected,
     todo,
     onUpdateRow,
     onToggleSelection,
+    onShareTodo,
+    onOpenNotes,
 }: TodoRowProps) {
     const rowDraft = canWrite ? editedRows[todo.id] : undefined;
     const rowValues = rowDraft ?? {
@@ -166,18 +174,39 @@ export function TodoRow({
                     >
                         {isDeleteSelected && <Check size={13} strokeWidth={2.6} />}
                     </button> : <span className="todo-delete-checkbox-spacer" aria-hidden="true" />}
-                    <textarea
-                        className="todo-inline-field todo-inline-field--strong"
-                        value={rowValues.title}
-                        placeholder="Task name"
-                        rows={2}
-                        disabled={!canWrite}
-                        onChange={(event) =>
-                            onUpdateRow(todo, {
-                                title: event.target.value,
-                            })
-                        }
-                    />
+                    <div style={{ display: "flex", alignItems: "center", alignSelf: "stretch", minWidth: 0, gap: 2 }}>
+                        <textarea
+                            className="todo-inline-field todo-inline-field--strong"
+                            value={rowValues.title}
+                            placeholder="Task name"
+                            rows={2}
+                            disabled={!canWrite}
+                            style={{ flex: "1 1 auto", minWidth: 0, height: "100%" }}
+                            onChange={(event) =>
+                                onUpdateRow(todo, {
+                                    title: event.target.value,
+                                })
+                            }
+                        />
+                        {(canShare || canShowNotes) && <div style={{ display: "flex", alignItems: "stretch", height: "100%", flex: "0 0 auto" }}>
+                            {canShare && <button
+                                type="button"
+                                className="todo-header-action-btn active"
+                                style={{ width: 26, minWidth: 26, height: "100%", minHeight: 0 }}
+                                title="Chia sẻ Todo"
+                                aria-label={`Chia sẻ Todo ${todo.title}`}
+                                onClick={() => onShareTodo(todo)}
+                            ><Share2 size={14} /></button>}
+                            {canShowNotes && <button
+                                type="button"
+                                className="todo-header-action-btn active"
+                                style={{ width: 26, minWidth: 26, height: "100%", minHeight: 0 }}
+                                title="Ghi chú"
+                                aria-label={`Xem ghi chú của ${todo.title}`}
+                                onClick={() => onOpenNotes(todo)}
+                            ><MessageSquareText size={14} /></button>}
+                        </div>}
+                    </div>
                 </div>
                 <div className="todo-card-description">
                     <textarea

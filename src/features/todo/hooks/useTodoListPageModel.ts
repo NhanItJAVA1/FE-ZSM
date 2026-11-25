@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "../../../constants/queryKeys.js";
 import { useDebouncedValue } from "../../../hooks/useDebouncedValue.js";
 import { todoService } from "../../../services/api/todoService.js";
@@ -16,10 +16,12 @@ import { useTodoSelection } from "./useTodoSelection.js";
 import { useTodoTableEditing } from "./useTodoTableEditing.js";
 import { useAppSelector } from "../../../stores/hook.js";
 import { RBAC_PERMISSIONS } from "../../../constants/rbacPermissions.js";
+import type { TodoCollaborationDialogState } from "../components/TodoCollaborationDialog.js";
 
 const EMPTY_TODOS: TodoDto[] = [];
 
 export function useTodoListPageModel() {
+    const queryClient = useQueryClient();
     const [actionNotice, setActionNotice] = useState<{ id: number; message: string } | null>(null);
     const noticeId = useRef(0);
     const notifyActionError = useCallback((message: string) => {
@@ -28,27 +30,40 @@ export function useTodoListPageModel() {
     }, []);
     const authUser = useAppSelector((state) => state.auth.user);
     const userId = authUser?.id;
+    const onSharedAccessLost = useCallback(() => {
+        if (userId !== undefined) {
+            void queryClient.invalidateQueries({ queryKey: [...QUERY_KEYS.todos(userId), "shared"] });
+        }
+    }, [queryClient, userId]);
     const permissions = authUser?.permissions ?? [];
     const canReadMine = permissions.includes(RBAC_PERMISSIONS.todoRead);
     const canReadAll = permissions.includes(RBAC_PERMISSIONS.todosReadAll);
+    const canReadShared = permissions.includes(RBAC_PERMISSIONS.todosReadShared);
     const canReadCategories = permissions.includes(RBAC_PERMISSIONS.todoCategoryRead);
-    const [activeTab, setActiveTab] = useState<"todos" | "users">(
-        !canReadMine && canReadAll ? "users" : "todos"
+    const canShareTodos = permissions.includes(RBAC_PERMISSIONS.todosShare);
+    const canCreateNotes = permissions.includes(RBAC_PERMISSIONS.todosNotesCreate);
+    const [activeTab, setActiveTab] = useState<"todos" | "users" | "shared">(
+        canReadMine ? "todos" : canReadShared ? "shared" : canReadAll ? "users" : "todos"
     );
-    const [todoView, setTodoView] = useState<TodoView>({ type: "mine" });
+    const [todoView, setTodoView] = useState<TodoView>(
+        !canReadMine && canReadShared ? { type: "shared" } : { type: "mine" }
+    );
     const [viewingUser, setViewingUser] = useState<TodoUserSummaryDto | null>(null);
+    const [collaborationDialog, setCollaborationDialog] = useState<TodoCollaborationDialogState | null>(null);
     const [usersSearch, setUsersSearch] = useState("");
     const debouncedUsersSearch = useDebouncedValue(usersSearch, 500);
     const [usersPage, setUsersPage] = useState(1);
     const usersPageSize = 10;
-    const canReadCurrentView = todoView.type === "mine" ? canReadMine : canReadAll;
+    const canReadCurrentView = todoView.type === "mine"
+        ? canReadMine
+        : todoView.type === "shared" ? canReadShared : canReadAll;
     const canWriteTodos = permissions.includes(RBAC_PERMISSIONS.todoWrite);
     const canWriteCurrentTodos = todoView.type === "mine" && canWriteTodos;
     const canCreateCategory = permissions.includes(RBAC_PERMISSIONS.todoCategoryCreate);
     const canUpdateCategory = permissions.includes(RBAC_PERMISSIONS.todoCategoryUpdate);
     const canDeleteCategory = permissions.includes(RBAC_PERMISSIONS.todoCategoryDelete);
     const leftPanelRef = useRef<HTMLElement | null>(null);
-    const pageSize = useTodoPageSize(leftPanelRef, activeTab === "todos" && (canReadCurrentView || canReadCategories));
+    const pageSize = useTodoPageSize(leftPanelRef, activeTab !== "users" && (canReadCurrentView || canReadCategories));
     const todoFilters = useTodoFilters(pageSize);
     const allTodosQuery = useTodosQuery({
         page: 1,
@@ -126,12 +141,21 @@ export function useTodoListPageModel() {
     }, [currentTodoPage, setPage, todosQuery.data, totalPages]);
 
     useEffect(() => {
-        if (activeTab === "users" && !canReadAll && (canReadMine || todoView.type === "user")) {
-            setActiveTab("todos");
-        } else if (activeTab === "todos" && !canReadMine && todoView.type === "mine" && canReadAll) {
-            setActiveTab("users");
+        if (activeTab === "users" && !canReadAll) {
+            setActiveTab(canReadMine ? "todos" : canReadShared ? "shared" : "todos");
+        } else if (activeTab === "shared" && !canReadShared) {
+            setTodoView({ type: "mine" });
+            setViewingUser(null);
+            setActiveTab(canReadMine ? "todos" : canReadAll ? "users" : "todos");
+        } else if (activeTab === "todos" && !canReadMine && todoView.type === "mine") {
+            if (canReadShared) {
+                setTodoView({ type: "shared" });
+                setActiveTab("shared");
+            } else if (canReadAll) {
+                setActiveTab("users");
+            }
         }
-    }, [activeTab, canReadAll, canReadMine, todoView]);
+    }, [activeTab, canReadAll, canReadMine, canReadShared, todoView]);
 
     async function refetchTodos() {
         await todosQuery.refetch();
@@ -162,9 +186,9 @@ export function useTodoListPageModel() {
         todoDialogActions.actions.selectTodoCategory(filter);
     }
 
-    function switchTodoView(nextView: TodoView, targetUser: TodoUserSummaryDto | null, tab: "todos" | "users") {
+    function switchTodoView(nextView: TodoView, targetUser: TodoUserSummaryDto | null, tab: "todos" | "users" | "shared") {
         const isSameView = nextView.type === todoView.type &&
-            (nextView.type === "mine" || (todoView.type === "user" && nextView.userId === todoView.userId));
+            (nextView.type !== "user" || (todoView.type === "user" && nextView.userId === todoView.userId));
         if (isSameView) {
             setActiveTab(tab);
             return;
@@ -198,9 +222,20 @@ export function useTodoListPageModel() {
         switchTodoView({ type: "mine" }, null, "todos");
     }
 
-    function selectManagementTab(tab: "todos" | "users") {
+    function selectManagementTab(tab: "todos" | "users" | "shared") {
         if (tab === "users" && !canReadAll) return;
-        if (tab === "todos" && !canReadMine && todoView.type !== "user") return;
+        if (tab === "shared") {
+            if (!canReadShared) return;
+            switchTodoView({ type: "shared" }, null, "shared");
+            return;
+        }
+        if (tab === "todos") {
+            if (!canReadMine && todoView.type !== "user") return;
+            if (todoView.type === "shared") {
+                switchTodoView({ type: "mine" }, null, "todos");
+                return;
+            }
+        }
         setActiveTab(tab);
     }
 
@@ -228,8 +263,10 @@ export function useTodoListPageModel() {
             activeTab,
             canReadMine,
             canReadAll,
+            canReadShared,
             canReadCategories,
             canShowTodosTab: canReadMine || todoView.type === "user",
+            canShowSharedTab: canReadShared,
             canReadCurrentView,
             todoView,
             viewingUser,
@@ -303,9 +340,13 @@ export function useTodoListPageModel() {
             },
             editing: {
                 canWriteTodos: canWriteCurrentTodos,
+                canShareTodos: todoView.type === "mine" && canShareTodos,
+                canShowNotes: todoView.type === "mine" || todoView.type === "shared",
                 readOnlyMessage: todoView.type === "user"
                     ? "Viewing another User's Todos is read-only."
-                    : "You can only view Todo because you don't have todo.write.",
+                    : todoView.type === "shared"
+                        ? "Shared Todos are read-only."
+                        : "You can only view Todo because you don't have todo.write.",
                 editedRows: todoEditing.editing.editedRows,
                 formError: todoEditing.editing.formError,
                 drafts: todoEditing.editing.drafts,
@@ -332,6 +373,16 @@ export function useTodoListPageModel() {
                 onToggleSelection: todoSelection.actions.toggleSelection,
                 onUpdateDraft: todoEditing.actions.updateInlineDraft,
                 onUpdateRow: todoEditing.actions.updateTodoRow,
+                onShareTodo: (todo: TodoDto) => {
+                    if (todoView.type === "mine" && canShareTodos) {
+                        setCollaborationDialog({ mode: "share", todo, sharedContext: false });
+                    }
+                },
+                onOpenTodoNotes: (todo: TodoDto) => {
+                    if (todoView.type === "mine" || todoView.type === "shared") {
+                        setCollaborationDialog({ mode: "notes", todo, sharedContext: todoView.type === "shared" });
+                    }
+                },
                 onSetOverdueFilter: todoFilters.actions.setOverdueFilter,
                 onSetPriorityFilter: todoFilters.actions.setPriorityFilter,
                 onSetStatusFilter: todoFilters.actions.setStatusFilter,
@@ -339,6 +390,12 @@ export function useTodoListPageModel() {
                 onSave: () => void saveTodoPanel(),
                 onRetry: () => void refetchTodos(),
             },
+        },
+        collaborationProps: {
+            dialog: collaborationDialog,
+            canCreateNotes,
+            onClose: () => setCollaborationDialog(null),
+            onSharedAccessLost,
         },
     };
 }

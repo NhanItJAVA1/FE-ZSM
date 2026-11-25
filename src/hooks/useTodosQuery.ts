@@ -21,9 +21,11 @@ export function useTodosQuery(query: TodoQuery | undefined, view: TodoView, enab
                 query,
             ]
             : ["todos", "anonymous", view.type, viewUserId, requestPage, requestPageSize, query],
-        queryFn: ({ signal }) => view.type === "mine"
-            ? todoService.getMine(query, signal)
-            : todoService.getForUser(view.userId, query, signal),
+        queryFn: ({ signal }) => {
+            if (view.type === "mine") return todoService.getMine(query, signal);
+            if (view.type === "shared") return todoService.getShared(query, signal);
+            return todoService.getForUser(view.userId, query, signal);
+        },
         enabled: sessionUserId !== undefined && enabled,
         retry: false,
     });

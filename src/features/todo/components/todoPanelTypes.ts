@@ -31,6 +31,8 @@ export interface TodoPanelSelection {
 
 export interface TodoPanelEditing {
     canWriteTodos: boolean;
+    canShareTodos: boolean;
+    canShowNotes: boolean;
     readOnlyMessage: string;
     editedRows: Record<number, TodoFormState>;
     formError: string | null;
@@ -54,6 +56,8 @@ export interface TodoPanelActions {
     onRemoveDraft: (id: string) => void;
     onUpdateDraft: (id: string, patch: Partial<TodoFormState>) => void;
     onUpdateRow: (todo: TodoDto, patch: Partial<TodoFormState>) => void;
+    onShareTodo: (todo: TodoDto) => void;
+    onOpenTodoNotes: (todo: TodoDto) => void;
     onSetOverdueFilter: (filter: TodoOverdueFilter) => void;
     onSetPriorityFilter: (priority: TodoPriority | "All") => void;
     onSetStatusFilter: (status: TodoStatus | "All") => void;

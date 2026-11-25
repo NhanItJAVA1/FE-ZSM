@@ -3,6 +3,7 @@ export type TodoPriority = "Low" | "Medium" | "High";
 
 export interface TodoDto {
     id: number;
+    ownerDisplayName: string;
     title: string;
     description: string | null;
     status: TodoStatus;
@@ -33,7 +34,22 @@ export interface PagedResult<T> {
 
 export type TodoView =
     | { type: "mine" }
+    | { type: "shared" }
     | { type: "user"; userId: number };
+
+export interface TodoShareDto {
+    sharedWithUserId: number;
+    createdAt: string;
+}
+
+export interface TodoNoteDto {
+    id: number;
+    todoId: number;
+    userId: number;
+    displayName: string;
+    content: string;
+    createdAt: string;
+}
 
 export interface TodoUserSummaryDto {
     userId: number;

@@ -1,5 +1,7 @@
 export const QUERY_KEYS = {
     todos: (userId: number) => ["todos", "user", userId] as const,
+    todoShares: (todoId: number) => ["todos", "shares", todoId] as const,
+    todoNotes: (todoId: number) => ["todos", "notes", todoId] as const,
     todoUsersSummary: (search: string, page: number, pageSize: number) =>
         ["todos", "users-summary", search, page, pageSize] as const,
     todoCategories: (userId: number) => ["todo-categories", "user", userId] as const,
