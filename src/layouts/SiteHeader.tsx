@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import NavIcon, { type NavIconName } from "../components/ui/NavIcon.js";
 import { RBAC_ADMIN_PAGE_ACCESS_PERMISSIONS } from "../constants/rbacPermissions.js";
 import { ROUTES } from "../constants/routes.js";
@@ -21,6 +21,7 @@ const NAV_ITEMS: Array<{
 export default function SiteHeader() {
     const dispatch = useAppDispatch();
     const queryClient = useQueryClient();
+    const location = useLocation();
     const navigate = useNavigate();
     const { user } = useAppSelector((state) => state.auth);
     const isSystemOwner = user?.isSystemOwner ?? false;
@@ -45,7 +46,7 @@ export default function SiteHeader() {
     });
 
     return (
-        <header className="site-header">
+        <header className={`site-header${location.pathname === ROUTES.admin ? " site-header--admin" : ""}`}>
             <div className="site-header-left site-header-rail">
                 <nav
                     className="site-nav site-nav--icons"
@@ -78,7 +79,7 @@ export default function SiteHeader() {
                 )}
             </div>
 
-            {user && (
+            {user && location.pathname !== ROUTES.admin && (
                 <span className="site-header-greeting" title={user.displayName || user.username}>
                     Hi, {user.displayName || user.username}
                 </span>

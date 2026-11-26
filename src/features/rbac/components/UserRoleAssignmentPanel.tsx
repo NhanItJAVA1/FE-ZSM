@@ -130,16 +130,23 @@ export default function UserRoleAssignmentPanel({ onToast }: { onToast: (message
 
             {user && (
                 <section className="rbac-card rbac-user-editor-card">
-                    <button type="button" className="rbac-link-button rbac-back-button" onClick={() => setEditingUserId(null)}>← Quay lại</button>
+                    <div className="rbac-user-editor-sticky">
+                        <div className="rbac-user-editor-header">
+                            <button
+                                type="button"
+                                className="rbac-user-editor-back"
+                                aria-label="Quay lại danh sách Users"
+                                title="Quay lại"
+                                onClick={() => setEditingUserId(null)}
+                            >←</button>
+                            <span className="rbac-user-editor-divider" aria-hidden="true" />
+                            <h2>Edit Access</h2>
+                            <span className="rbac-user-editor-divider" aria-hidden="true" />
+                            <p>{user.displayName || user.username} · {user.email}</p>
+                        </div>
+                    </div>
                     <div className="rbac-user-edit-grid">
                         <section>
-                            <div className="rbac-user-editor-title">
-                                <h2>Chỉnh quyền truy cập</h2>
-                                <p>{user.displayName || user.username} · {user.email}</p>
-                            </div>
-                            <div className="rbac-user-subsection-heading">
-                                <h3>Roles</h3>
-                            </div>
                             {rolesQuery.isLoading && <RbacLoading />}
                             {rolesQuery.isError && <RbacError error={rolesQuery.error} action="tải Roles" />}
                             {rolesQuery.data?.length === 0 && <RbacEmpty>Chưa có Role để gán.</RbacEmpty>}
@@ -181,7 +188,7 @@ export default function UserRoleAssignmentPanel({ onToast }: { onToast: (message
                             {rolePermissionQueries.map((query, index) => query.isError && <RbacError key={selectedRoles[index]?.id ?? index} error={query.error} action={`tải Permissions của ${selectedRoles[index]?.name ?? "Role"}`} />)}
                             {selectedRoles.length > 0 && !rolePermissionQueries.some((query) => query.isLoading || query.isError) && effectivePermissions.length === 0 && <RbacEmpty>Các Role đã chọn chưa có Permission.</RbacEmpty>}
                             {effectivePermissions.length > 0 && (
-                                <div className="rbac-user-table-wrap">
+                                <div className="rbac-user-table-wrap rbac-effective-permissions-scroll">
                                     <table className="rbac-user-table rbac-effective-permissions-table">
                                         <thead><tr><th scope="col">Permission</th><th scope="col">Được cấp bởi</th></tr></thead>
                                         <tbody>

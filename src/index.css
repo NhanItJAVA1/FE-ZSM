@@ -67,6 +67,10 @@ dl {
   gap: 18px;
 }
 
+.app-shell:has(.page-heading--admin) {
+  padding-top: 0;
+}
+
 .site-header {
   position: fixed;
   top: 0;
@@ -84,6 +88,49 @@ dl {
   min-height: 0;
   flex-wrap: nowrap;
   gap: 10px;
+}
+
+.site-header--admin {
+  top: 0;
+  left: 0;
+  height: 156px;
+  align-items: stretch;
+}
+
+.site-header--admin .site-header-left,
+.site-header--admin .site-header-rail {
+  width: 46px;
+  height: 100%;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.site-header--admin .site-header-rail {
+  border-radius: 0 0 18px 18px;
+}
+
+.site-header--admin .site-nav--icons {
+  height: 100%;
+  flex: 2 1 0;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.site-header--admin .site-nav-icon-btn {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  flex: 1 1 0;
+  border-right: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+}
+
+.site-header--admin .site-nav-icon-btn--logout {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  flex: 1 1 0;
+  border-radius: 0;
 }
 
 .site-header-left {
@@ -440,6 +487,47 @@ body:has(.todo-list-page) .header-chip--user {
     var(--hero-gradient),
     url('https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=1600&q=80') center/cover;
   color: var(--text-on-dark);
+}
+
+.page-heading--sticky {
+  position: sticky;
+  top: 0;
+  z-index: 90;
+}
+
+.page-heading--admin {
+  width: calc(100% + 42px);
+  min-height: 156px;
+  margin-left: -18px;
+  border-radius: 10px;
+  justify-content: center;
+  text-align: center;
+}
+
+.page-heading--admin > div:first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.page-heading--admin .hero-copy {
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.admin-heading-greeting {
+  position: absolute;
+  top: 20px;
+  right: 28px;
+  flex: 0 0 auto;
+  padding: 7px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-on-dark);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
 }
 
 .hero-banner h1,
@@ -3325,10 +3413,34 @@ button:disabled {
     padding: 64px 12px 12px;
   }
 
+  .app-shell:has(.page-heading--admin) {
+    padding-top: 0;
+  }
+
   .site-header {
     top: 0;
     left: 0;
     width: auto;
+  }
+
+  .site-header--admin {
+    top: 0;
+    left: 0;
+  }
+
+  .page-heading--sticky {
+    top: 0;
+  }
+
+  .page-heading--admin {
+    width: calc(100% + 16px);
+    min-height: 156px;
+    margin-left: -6px;
+  }
+
+  .page-heading--admin .admin-heading-greeting {
+    top: 14px;
+    right: 14px;
   }
 
   .site-header-left {
@@ -3444,7 +3556,7 @@ button:disabled {
 .rbac-workspace {
   display: grid;
   gap: 14px;
-  margin-top: 18px;
+  margin-top: -4px;
   padding-bottom: 28px;
 }
 
@@ -3463,9 +3575,16 @@ button:disabled {
 .rbac-replace-warning span { color: var(--muted); }
 
 .rbac-tabs {
+  position: sticky;
+  top: 160px;
+  z-index: 80;
   display: flex;
+  width: calc(100% + 42px);
+  margin-left: -18px;
+  justify-content: center;
   gap: 6px;
   border-bottom: 1px solid var(--border);
+  background: var(--bg);
 }
 
 .rbac-tabs button {
@@ -3473,14 +3592,21 @@ button:disabled {
   padding: 0 14px;
   border: 0;
   border-bottom: 2px solid transparent;
-  border-radius: 0;
+  border-radius: 6px 6px 0 0;
   background: transparent;
   color: var(--muted);
 }
 
+.rbac-tabs button:hover:not(.active) {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
 .rbac-tabs button.active {
   border-bottom-color: var(--accent);
-  color: var(--text-h);
+  background: color-mix(in srgb, var(--accent) 9%, var(--surface));
+  color: var(--accent-hover);
+  font-weight: 800;
 }
 
 .rbac-panel-grid {
@@ -3538,9 +3664,20 @@ button:disabled {
 .rbac-section-heading h2 { margin: 0; color: var(--text-h); font-size: 18px; }
 .rbac-section-heading p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
 .rbac-section-heading .ghost-btn { flex: 0 0 auto; }
-.rbac-user-editor-title { margin-bottom: 16px; }
-.rbac-user-editor-title h2 { margin: 0; color: var(--text-h); font-size: 18px; }
-.rbac-user-editor-title p { margin: 5px 0 0; color: var(--muted); font-size: 13px; }
+.rbac-user-editor-sticky {
+  position: sticky;
+  top: 210px;
+  z-index: 20;
+  margin: -4px -4px 14px;
+  padding: 4px;
+  background: var(--surface);
+}
+.rbac-user-editor-header { display: flex; min-width: 0; align-items: center; gap: 12px; }
+.rbac-user-editor-header h2 { flex: 0 0 auto; margin: 0; color: var(--text-h); font-size: 18px; }
+.rbac-user-editor-header p { min-width: 0; margin: 0; overflow: hidden; color: var(--muted); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.rbac-user-editor-back { width: 38px; min-width: 38px; height: 38px; min-height: 38px; padding: 0; border: 0; background: transparent; color: var(--accent); font-size: 30px; font-weight: 600; line-height: 1; }
+.rbac-user-editor-back:hover { color: var(--accent-hover); }
+.rbac-user-editor-divider { width: 1px; height: 24px; flex: 0 0 1px; background: var(--border); }
 
 .rbac-role-list,
 .rbac-permission-groups,
@@ -3660,6 +3797,8 @@ button:disabled {
 .rbac-user-subsection-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
 .rbac-user-subsection-heading h3 { margin: 0; }
 .rbac-user-table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 7px; }
+.rbac-effective-permissions-scroll { max-height: min(52vh, 480px); overflow: auto; overscroll-behavior: contain; }
+.rbac-effective-permissions-table thead th { position: sticky; top: 0; z-index: 1; }
 .rbac-user-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .rbac-user-table th { padding: 10px 12px; background: var(--field); color: var(--text-h); text-align: left; font-weight: 700; }
 .rbac-user-table td { padding: 10px 12px; border-top: 1px solid var(--border); color: var(--muted); vertical-align: middle; }
@@ -3717,5 +3856,10 @@ button:disabled {
   .rbac-user-row { align-items: flex-start; }
   .rbac-tabs { overflow-x: auto; }
   .rbac-tabs button { flex: 0 0 auto; }
+  .rbac-tabs { top: 220px; width: calc(100% + 16px); margin-left: -6px; }
   .rbac-footer-actions { align-items: flex-start; flex-direction: column; }
+  .rbac-user-editor-sticky { top: 270px; }
+  .rbac-user-editor-header { gap: 8px; }
+  .rbac-user-editor-header h2 { font-size: 15px; }
+  .rbac-user-editor-header p { font-size: 11px; }
 }

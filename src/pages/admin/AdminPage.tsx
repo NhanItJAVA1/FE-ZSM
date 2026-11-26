@@ -36,15 +36,14 @@ export default function AdminPage() {
     return (
         <AppLayout>
             <PageHeading
+                className="page-heading--sticky page-heading--admin"
                 eyebrow="Admin"
                 title="Quản lý truy cập"
                 description="Quản lý Roles, quyền của Role và quyền truy cập của từng User."
+                action={user && <span className="admin-heading-greeting">Hi, {user.displayName || user.username}</span>}
             />
 
             <section className="rbac-workspace">
-                <div className="rbac-security-note" role="note">
-                    Quyền được xác thực bởi Backend trên mọi request. Giao diện không suy ra quyền từ JWT Role claim.
-                </div>
                 {visibleSections.length === 0 && (
                     <p role="status">Bạn chưa được cấp quyền quản lý RBAC.</p>
                 )}

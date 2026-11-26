@@ -190,7 +190,7 @@ export default function TodoCollaborationDialog({
                                     ? currentUser.displayName || currentUser.username
                                     : `User #${note.userId}`)}</span>
                                 <p>{note.content}</p>
-                                <small>{new Date(note.createdAt).toLocaleString()}</small>
+                                <small>{new Date(note.createdAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}</small>
                             </div>
                         ))}
                     </div>}
