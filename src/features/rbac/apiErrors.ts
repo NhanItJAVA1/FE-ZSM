@@ -2,9 +2,28 @@ import { ApiError } from "../../services/api/apiError.js";
 
 export { ApiError };
 
-export function getApiErrorMessage(error: unknown, action: string): string {
+export function getApiErrorMessage(error: unknown, action: string, language: "vi" | "en" = "vi"): string {
     if (!(error instanceof ApiError)) {
-        return error instanceof Error ? error.message : `Không thể ${action}.`;
+        return error instanceof Error ? error.message : language === "en" ? `Unable to ${action}.` : `Không thể ${action}.`;
+    }
+
+    if (language === "en") {
+        switch (error.status) {
+            case 400:
+                return `Invalid data: ${error.message}`;
+            case 403:
+                return "You do not have permission to perform this action.";
+            case 404:
+                return "This item no longer exists. Reload the list and try again.";
+            case 409:
+                return error.code === "LAST_ADMIN_PROTECTED"
+                    ? "This action would remove the last RBAC administrator."
+                    : error.code === "ROLE_IN_USE" || error.code === "ROLE_DELETE_CONFLICT"
+                        ? "This Role cannot be deleted while it is assigned to Users or still has Permissions."
+                        : `Data conflict: ${error.message}`;
+            default:
+                return error.message || `Unable to ${action}.`;
+        }
     }
 
     switch (error.status) {

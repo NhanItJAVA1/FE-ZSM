@@ -38,8 +38,8 @@ export default function AdminPage() {
             <PageHeading
                 className="page-heading--sticky page-heading--admin"
                 eyebrow="Admin"
-                title="Quản lý truy cập"
-                description="Quản lý Roles, quyền của Role và quyền truy cập của từng User."
+                title="Access Management"
+                description="Manage Roles, Role permissions, and User access."
                 action={user && <span className="admin-heading-greeting">Hi, {user.displayName || user.username}</span>}
             />
 

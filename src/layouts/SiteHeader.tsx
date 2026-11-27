@@ -14,7 +14,7 @@ const NAV_ITEMS: Array<{
     end?: boolean;
 }> = [
     { to: ROUTES.todoList, label: "Todo list", icon: "todoList" },
-    { to: ROUTES.admin, label: "Quản trị", icon: "admin" },
+    { to: ROUTES.admin, label: "Access Management", icon: "admin" },
     { to: ROUTES.adminRecovery, label: "Admin Recovery", icon: "search" },
 ];
 
@@ -58,7 +58,8 @@ export default function SiteHeader() {
                             to={item.to}
                             end={item.end ?? false}
                             className="site-nav-icon-btn"
-                            title={item.label}
+                            aria-label={item.label}
+                            data-tooltip={item.label}
                         >
                             <NavIcon name={item.icon} className="site-nav-icon" />
                             <span className="sr-only">{item.label}</span>
@@ -70,11 +71,12 @@ export default function SiteHeader() {
                     <button
                         type="button"
                         className="site-nav-icon-btn site-nav-icon-btn--logout"
+                        aria-label="Log out"
+                        data-tooltip="Log out"
                         onClick={handleLogout}
-                        title="Đăng xuất"
                     >
                         <NavIcon name="logout" className="site-nav-icon" />
-                        <span className="sr-only">Đăng xuất</span>
+                        <span className="sr-only">Log out</span>
                     </button>
                 )}
             </div>

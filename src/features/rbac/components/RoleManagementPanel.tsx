@@ -117,7 +117,7 @@ export default function RoleManagementPanel({
             } catch (error) {
                 return {
                     role,
-                    permissionError: `Role đã được tạo nhưng chưa gán được Permissions: ${getApiErrorMessage(error, "cập nhật Permissions")}`,
+                    permissionError: `Role was created, but Permissions could not be assigned: ${getApiErrorMessage(error, "update Permissions", "en")}`,
                     action: "created" as const,
                     permissionCount: 0,
                 };
@@ -145,10 +145,10 @@ export default function RoleManagementPanel({
             setCreatingRole(false);
             setEditorOpen(false);
             onToast(action === "created"
-                ? permissionCount > 0 ? "Đã tạo Role và gán Permissions thành công." : "Đã tạo Role thành công."
-                : "Đã cập nhật Role thành công.");
+                ? permissionCount > 0 ? "Role and Permissions created successfully." : "Role created successfully."
+                : "Role updated successfully.");
         },
-        onError: (error) => setFormError(getApiErrorMessage(error, "lưu Role")),
+        onError: (error) => setFormError(getApiErrorMessage(error, "save the Role", "en")),
     });
     const deleteMutation = useMutation({
         mutationFn: async (id: number) => {
@@ -157,7 +157,7 @@ export default function RoleManagementPanel({
             return { roleName, roleId: id };
         },
         onSuccess: ({ roleName, roleId }) => {
-            onToast(roleName ? `Đã xóa Role “${roleName}”.` : "Đã xóa Role thành công.");
+            onToast(roleName ? `Role “${roleName}” deleted.` : "Role deleted successfully.");
             if (selectedRoleId === roleId) {
                 setSelectedRoleId(null);
                 setAssignedUsersPage(1);
@@ -165,7 +165,7 @@ export default function RoleManagementPanel({
             }
             void refreshRoles();
         },
-        onError: (error) => onToast(getApiErrorMessage(error, "xóa Role"), "error"),
+        onError: (error) => onToast(getApiErrorMessage(error, "delete the Role", "en"), "error"),
     });
     const bulkRemoveUsersMutation = useMutation({
         mutationFn: ({ roleId, userIds }: BulkRemoveConfirmation) =>
@@ -178,13 +178,13 @@ export default function RoleManagementPanel({
                 setAssignedUsersPage((page) => Math.min(page, nextTotalPages));
             }
             setBulkRemoveConfirmation(null);
-            onToast(`Đã gỡ Role “${roleName}” khỏi ${userIds.length} User.`);
+            onToast(`Role “${roleName}” removed from ${userIds.length} User${userIds.length === 1 ? "" : "s"}.`);
             await queryClient.invalidateQueries({ queryKey: ["rbac", "roles", roleId, "users"] });
             await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.users });
         },
         onError: (error) => {
             setBulkRemoveConfirmation(null);
-            onToast(getApiErrorMessage(error, "gỡ Role khỏi Users"), "error");
+            onToast(getApiErrorMessage(error, "remove the Role from Users", "en"), "error");
         },
     });
 
@@ -197,7 +197,7 @@ export default function RoleManagementPanel({
             return false;
         }
         if (!name.trim()) {
-            throw new Error("Tên Role không được để trống.");
+            throw new Error("Role name is required.");
         }
 
         let updatedRole: RoleDto;
@@ -207,7 +207,7 @@ export default function RoleManagementPanel({
                 description: description.trim(),
             });
         } catch (error) {
-            throw new Error(getApiErrorMessage(error, "cập nhật tên và mô tả Role"));
+            throw new Error(getApiErrorMessage(error, "update the Role name and description", "en"));
         }
 
         setEditingRole(updatedRole);
@@ -307,16 +307,16 @@ export default function RoleManagementPanel({
                 <div className="rbac-section-heading">
                     <div>
                         <h2>Roles</h2>
-                        <p>Tạo vai trò, quản lý thông tin và Permissions được cấp cho từng Role.</p>
+                        <p>Create Roles, manage their details, and assign Permissions.</p>
                     </div>
                     <div className="rbac-row-actions">
-                        {canCreateRole && <button type="button" className="rbac-primary-button" onClick={beginCreate} aria-label="Tạo Role" title="Tạo Role">+</button>}
+                        {canCreateRole && <button type="button" className="rbac-primary-button" onClick={beginCreate} aria-label="Create Role" title="Create Role">+</button>}
                     </div>
                 </div>
-                {canReadRoles && rolesQuery.isLoading && <RbacLoading />}
-                {canReadRoles && rolesQuery.isError && <RbacError error={rolesQuery.error} action="tải Roles" />}
-                {!canReadRoles && <p role="status">Bạn cần quyền roles.read để xem danh sách Role.</p>}
-                {canReadRoles && rolesQuery.data?.length === 0 && <RbacEmpty>Chưa có Role nào.</RbacEmpty>}
+                {canReadRoles && rolesQuery.isLoading && <RbacLoading language="en" />}
+                {canReadRoles && rolesQuery.isError && <RbacError error={rolesQuery.error} action="load Roles" language="en" />}
+                {!canReadRoles && <p role="status">You need the roles.read permission to view Roles.</p>}
+                {canReadRoles && rolesQuery.data?.length === 0 && <RbacEmpty>No Roles yet.</RbacEmpty>}
                 {canReadRoles && rolesQuery.data && rolesQuery.data.length > 0 && (
                     <div className="rbac-role-list">
                         {rolesQuery.data.map((role) => {
@@ -326,9 +326,9 @@ export default function RoleManagementPanel({
                                 <div className="rbac-role-copy">
                                     <div className="rbac-role-title">
                                         <strong>{role.name}</strong>
-                                        {protectedRole && <span className="rbac-badge">Mặc định · khóa tên</span>}
+                                        {protectedRole && <span className="rbac-badge">Default · name locked</span>}
                                     </div>
-                                    <p>{role.description || "Chưa có mô tả"}</p>
+                                    <p>{role.description || "No description"}</p>
                                 </div>
                             );
                             return (
@@ -337,15 +337,15 @@ export default function RoleManagementPanel({
                                         type="button"
                                         className="rbac-role-row-main"
                                         onClick={() => beginEdit(role)}
-                                        aria-label={`Sửa Role ${role.name}`}
+                                        aria-label={`Edit Role ${role.name}`}
                                     >{roleCopy}</button> : roleCopy}
                                     <div className="rbac-row-actions rbac-role-row-actions">
                                         <button
                                             type="button"
                                             className={`rbac-icon-button${selectedRoleId === role.id ? " active" : ""}`}
-                                            aria-label={`Xem người dùng có Role ${role.name}`}
+                                            aria-label={`View Users with Role ${role.name}`}
                                             aria-pressed={selectedRoleId === role.id}
-                                            title="Xem người dùng có Role này"
+                                            title="View Users assigned to this Role"
                                             disabled={bulkRemoveUsersMutation.isPending}
                                             onClick={() => selectRoleForUsers(role)}
                                         ><Eye size={17} aria-hidden="true" /></button>
@@ -354,12 +354,12 @@ export default function RoleManagementPanel({
                                             className="ghost-btn danger"
                                             disabled={protectedRole || deleteMutation.isPending || bulkRemoveUsersMutation.isPending}
                                             onClick={() => {
-                                                if (window.confirm(`Xóa Role “${role.name}”? Thao tác này không thể hoàn tác.`)) {
+                                                if (window.confirm(`Delete Role “${role.name}”? This action cannot be undone.`)) {
                                                     setFormError(null);
                                                     deleteMutation.mutate(role.id);
                                                 }
                                             }}
-                                        >Xóa</button>}
+                                        >Delete</button>}
                                     </div>
                                 </article>
                             );
@@ -371,19 +371,19 @@ export default function RoleManagementPanel({
             {!editorOpen && <section className="rbac-card rbac-role-users-panel" aria-live="polite">
                 <div className="rbac-section-heading">
                     <div>
-                        <h2>{selectedRole ? `Người dùng · ${selectedRole.name}` : "Người dùng được gán Role"}</h2>
+                        <h2>{selectedRole ? `Users · ${selectedRole.name}` : "Users assigned to a Role"}</h2>
                         {selectedRole && <p>
                             {assignedUsersQuery.isLoading
-                                ? "Đang tải danh sách người dùng…"
+                                ? "Loading Users…"
                                 : assignedUsersQuery.data
-                                    ? `${assignedUsersQuery.data.totalItems} người dùng`
-                                    : assignedUsersQuery.isError ? "Không tải được danh sách" : ""}
+                                    ? `${assignedUsersQuery.data.totalItems} Users`
+                                    : assignedUsersQuery.isError ? "Could not load the list" : ""}
                         </p>}
                     </div>
                 </div>
 
-                {!canReadRoles && <RbacEmpty>Bạn cần quyền roles.read để xem danh sách người dùng.</RbacEmpty>}
-                {canReadRoles && !selectedRole && <RbacEmpty>Chọn một Role để xem danh sách người dùng.</RbacEmpty>}
+                {!canReadRoles && <RbacEmpty>You need the roles.read permission to view assigned Users.</RbacEmpty>}
+                {canReadRoles && !selectedRole && <RbacEmpty>Select a Role to view its Users.</RbacEmpty>}
                 {canReadRoles && selectedRole && canManageUserRoles && <div className="rbac-role-users-selection">
                     <label className="rbac-role-users-select-all">
                         <input
@@ -395,27 +395,27 @@ export default function RoleManagementPanel({
                             disabled={currentPageUserIds.length === 0 || assignedUsersQuery.isFetching || bulkRemoveUsersMutation.isPending}
                             onChange={(event) => toggleCurrentPageUsers(event.target.checked)}
                         />
-                        <span>Chọn tất cả</span>
+                        <span>Select all</span>
                     </label>
-                    <span className="rbac-role-users-selected-count">Đã chọn {selectedUserIds.size} User</span>
+                    <span className="rbac-role-users-selected-count">{selectedUserIds.size} Users selected</span>
                     <div className="rbac-row-actions">
                         {selectedUserIds.size > 0 && <button
                             type="button"
                             className="rbac-link-button"
                             disabled={bulkRemoveUsersMutation.isPending}
                             onClick={() => setSelectedUserIds(new Set())}
-                        >Bỏ chọn tất cả</button>}
+                        >Clear selection</button>}
                         <button
                             type="button"
                             className="rbac-primary-button"
                             disabled={selectedUserIds.size === 0 || bulkRemoveUsersMutation.isPending}
                             onClick={beginBulkRemove}
-                        >Gỡ Role ({selectedUserIds.size})</button>
+                        >Remove Role ({selectedUserIds.size})</button>
                     </div>
                 </div>}
-                {canReadRoles && selectedRole && assignedUsersQuery.isLoading && <RbacLoading />}
-                {canReadRoles && selectedRole && assignedUsersQuery.isError && <RbacError error={assignedUsersQuery.error} action="tải người dùng của Role" />}
-                {canReadRoles && selectedRole && assignedUsersQuery.data?.items.length === 0 && <RbacEmpty>Role này chưa được gán cho User nào.</RbacEmpty>}
+                {canReadRoles && selectedRole && assignedUsersQuery.isLoading && <RbacLoading language="en" />}
+                {canReadRoles && selectedRole && assignedUsersQuery.isError && <RbacError error={assignedUsersQuery.error} action="load Users assigned to the Role" language="en" />}
+                {canReadRoles && selectedRole && assignedUsersQuery.data?.items.length === 0 && <RbacEmpty>This Role is not assigned to any Users.</RbacEmpty>}
                 {canReadRoles && selectedRole && assignedUsersQuery.data && assignedUsersQuery.data.items.length > 0 && (
                     <div className="rbac-role-assigned-users">
                         {assignedUsersQuery.data.items.map((user) => (
@@ -424,7 +424,7 @@ export default function RoleManagementPanel({
                                     type="checkbox"
                                     checked={selectedUserIds.has(user.userId)}
                                     disabled={assignedUsersQuery.isFetching || bulkRemoveUsersMutation.isPending}
-                                    aria-label={`Chọn ${user.displayName}`}
+                                    aria-label={`Select ${user.displayName}`}
                                     onChange={() => toggleUserSelection(user.userId)}
                                 />}
                                 <span>{user.displayName}</span>
@@ -454,9 +454,9 @@ export default function RoleManagementPanel({
                     onClick={(event) => event.stopPropagation()}
                 >
                     <div className="todo-dialog-copy">
-                        <h2 id="rbac-bulk-remove-title">Xác nhận gỡ Role</h2>
+                        <h2 id="rbac-bulk-remove-title">Confirm Role removal</h2>
                         <p id="rbac-bulk-remove-message">
-                            Bạn có chắc muốn gỡ Role {bulkRemoveConfirmation.roleName} khỏi {bulkRemoveConfirmation.userIds.length} người dùng đã chọn không?
+                            Remove Role {bulkRemoveConfirmation.roleName} from {bulkRemoveConfirmation.userIds.length} selected User{bulkRemoveConfirmation.userIds.length === 1 ? "" : "s"}?
                         </p>
                     </div>
                     <div className="todo-dialog-actions">
@@ -465,43 +465,43 @@ export default function RoleManagementPanel({
                             className="ghost-btn"
                             disabled={bulkRemoveUsersMutation.isPending}
                             onClick={() => setBulkRemoveConfirmation(null)}
-                        >Hủy</button>
+                        >Cancel</button>
                         <button
                             type="button"
                             className="todo-danger-btn"
                             disabled={bulkRemoveUsersMutation.isPending}
                             onClick={confirmBulkRemove}
-                        >{bulkRemoveUsersMutation.isPending ? "Đang gỡ…" : "Xác nhận gỡ"}</button>
+                        >{bulkRemoveUsersMutation.isPending ? "Removing…" : "Remove Role"}</button>
                     </div>
                 </section>
             </div>}
 
             {editorOpen && <section className="rbac-card rbac-form-card rbac-editor-card">
-                <button type="button" className="rbac-link-button rbac-back-button" onClick={closeEditor}>← Danh sách Roles</button>
+                <button type="button" className="rbac-link-button rbac-back-button" onClick={closeEditor}>← Back to Roles</button>
                 <div className="rbac-section-heading">
                     <div>
-                        <h2>{creatingRole ? "Tạo Role" : `Sửa ${editingRole?.name ?? "Role"}`}</h2>
-                        <p>{creatingRole ? "Có thể gán Permissions ngay khi tạo Role." : "Cập nhật thông tin và Permissions của Role."}</p>
+                        <h2>{creatingRole ? "Create Role" : `Edit ${editingRole?.name ?? "Role"}`}</h2>
+                        <p>{creatingRole ? "Assign Permissions while creating the Role." : "Update the Role details and Permissions."}</p>
                     </div>
                 </div>
 
                 {(creatingRole || (editingRole && canUpdateRole && !isProtectedRole(editingRole))) && <form className="rbac-form" onSubmit={submit}>
                     <label>
-                        Tên Role
+                        Role name
                         <input value={name} onChange={(event) => setName(event.target.value)} maxLength={50} required disabled={Boolean(editingRole && isProtectedRole(editingRole))} />
                     </label>
                     <label>
-                        Mô tả
+                        Description
                         <textarea value={description} onChange={(event) => setDescription(event.target.value)} maxLength={500} rows={3} />
                     </label>
                     {creatingRole && canManagePermissions && (
                         <fieldset className="rbac-create-permissions">
                             <legend>
-                                Permissions cho Role
+                                Permissions for this Role
                             </legend>
-                            {permissionsQuery.isLoading && <RbacLoading />}
-                            {permissionsQuery.isError && <RbacError error={permissionsQuery.error} action="tải Permissions" />}
-                            {permissionsQuery.data?.length === 0 && <RbacEmpty>Backend chưa có Permissions.</RbacEmpty>}
+                            {permissionsQuery.isLoading && <RbacLoading language="en" />}
+                            {permissionsQuery.isError && <RbacError error={permissionsQuery.error} action="load Permissions" language="en" />}
+                            {permissionsQuery.data?.length === 0 && <RbacEmpty>No Permissions are available.</RbacEmpty>}
                             {permissionsQuery.data && permissionsQuery.data.length > 0 && (
                                 <div className="rbac-permission-groups">
                                     {createPermissionGroups.map(([groupName, permissions]) => (
@@ -517,7 +517,7 @@ export default function RoleManagementPanel({
                                                             ? current.filter((id) => !groupIds.includes(id))
                                                             : [...new Set([...current, ...groupIds])];
                                                     })}
-                                                >{permissions.every((permission) => selectedPermissionIds.includes(permission.id)) ? "Bỏ chọn" : "Chọn nhanh"}</button>
+                                                >{permissions.every((permission) => selectedPermissionIds.includes(permission.id)) ? "Deselect group" : "Select group"}</button>
                                             </div>
                                             <div className="rbac-permission-list">
                                                 {permissions.map((permission) => (
@@ -531,7 +531,7 @@ export default function RoleManagementPanel({
                                                             <span className="rbac-permission-title">
                                                                 <strong>{permission.description || permission.code}</strong>
                                                                 {RBAC_ADMIN_PAGE_ACCESS_PERMISSIONS.some((code) => code === permission.code) && (
-                                                                    <small className="rbac-admin-access-badge">Có thể vào AdminPage</small>
+                                                                    <small className="rbac-admin-access-badge">Admin access</small>
                                                                 )}
                                                             </span>
                                                             <small>{permission.code}</small>
@@ -547,9 +547,9 @@ export default function RoleManagementPanel({
                     )}
                     {formError && <p className="rbac-inline-error" role="alert">{formError}</p>}
                     {(creatingRole || !canManagePermissions) && <div className="rbac-row-actions">
-                        {creatingRole && <button type="button" className="ghost-btn" onClick={closeEditor}>Hủy</button>}
+                        {creatingRole && <button type="button" className="ghost-btn" onClick={closeEditor}>Cancel</button>}
                         <button type="submit" className="rbac-primary-button" disabled={saveMutation.isPending || !name.trim()}>
-                            {saveMutation.isPending ? "Đang lưu…" : creatingRole ? "Tạo Role" : "Lưu"}
+                            {saveMutation.isPending ? "Saving…" : creatingRole ? "Create Role" : "Save"}
                         </button>
                     </div>}
                 </form>}
@@ -564,8 +564,8 @@ export default function RoleManagementPanel({
                         hasAdditionalChanges={roleDetailsChanged && Boolean(name.trim())}
                     />
                 )}
-                {editingRole && isProtectedRole(editingRole) && !canUpdateRole && <p className="rbac-user-summary">Role mặc định không thể đổi tên hoặc mô tả.</p>}
-                {editingRole && isProtectedRole(editingRole) && canUpdateRole && <p className="rbac-user-summary">Role mặc định được khóa thông tin; chỉ có thể chỉnh Permissions.</p>}
+                {editingRole && isProtectedRole(editingRole) && !canUpdateRole && <p className="rbac-user-summary">Default Roles cannot be renamed or have their descriptions changed.</p>}
+                {editingRole && isProtectedRole(editingRole) && canUpdateRole && <p className="rbac-user-summary">Default Role details are locked; only Permissions can be changed.</p>}
                 {formError && !(creatingRole || (editingRole && canUpdateRole && !isProtectedRole(editingRole))) && <p className="rbac-inline-error" role="alert">{formError}</p>}
             </section>}
         </div>

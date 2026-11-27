@@ -39,17 +39,19 @@ export function RbacToast({
     );
 }
 
-export function RbacError({ error, action }: { error: unknown; action: string }) {
+export function RbacError({ error, action, language = "vi" }: { error: unknown; action: string; language?: "vi" | "en" }) {
     return (
         <div className="rbac-error" role="alert">
-            <strong>{isApiStatus(error, 403) ? "Không đủ quyền" : "Không thể tải dữ liệu"}</strong>
-            <p>{getApiErrorMessage(error, action)}</p>
+            <strong>{language === "en"
+                ? isApiStatus(error, 403) ? "Permission denied" : "Unable to load data"
+                : isApiStatus(error, 403) ? "Không đủ quyền" : "Không thể tải dữ liệu"}</strong>
+            <p>{getApiErrorMessage(error, action, language)}</p>
         </div>
     );
 }
 
-export function RbacLoading() {
-    return <p className="rbac-state" role="status">Đang tải dữ liệu…</p>;
+export function RbacLoading({ language = "vi" }: { language?: "vi" | "en" } = {}) {
+    return <p className="rbac-state" role="status">{language === "en" ? "Loading…" : "Đang tải dữ liệu…"}</p>;
 }
 
 export function RbacEmpty({ children }: { children: React.ReactNode }) {

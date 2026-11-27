@@ -156,7 +156,7 @@ dl {
 }
 
 .site-header-rail {
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
   border-radius: 0 0 36px 0;
   background: color-mix(in srgb, var(--surface) 86%, transparent);
@@ -326,6 +326,7 @@ body:has(.todo-list-page) .header-chip--user {
 }
 
 .site-nav-icon-btn {
+  position: relative;
   width: 46px;
   height: 38px;
   min-height: 38px;
@@ -427,6 +428,47 @@ body:has(.todo-list-page) .header-chip--user {
   font-weight: 600;
 }
 
+.site-nav-icon-btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  z-index: 1000;
+  padding: 6px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  background: var(--color-charcoal-950);
+  box-shadow: 0 5px 14px rgba(12, 14, 20, 0.22);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, -3px);
+  transition: opacity 140ms ease, transform 140ms ease, visibility 140ms ease;
+}
+
+.site-nav-icon-btn[data-tooltip]:hover::after,
+.site-nav-icon-btn[data-tooltip]:focus-visible::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+}
+
+.site-header--admin .site-nav-icon-btn[data-tooltip]::after {
+  top: 50%;
+  left: calc(100% + 8px);
+  transform: translate(-3px, -50%);
+}
+
+.site-header--admin .site-nav-icon-btn[data-tooltip]:hover::after,
+.site-header--admin .site-nav-icon-btn[data-tooltip]:focus-visible::after {
+  transform: translate(0, -50%);
+}
+
 .site-nav-icon-btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -502,6 +544,9 @@ body:has(.todo-list-page) .header-chip--user {
   border-radius: 10px;
   justify-content: center;
   text-align: center;
+  background:
+    var(--hero-gradient),
+    url("./assets/Pastel Shield Access Manager Banner.png") center/cover;
 }
 
 .page-heading--admin > div:first-child {
@@ -3801,6 +3846,10 @@ button:disabled {
 .rbac-effective-permissions-table thead th { position: sticky; top: 0; z-index: 1; }
 .rbac-user-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .rbac-user-table th { padding: 10px 12px; background: var(--field); color: var(--text-h); text-align: left; font-weight: 700; }
+.rbac-role-table-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-right: -8px; }
+.rbac-role-reset-icon { width: 24px; min-width: 24px; height: 24px; min-height: 24px; padding: 0; border: 0; background: transparent; color: var(--accent); font-size: 19px; line-height: 1; }
+.rbac-role-reset-icon:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.rbac-role-reset-icon:disabled { opacity: 0.35; cursor: not-allowed; }
 .rbac-user-table td { padding: 10px 12px; border-top: 1px solid var(--border); color: var(--muted); vertical-align: middle; }
 .rbac-user-table tbody tr:hover { background: color-mix(in srgb, var(--surface) 55%, var(--field)); }
 .rbac-role-check { display: flex; align-items: center; gap: 9px; color: var(--text-h); cursor: pointer; }

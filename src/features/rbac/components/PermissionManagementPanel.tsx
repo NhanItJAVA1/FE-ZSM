@@ -81,7 +81,7 @@ export default function PermissionManagementPanel({
                 await rbacService.replaceRolePermissions(selectedId!, { permissionIds: selectedPermissionIds });
             } catch (error) {
                 if (roleDetailsUpdated) {
-                    throw new Error(`Tên và mô tả Role đã lưu, nhưng không thể lưu Permissions: ${getApiErrorMessage(error, "cập nhật Permissions")}`);
+                    throw new Error(`Role name and description were saved, but Permissions could not be saved: ${getApiErrorMessage(error, "update Permissions", "en")}`);
                 }
                 throw error;
             }
@@ -91,15 +91,15 @@ export default function PermissionManagementPanel({
             setSaveError(null);
             await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.rolePermissions(selectedId!) });
             onToast(roleDetailsUpdated
-                ? `Đã lưu Role và Permissions cho “${role?.name ?? ""}”.`
-                : `Đã cập nhật Permissions cho Role “${role?.name ?? ""}”.`);
+                ? `Role and Permissions saved for “${role?.name ?? ""}”.`
+                : `Permissions updated for Role “${role?.name ?? ""}”.`);
             try {
                 dispatch(setAuth(await authService.refreshSession()));
             } catch {
-                setSaveError("Permissions đã lưu nhưng không thể làm mới quyền phiên hiện tại. Hãy tải lại trang.");
+                setSaveError("Permissions were saved, but the current session could not be refreshed. Reload the page.");
             }
         },
-        onError: (error) => setSaveError(getApiErrorMessage(error, "cập nhật Permissions")),
+        onError: (error) => setSaveError(getApiErrorMessage(error, "update Permissions", "en")),
     });
 
     function togglePermission(id: number, checked: boolean) {
@@ -113,13 +113,13 @@ export default function PermissionManagementPanel({
             <div className="rbac-section-heading">
                 <div>
                     <h2>Permissions · {role?.name ?? "Role"}</h2>
-                    <p>Cấu hình quyền hiệu lực được cấp cho Role này.</p>
+                    <p>Configure the effective Permissions granted to this Role.</p>
                 </div>
             </div>
 
-            {roleId === undefined && rolesQuery.isLoading && <RbacLoading />}
-            {roleId === undefined && rolesQuery.isError && <RbacError error={rolesQuery.error} action="tải Roles" />}
-            {roleId === undefined && rolesQuery.data && rolesQuery.data.length === 0 && <RbacEmpty>Tạo Role trước khi cấu hình Permissions.</RbacEmpty>}
+            {roleId === undefined && rolesQuery.isLoading && <RbacLoading language="en" />}
+            {roleId === undefined && rolesQuery.isError && <RbacError error={rolesQuery.error} action="load Roles" language="en" />}
+            {roleId === undefined && rolesQuery.data && rolesQuery.data.length === 0 && <RbacEmpty>Create a Role before configuring Permissions.</RbacEmpty>}
 
             {((roleId !== undefined && role !== undefined) || (roleId === undefined && rolesQuery.data && rolesQuery.data.length > 0)) && (
                 <>
@@ -131,15 +131,15 @@ export default function PermissionManagementPanel({
                     </label>}
 
                     <div className="rbac-replace-warning" role="note">
-                        <strong>Lưu sẽ thay thế toàn bộ danh sách Permission hiện tại của Role.</strong>
-                        <span>Quyền không được chọn sẽ bị thu hồi. Kiểm tra kỹ trước khi lưu.</span>
+                        <strong>Saving replaces this Role’s entire current Permission list.</strong>
+                        <span>Unselected Permissions will be revoked. Review your changes before saving.</span>
                     </div>
 
-                    {permissionsQuery.isLoading && <RbacLoading />}
-                    {permissionsQuery.isError && <RbacError error={permissionsQuery.error} action="tải Permissions" />}
-                    {rolePermissionsQuery.isLoading && <RbacLoading />}
-                    {rolePermissionsQuery.isError && <RbacError error={rolePermissionsQuery.error} action="tải Permissions của Role" />}
-                    {permissionsQuery.data?.length === 0 && <RbacEmpty>Backend chưa có Permissions.</RbacEmpty>}
+                    {permissionsQuery.isLoading && <RbacLoading language="en" />}
+                    {permissionsQuery.isError && <RbacError error={permissionsQuery.error} action="load Permissions" language="en" />}
+                    {rolePermissionsQuery.isLoading && <RbacLoading language="en" />}
+                    {rolePermissionsQuery.isError && <RbacError error={rolePermissionsQuery.error} action="load this Role’s Permissions" language="en" />}
+                    {permissionsQuery.data?.length === 0 && <RbacEmpty>No Permissions are available.</RbacEmpty>}
 
                     {permissionsQuery.data && permissionsQuery.data.length > 0 && !rolePermissionsQuery.isLoading && !rolePermissionsQuery.isError && (
                         <div className="rbac-permission-groups">
@@ -155,7 +155,7 @@ export default function PermissionManagementPanel({
                                                 onClick={() => {
                                                     for (const permission of permissions) togglePermission(permission.id, !allChecked);
                                                 }}
-                                            >{allChecked ? "Bỏ chọn nhóm" : "Chọn cả nhóm"}</button>
+                                            >{allChecked ? "Deselect group" : "Select all"}</button>
                                         </div>
                                         <div className="rbac-permission-list">
                                             {permissions.map((permission) => (
@@ -169,7 +169,7 @@ export default function PermissionManagementPanel({
                                                         <span className="rbac-permission-title">
                                                             <strong>{permission.description || permission.code}</strong>
                                                             {RBAC_ADMIN_PAGE_ACCESS_PERMISSIONS.some((code) => code === permission.code) && (
-                                                                <small className="rbac-admin-access-badge">Có thể vào AdminPage</small>
+                                                                <small className="rbac-admin-access-badge">Admin access</small>
                                                             )}
                                                         </span>
                                                         <small>{permission.code}</small>
@@ -185,15 +185,15 @@ export default function PermissionManagementPanel({
 
                     {saveError && <p className="rbac-inline-error" role="alert">{saveError}</p>}
                     <div className="rbac-footer-actions">
-                        <span>{selectedPermissionIds.length} Permission được chọn</span>
+                        <span>{selectedPermissionIds.length} Permissions selected</span>
                         <div className="rbac-row-actions">
-                            {onCancel && <button type="button" className="ghost-btn" onClick={onCancel}>Hủy</button>}
+                            {onCancel && <button type="button" className="ghost-btn" onClick={onCancel}>Cancel</button>}
                             <button
                                 type="button"
                                 className="rbac-primary-button"
                                 disabled={(!dirty && !hasAdditionalChanges) || saveMutation.isPending || rolePermissionsQuery.isLoading || permissionsQuery.isLoading || permissionsQuery.isError || rolePermissionsQuery.isError}
                                 onClick={() => saveMutation.mutate()}
-                            >{saveMutation.isPending ? "Đang lưu…" : onBeforeSave ? "Lưu" : "Lưu Permissions"}</button>
+                            >{saveMutation.isPending ? "Saving…" : "Save"}</button>
                         </div>
                     </div>
                 </>

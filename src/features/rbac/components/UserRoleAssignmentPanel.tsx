@@ -155,7 +155,26 @@ export default function UserRoleAssignmentPanel({ onToast }: { onToast: (message
                             {rolesQuery.data && rolesQuery.data.length > 0 && !userRolesQuery.isLoading && !userRolesQuery.isError && (
                                 <div className="rbac-user-table-wrap">
                                     <table className="rbac-user-table rbac-user-roles-table">
-                                        <thead><tr><th scope="col">Role</th><th scope="col">Mô tả</th></tr></thead>
+                                        <thead><tr>
+                                            <th scope="col">
+                                                <div className="rbac-role-table-heading">
+                                                    <span>Role</span>
+                                                    {dirty && <button
+                                                        type="button"
+                                                        className="rbac-role-reset-icon"
+                                                        aria-label="Khôi phục Roles đang gán"
+                                                        title="Khôi phục Roles đang gán"
+                                                        disabled={saveMutation.isPending}
+                                                        onClick={() => {
+                                                            setSelectedRoleIds(savedIds);
+                                                            setSaveError(null);
+                                                            setLastAdminError(false);
+                                                        }}
+                                                    >↶</button>}
+                                                </div>
+                                            </th>
+                                            <th scope="col">Mô tả</th>
+                                        </tr></thead>
                                         <tbody>
                                             {rolesQuery.data.map((role) => (
                                                 <tr key={role.id}>
