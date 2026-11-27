@@ -3844,6 +3844,10 @@ button:disabled {
 .rbac-user-table-wrap { width: 100%; overflow-x: auto; border: 1px solid var(--border); border-radius: 7px; }
 .rbac-effective-permissions-scroll { max-height: min(52vh, 480px); overflow: auto; overscroll-behavior: contain; }
 .rbac-effective-permissions-table thead th { position: sticky; top: 0; z-index: 1; }
+.rbac-effective-permissions-search { display: block; flex: 0 1 300px; min-width: 180px; margin: 0 0 0 auto; }
+.rbac-effective-permissions-search input { width: 100%; min-height: 38px; padding: 8px 11px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text-h); font: inherit; font-size: 12px; }
+.rbac-effective-permissions-search input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.rbac-effective-permissions-group th { padding: 7px 12px; border-top: 1px solid var(--border); background: color-mix(in srgb, var(--field) 72%, var(--surface)); color: var(--text-h); font-size: 11px; text-align: left; text-transform: capitalize; }
 .rbac-user-table { width: 100%; border-collapse: collapse; font-size: 12px; }
 .rbac-user-table th { padding: 10px 12px; background: var(--field); color: var(--text-h); text-align: left; font-weight: 700; }
 .rbac-role-table-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-right: -8px; }
@@ -3908,7 +3912,8 @@ button:disabled {
   .rbac-tabs { top: 220px; width: calc(100% + 16px); margin-left: -6px; }
   .rbac-footer-actions { align-items: flex-start; flex-direction: column; }
   .rbac-user-editor-sticky { top: 270px; }
-  .rbac-user-editor-header { gap: 8px; }
+  .rbac-user-editor-header { flex-wrap: wrap; gap: 8px; }
   .rbac-user-editor-header h2 { font-size: 15px; }
   .rbac-user-editor-header p { font-size: 11px; }
+  .rbac-user-editor-header .rbac-effective-permissions-search { flex: 1 1 100%; margin-left: 46px; }
 }

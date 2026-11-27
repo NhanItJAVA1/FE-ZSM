@@ -32,7 +32,7 @@ export function RbacToast({
             aria-live={notice.type === "success" ? "polite" : "assertive"}
         >
             <p>{notice.message}</p>
-            <button type="button" aria-label="Đóng thông báo" onClick={onDismiss}>
+            <button type="button" aria-label="Close notification" onClick={onDismiss}>
                 <X size={16} />
             </button>
         </aside>
